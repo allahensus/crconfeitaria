@@ -43,6 +43,7 @@ model Product {
   active      Boolean            @default(true)
   featured    Boolean            @default(false)
   variations  ProductVariation[]
+  recipeItems RecipeItem[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 }
@@ -214,3 +215,27 @@ model Testimonial {
   avatarUrl String?
   createdAt DateTime @default(now())
 }
+
+model Ingredient {
+  id              String       @id @default(uuid())
+  name            String
+  unit            String       @default("g") // g, ml, un, kg
+  packageQuantity Float        // ex: 395 (g) no pacote
+  costPrice       Float        // ex: 7.50 (preço pago no mercado)
+  category        String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+  recipeItems     RecipeItem[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model RecipeItem {
+  id           String     @id @default(uuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  quantityUsed Float      // ex: 150 (g usados por unidade de produto)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+

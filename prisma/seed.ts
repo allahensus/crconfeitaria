@@ -274,7 +274,27 @@ async function main() {
     }
   }
 
-  // 6. Testimonials
+  // 6. Initial Ingredients for Dynamic Pricing
+  const ingredientsData = [
+    { name: 'Leite Condensado (Moça / Itambé)', unit: 'g', packageQuantity: 395, costPrice: 7.50, category: 'Laticínios' },
+    { name: 'Creme de Leite 20%', unit: 'g', packageQuantity: 200, costPrice: 4.20, category: 'Laticínios' },
+    { name: 'Manteiga Extra Sem Sal', unit: 'g', packageQuantity: 200, costPrice: 14.00, category: 'Laticínios' },
+    { name: 'Chocolate Nobre 50% Callebaut', unit: 'g', packageQuantity: 1000, costPrice: 85.00, category: 'Chocolates' },
+    { name: 'Farinha de Trigo Premium', unit: 'g', packageQuantity: 1000, costPrice: 6.00, category: 'Secos' },
+    { name: 'Açúcar Refinado / Impalpável', unit: 'g', packageQuantity: 1000, costPrice: 4.80, category: 'Secos' },
+    { name: 'Ovos Médios', unit: 'un', packageQuantity: 30, costPrice: 18.00, category: 'Frescos' },
+    { name: 'Chantilly Amélia / Supreme', unit: 'ml', packageQuantity: 1000, costPrice: 22.00, category: 'Coberturas' },
+    { name: 'Caixa & Embalagem Decorativa', unit: 'un', packageQuantity: 1, costPrice: 5.50, category: 'Embalagens' },
+  ];
+
+  for (const ing of ingredientsData) {
+    const existing = await prisma.ingredient.findFirst({ where: { name: ing.name } });
+    if (!existing) {
+      await prisma.ingredient.create({ data: ing });
+    }
+  }
+
+  // 7. Testimonials
   const testimonials = [
     {
       name: 'Mariana Silva',

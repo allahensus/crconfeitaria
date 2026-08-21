@@ -36,6 +36,7 @@ export function AdminSidebar() {
     { label: 'Calendário Produção', href: '/admin/calendario', icon: Calendar },
     { label: 'Orçamentos', href: '/admin/orcamentos', icon: FileText },
     { label: 'Produtos', href: '/admin/produtos', icon: Cake },
+    { label: 'Insumos & Precificação', href: '/admin/insumos', icon: Sparkles },
     { label: 'Categorias', href: '/admin/categorias', icon: FolderTree },
     { label: 'Clientes (CRM)', href: '/admin/clientes', icon: Users },
     { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign },
