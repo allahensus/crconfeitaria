@@ -137,7 +137,7 @@ export default function PublicPage() {
               Cardápio de Recheios Especiais
             </h2>
             <p className="text-sm text-[#645451] mt-2">
-              Trabalhamos com mais de 20 opções de recheios cremosos e nobres para o seu bolo.
+              Trabalhamos com os melhores recheios artesanais cremosos e nobres para o seu bolo.
             </p>
           </div>
 
