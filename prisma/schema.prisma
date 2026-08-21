@@ -1,0 +1,216 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  order       Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          String             @id @default(uuid())
+  name        String
+  slug        String             @unique
+  categoryId  String
+  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  description String
+  mainImage   String
+  gallery     String?            // JSON string array
+  basePrice   Float
+  unit        String             @default("unidade") // unidade, kg, etc.
+  yieldInfo   String?            // ex: "7 fatias", "450g (2 pessoas)"
+  active      Boolean            @default(true)
+  featured    Boolean            @default(false)
+  variations  ProductVariation[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model ProductVariation {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String   // ex: "13 a 15 fatias", "Buttercream", "6cm"
+  price     Float
+  slices    String?  // ex: "13-15 fatias"
+  weight    String?  // ex: "1kg"
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FillingOption {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   @default("Geral") // ex: "Tradicional", "Gourmet", "Frutas"
+  extraPrice  Float    @default(0.0)
+  active      Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id           String    @id @default(uuid())
+  name         String
+  whatsapp     String
+  email        String?
+  cpf          String?
+  address      String?
+  birthDate    DateTime?
+  lgpdAccepted Boolean   @default(true)
+  notes        String?
+  totalSpent   Float     @default(0.0)
+  ordersCount  Int       @default(0)
+  quotes       Quote[]
+  orders       Order[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Quote {
+  id               String      @id @default(uuid())
+  quoteNumber      String      @unique // ex: ORC-2026-0001
+  customerId       String?
+  customer         Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName     String
+  customerWhatsapp String
+  eventDate        DateTime?
+  themeNotes       String?
+  subtotal         Float
+  discount         Float       @default(0.0)
+  extraTotal       Float       @default(0.0)
+  finalTotal       Float
+  status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
+  items            QuoteItem[]
+  order            Order?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model QuoteItem {
+  id          String   @id @default(uuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  variation   String?
+  cakeBase    String?  // Baunilha, Chocolate
+  filling1    String?
+  filling2    String?
+  frosting    String?  // Chantily, Buttercream
+  extras      String?  // Topper, Palito, etc.
+  quantity    Int      @default(1)
+  unitPrice   Float
+  totalPrice  Float
+}
+
+model Order {
+  id               String                 @id @default(uuid())
+  orderNumber      String                 @unique // ex: PED-2026-0001
+  quoteId          String?                @unique
+  quote            Quote?                 @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  customerId       String?
+  customer         Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName     String
+  customerWhatsapp String
+  deliveryDate     DateTime
+  status           String                 @default("NOVO") // NOVO, AGUARDANDO_CONFIRMACAO, CONFIRMADO, PAGAMENTO_PENDENTE, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO
+  totalAmount      Float
+  paidAmount       Float                  @default(0.0)
+  paymentStatus    String                 @default("PENDENTE") // PENDENTE, PARCIAL, PAGO
+  notes            String?
+  items            OrderItem[]
+  payments         Payment[]
+  transactions     FinancialTransaction[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+}
+
+model OrderItem {
+  id            String  @id @default(uuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName   String
+  variationName String?
+  cakeBase      String?
+  filling1      String?
+  filling2      String?
+  quantity      Int     @default(1)
+  unitPrice     Float
+  totalPrice    Float
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Float
+  paymentMethod String   // Pix, Dinheiro, Cartao, Transferencia
+  status        String   @default("CONFIRMADO")
+  paidAt        DateTime @default(now())
+  notes         String?
+}
+
+model Expense {
+  id            String                 @id @default(uuid())
+  description   String
+  category      String                 // Ingredientes, Embalagens, Entregas, Energia, Equipamentos, Marketing, Outros
+  amount        Float
+  date          DateTime               @default(now())
+  paymentMethod String                 @default("Pix")
+  notes         String?
+  transactions  FinancialTransaction[]
+  createdAt     DateTime               @default(now())
+}
+
+model FinancialTransaction {
+  id          String   @id @default(uuid())
+  type        String   // RECEITA, DESPESA
+  amount      Float
+  category    String
+  description String
+  date        DateTime @default(now())
+  orderId     String?
+  order       Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  expenseId   String?
+  expense     Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  eventType String
+  comment   String
+  rating    Int      @default(5)
+  active    Boolean  @default(true)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+}
