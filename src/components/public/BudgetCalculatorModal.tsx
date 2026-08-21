@@ -9,6 +9,7 @@ interface BudgetCalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialProduct?: any;
+  initialVariation?: any;
   products: any[];
   fillings: any[];
 }
@@ -17,6 +18,7 @@ export function BudgetCalculatorModal({
   isOpen,
   onClose,
   initialProduct,
+  initialVariation,
   products,
   fillings,
 }: BudgetCalculatorModalProps) {
@@ -27,9 +29,10 @@ export function BudgetCalculatorModal({
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [cakeBase, setCakeBase] = useState('Baunilha');
   const [filling1, setFilling1] = useState('');
-  const [filling2, setFilling2] = useState('');
+  const [filling2, setFilling2] = useState(''); // Default empty = 1 recheio único
   const [frosting, setFrosting] = useState('Chantily');
   const [extraPalito, setExtraPalito] = useState(false);
+  const [palitoCount, setPalitoCount] = useState(0); // Quantidade específica de biscoitos COM palito
   const [quantity, setQuantity] = useState(1);
   const [eventDate, setEventDate] = useState('');
   const [themeNotes, setThemeNotes] = useState('');
@@ -52,10 +55,14 @@ export function BudgetCalculatorModal({
       setStep(1);
       setSubmittedQuote(null);
       setErrorMsg('');
+      setPalitoCount(0);
+      setFilling2(''); // 1 recheio único por padrão
     }
     if (initialProduct) {
       setSelectedProduct(initialProduct);
-      if (initialProduct.variations && initialProduct.variations.length > 0) {
+      if (initialVariation) {
+        setSelectedVariation(initialVariation);
+      } else if (initialProduct.variations && initialProduct.variations.length > 0) {
         setSelectedVariation(initialProduct.variations[0]);
       } else {
         setSelectedVariation(null);
@@ -66,7 +73,7 @@ export function BudgetCalculatorModal({
         setSelectedVariation(products[0].variations[0]);
       }
     }
-  }, [isOpen, initialProduct, products]);
+  }, [isOpen, initialProduct, initialVariation, products]);
 
   useEffect(() => {
     if (fillings.length > 0 && !filling1) {
@@ -82,10 +89,6 @@ export function BudgetCalculatorModal({
     : 0;
 
   let extraCostPerUnit = 0;
-  if (selectedProduct?.slug === 'biscoitos-amanteigados' && extraPalito) {
-    extraCostPerUnit += 2.0; // Adicional no palito R$ 2,00 por unidade
-  }
-
   // Cobertura em Buttercream surcharge (+R$ 20,00 para Mini Bolo / Bolos Redondos)
   if (frosting === 'Buttercream') {
     if (selectedProduct?.slug === 'mini-bolo' || selectedProduct?.slug === 'bolos-redondos') {
@@ -93,7 +96,9 @@ export function BudgetCalculatorModal({
     }
   }
 
-  const subtotal = (unitPrice + extraCostPerUnit) * quantity;
+  const isBiscoito = selectedProduct?.slug === 'biscoitos-amanteigados';
+  const palitoTotalCost = isBiscoito ? (palitoCount * 2.0) : 0;
+  const subtotal = ((unitPrice + extraCostPerUnit) * quantity) + palitoTotalCost;
   const finalTotal = subtotal;
 
   const availableFillingsForProduct = React.useMemo(() => {
@@ -477,22 +482,47 @@ export function BudgetCalculatorModal({
               ) : (
                 /* Biscoitos Extras */
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
-                    <h4 className="font-bold text-sm text-[#4A231A] mb-1">Adicional: Biscoito no Palito</h4>
-                    <p className="text-xs text-[#645451] mb-3">
-                      Disponível para tamanhos de 6cm e 9cm. Adiciona R$ 2,00 por unidade.
-                    </p>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={extraPalito}
-                        onChange={(e) => setExtraPalito(e.target.checked)}
-                        className="w-5 h-5 rounded border-[#C27360] text-[#C27360] focus:ring-[#C27360]"
-                      />
-                      <span className="text-sm font-semibold text-[#4A231A]">
-                        Sim, incluir suporte no palito (+R$ 2,00/un)
-                      </span>
-                    </label>
+                  <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm text-[#4A231A]">Adicional: Biscoitos no Palito</h4>
+                        <p className="text-xs text-[#645451]">
+                          Disponível para tamanhos 6cm e 9cm (+ R$ 2,00 por unidade no palito).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#F2D7D0]/60 space-y-2">
+                      <label className="block text-xs font-bold text-[#A75644]">
+                        Quantas unidades serão COM PALITO? (Total do pedido: {quantity} un)
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#F2D7D0]">
+                          <button
+                            type="button"
+                            onClick={() => setPalitoCount(Math.max(0, palitoCount - 1))}
+                            className="w-8 h-8 rounded-lg bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                          >
+                            -
+                          </button>
+                          <span className="text-sm font-extrabold text-[#4A231A] w-8 text-center">
+                            {palitoCount}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPalitoCount(Math.min(quantity, palitoCount + 1))}
+                            className="w-8 h-8 rounded-lg bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="text-xs font-semibold text-[#645451]">
+                          {palitoCount > 0
+                            ? `✨ ${palitoCount} com palito (+${formatCurrency(palitoCount * 2)}) e ${Math.max(0, quantity - palitoCount)} sem palito`
+                            : 'Todos sem palito (padrão)'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

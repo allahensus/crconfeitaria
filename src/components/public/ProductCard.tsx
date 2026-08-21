@@ -7,7 +7,7 @@ import { Sparkles, Users, Layers, ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
   product: any;
-  onOpenBudgetModal: (product: any) => void;
+  onOpenBudgetModal: (product: any, variation?: any) => void;
 }
 
 export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
@@ -15,7 +15,7 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
     ? Math.min(...product.variations.map((v: any) => v.price))
     : product.basePrice;
 
-  const hasVariations = product.variations && product.variations.length > 1;
+  const hasVariations = product.variations && product.variations.length > 0;
 
   return (
     <div className="group bg-white rounded-3xl overflow-hidden border border-[#F2D7D0] shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
@@ -62,22 +62,24 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
             {product.description}
           </p>
 
-          {/* Variations Pill Preview */}
+          {/* Interactive Clickable Variations Pills */}
           {hasVariations && (
             <div className="pt-2 flex flex-wrap gap-1.5">
-              {product.variations.slice(0, 3).map((v: any) => (
-                <span
+              {product.variations.map((v: any) => (
+                <button
                   key={v.id}
-                  className="text-[11px] bg-[#FDF7F6] text-[#874132] font-medium px-2 py-0.5 rounded-md border border-[#F2D7D0]"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenBudgetModal(product, v);
+                  }}
+                  className="text-[11px] bg-[#FDF7F6] hover:bg-[#C27360] hover:text-white text-[#874132] font-semibold px-2.5 py-1 rounded-lg border border-[#F2D7D0] transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+                  title={`Clique para orçar no tamanho ${v.name}`}
                 >
-                  {v.name}
-                </span>
+                  <span>{v.name}</span>
+                  <span className="text-[10px] opacity-80">({formatCurrency(v.price)})</span>
+                </button>
               ))}
-              {product.variations.length > 3 && (
-                <span className="text-[11px] text-[#A75644] font-medium self-center">
-                  +{product.variations.length - 3} mais
-                </span>
-              )}
             </div>
           )}
         </div>

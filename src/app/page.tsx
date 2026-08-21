@@ -21,6 +21,7 @@ export default function PublicPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<any>(null);
+  const [selectedVariationForModal, setSelectedVariationForModal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,8 +57,9 @@ export default function PublicPage() {
     loadData();
   }, []);
 
-  const handleOpenModal = (product?: any) => {
+  const handleOpenModal = (product?: any, variation?: any) => {
     setSelectedProductForModal(product || null);
+    setSelectedVariationForModal(variation || null);
     setIsModalOpen(true);
   };
 
@@ -115,7 +117,7 @@ export default function PublicPage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onOpenBudgetModal={(p) => handleOpenModal(p)}
+                onOpenBudgetModal={(p, v) => handleOpenModal(p, v)}
               />
             ))}
           </div>
@@ -137,7 +139,7 @@ export default function PublicPage() {
               Cardápio de Recheios Especiais
             </h2>
             <p className="text-sm text-[#645451] mt-2">
-              Trabalhamos com mais de 20 opções de recheios cremosos e nobres para o seu bolo.
+              Trabalhamos com os melhores recheios artesanais cremosos e nobres para o seu bolo.
             </p>
           </div>
 
@@ -183,6 +185,7 @@ export default function PublicPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialProduct={selectedProductForModal}
+        initialVariation={selectedVariationForModal}
         products={products}
         fillings={fillings}
       />

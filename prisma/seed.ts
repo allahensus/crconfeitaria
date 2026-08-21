@@ -236,42 +236,29 @@ async function main() {
     },
   });
 
-  // 5. Fillings Options (20 Fillings)
+  // 5. Official Fillings Options
+  await prisma.fillingOption.deleteMany({}); // Reset to official menu fillings
+
   const fillings = [
-    { name: 'Alpino', category: 'Gourmet' },
-    { name: 'Beijinho com Abacaxi', category: 'Frutas' },
-    { name: 'Beijinho com Morangos', category: 'Frutas' },
-    { name: 'Brigadeiro Gourmet com Bombom Sonho de Valsa', category: 'Especial' },
-    { name: 'Brigadeiro Gourmet com Bombom Ouro Branco', category: 'Especial' },
-    { name: 'Brigadeiro Gourmet com Morangos', category: 'Frutas' },
-    { name: 'Brigadeiro Quatro Leites com Frutas Amarelas', category: 'Frutas' },
-    { name: 'Brigadeiro Quatro Leites com Frutas Vermelhas', category: 'Frutas' },
-    { name: 'Brigadeiro Quatro Leites com Morangos', category: 'Frutas' },
-    { name: 'Brigadeiro de Nutella com Nozes', category: 'Especial' },
-    { name: 'Doce de Leite com Ameixa', category: 'Tradicional' },
-    { name: 'Doce de Leite com Compota de Abacaxi', category: 'Frutas' },
+    { name: 'Brigadeiro Gourmet', category: 'Clássicos' },
+    { name: 'Ninho', category: 'Clássicos' },
+    { name: 'Cocada', category: 'Especial' },
+    { name: 'Prestígio', category: 'Clássicos' },
     { name: 'Doce de Leite com Coco', category: 'Tradicional' },
-    { name: 'Doce de Leite com Praliné de Nozes', category: 'Especial' },
-    { name: 'Ninho', category: 'Tradicional' },
-    { name: 'Ninho com Abacaxi', category: 'Frutas' },
-    { name: 'Ninho com Morangos', category: 'Frutas' },
-    { name: 'Ninho Trufado', category: 'Gourmet' },
     { name: 'Ninho com Nutella', category: 'Gourmet' },
-    { name: 'Prestígio', category: 'Tradicional' },
+    { name: 'Brigadeiro com Morango', category: 'Frutas' },
+    { name: 'Ninho com Morango', category: 'Frutas' },
   ];
 
   for (const f of fillings) {
-    const existing = await prisma.fillingOption.findFirst({ where: { name: f.name } });
-    if (!existing) {
-      await prisma.fillingOption.create({
-        data: {
-          name: f.name,
-          category: f.category,
-          extraPrice: 0.0,
-          active: true,
-        }
-      });
-    }
+    await prisma.fillingOption.create({
+      data: {
+        name: f.name,
+        category: f.category,
+        extraPrice: 0.0,
+        active: true,
+      }
+    });
   }
 
   // 6. Initial Ingredients for Dynamic Pricing
@@ -335,8 +322,10 @@ async function main() {
     }
   });
 
-  const sampleOrder = await prisma.order.create({
-    data: {
+  const sampleOrder = await prisma.order.upsert({
+    where: { orderNumber: 'PED-2026-0001' },
+    update: {},
+    create: {
       orderNumber: 'PED-2026-0001',
       customerId: sampleCustomer.id,
       customerName: sampleCustomer.name,
