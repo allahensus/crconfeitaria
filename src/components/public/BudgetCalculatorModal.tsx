@@ -96,6 +96,30 @@ export function BudgetCalculatorModal({
   const subtotal = (unitPrice + extraCostPerUnit) * quantity;
   const finalTotal = subtotal;
 
+  const availableFillingsForProduct = React.useMemo(() => {
+    if (selectedProduct?.slug === 'bento-cake') {
+      return [
+        { id: 'bento-brigadeiro', name: 'Brigadeiro', category: 'Cardápio Bentô' },
+        { id: 'bento-cocada', name: 'Cocada', category: 'Cardápio Bentô' },
+        { id: 'bento-ninho', name: 'Ninho', category: 'Cardápio Bentô' },
+      ];
+    }
+    if (selectedProduct?.slug === 'mini-bolo') {
+      return [
+        { id: 'mini-brigadeiro', name: 'Brigadeiro gourmet', category: 'Cardápio Mini Bolo' },
+        { id: 'mini-ninho', name: 'Ninho', category: 'Cardápio Mini Bolo' },
+        { id: 'mini-prestigio', name: 'Prestígio', category: 'Cardápio Mini Bolo' },
+      ];
+    }
+    return fillings;
+  }, [selectedProduct, fillings]);
+
+  useEffect(() => {
+    if (availableFillingsForProduct.length > 0) {
+      setFilling1(availableFillingsForProduct[0].name);
+    }
+  }, [selectedProduct, availableFillingsForProduct]);
+
   const handleProductChange = (prodId: string) => {
     const prod = products.find((p) => p.id === prodId);
     if (prod) {
@@ -378,14 +402,18 @@ export function BudgetCalculatorModal({
                   {/* Primary Filling */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                      Recheio Principal (Cardápio com 20 Sabores)
+                      {selectedProduct?.slug === 'bento-cake'
+                        ? 'Recheio Exclusivo (1 Camada Generosa)'
+                        : selectedProduct?.slug === 'mini-bolo'
+                        ? 'Recheio Exclusivo (Mini Bolo)'
+                        : 'Recheio Principal (Cardápio com 20 Sabores)'}
                     </label>
                     <select
                       value={filling1}
                       onChange={(e) => setFilling1(e.target.value)}
                       className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] font-medium focus:ring-2 focus:ring-[#C27360] outline-none"
                     >
-                      {fillings.map((f) => (
+                      {availableFillingsForProduct.map((f) => (
                         <option key={f.id} value={f.name}>
                           {f.name} ({f.category})
                         </option>
@@ -393,24 +421,26 @@ export function BudgetCalculatorModal({
                     </select>
                   </div>
 
-                  {/* Secondary Filling (Optional) */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                      Segundo Recheio (Opcional)
-                    </label>
-                    <select
-                      value={filling2}
-                      onChange={(e) => setFilling2(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
-                    >
-                      <option value="">Nenhum (Somente 1 recheio)</option>
-                      {fillings.map((f) => (
-                        <option key={f.id} value={f.name}>
-                          {f.name} ({f.category})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Secondary Filling (Optional) - Hidden for Bentô Cake */}
+                  {selectedProduct?.slug !== 'bento-cake' && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                        Segundo Recheio (Opcional)
+                      </label>
+                      <select
+                        value={filling2}
+                        onChange={(e) => setFilling2(e.target.value)}
+                        className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                      >
+                        <option value="">Nenhum (Somente 1 recheio)</option>
+                        {availableFillingsForProduct.map((f) => (
+                          <option key={f.id} value={f.name}>
+                            {f.name} ({f.category})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Frosting Selection */}
                   {(selectedProduct?.slug === 'mini-bolo' || selectedProduct?.slug === 'bolos-redondos') && (
