@@ -63,7 +63,12 @@ export default function PublicPage() {
 
   const filteredProducts = selectedCategory === 'all'
     ? products
-    : products.filter((p) => p.category?.slug === selectedCategory);
+    : products.filter(
+        (p) =>
+          p.category?.slug === selectedCategory ||
+          p.category?.id === selectedCategory ||
+          p.categoryId === selectedCategory
+      );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF6F4]">

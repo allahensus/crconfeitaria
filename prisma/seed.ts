@@ -210,6 +210,32 @@ async function main() {
     },
   });
 
+  // Product 5: Kit Festa Celebrar
+  await prisma.product.upsert({
+    where: { slug: 'kit-festa-celebrar' },
+    update: {
+      mainImage: '/images/bento_cake.jpg',
+    },
+    create: {
+      name: 'Kit Festa Celebrar (Bentô Cake + Biscoitos)',
+      slug: 'kit-festa-celebrar',
+      categoryId: catKits.id,
+      description: 'Combo perfeito para comemorações íntimas! Acompanha 1 Bentô Cake artesanal personalizado + 10 Biscoitos Amanteigados desenhados no tema da festa.',
+      mainImage: '/images/bento_cake.jpg',
+      basePrice: 160.0,
+      unit: 'kit',
+      yieldInfo: 'Bentô Cake + 10 Biscoitos Decorados',
+      active: true,
+      featured: true,
+      variations: {
+        create: [
+          { name: 'Kit Básico (Bentô + 10 Biscoitos 6cm)', price: 160.0, weight: '450g + 10 biscoitos', slices: '2 fatias + biscoitos' },
+          { name: 'Kit Premium (Bentô + 20 Biscoitos 6cm)', price: 240.0, weight: '450g + 20 biscoitos', slices: '2 fatias + biscoitos' },
+        ]
+      }
+    },
+  });
+
   // 5. Fillings Options (20 Fillings)
   const fillings = [
     { name: 'Alpino', category: 'Gourmet' },
