@@ -88,7 +88,7 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
                     Destaque da Confeitaria
                   </span>
                   <h3 className="font-serif text-2xl font-bold">Bentô Cake Personalizado</h3>
-                  <p className="text-xs text-white/90">Acompanha hambúrgueria decorada, colher de madeira e vela</p>
+                  <p className="text-xs text-white/90">Acompanha hamburgueira decorada, colher de madeira e vela</p>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-xl font-extrabold text-[#F9ECE9]">R$ 95,00</span>
                     <button

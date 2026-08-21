@@ -86,7 +86,7 @@ async function main() {
       name: 'Bentô Cake',
       slug: 'bento-cake',
       categoryId: catBolos.id,
-      description: 'Bentô Cake é um bolo personalizado na marmita. Ele tem 10 cm de diâmetro, pesa aproximadamente 450g e serve bem 2 pessoas. Possui 2 camadas de massa e 1 camada bem generosa de recheio. Embalado em hambúrgueria biodegradável personalizada, acompanha colher de madeira e velinha.',
+      description: 'Bentô Cake é um bolo personalizado na marmita. Ele tem 10 cm de diâmetro, pesa aproximadamente 450g e serve bem 2 pessoas. Possui 2 camadas de massa e 1 camada bem generosa de recheio. Embalado em hamburgueira biodegradável personalizada, acompanha colher de madeira e velinha.',
       mainImage: '/images/bento_cake.jpg',
       basePrice: 95.0,
       unit: 'unidade',
