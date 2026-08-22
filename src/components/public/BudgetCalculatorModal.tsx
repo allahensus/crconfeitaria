@@ -399,7 +399,7 @@ export function BudgetCalculatorModal({
           {step === 2 && (
             <div className="space-y-5 animate-in slide-in-from-right duration-200">
               
-              {!isBiscoitosCategory ? (
+              {!isBiscoito ? (
                 <>
                   {/* Cake Base */}
                   <div>
