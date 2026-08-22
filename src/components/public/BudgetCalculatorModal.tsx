@@ -31,6 +31,7 @@ export function BudgetCalculatorModal({
   const [filling1, setFilling1] = useState('');
   const [filling2, setFilling2] = useState(''); // Default empty = 1 recheio único
   const [frosting, setFrosting] = useState('Chantily');
+  const [noPalitoCount, setNoPalitoCount] = useState(4); // Biscoitos Sem Palito
   const [palitoCount, setPalitoCount] = useState(0); // Biscoitos Com Palito
   const [quantity, setQuantity] = useState(1);
   const [eventDate, setEventDate] = useState('');
@@ -78,12 +79,13 @@ export function BudgetCalculatorModal({
 
   useEffect(() => {
     if (selectedVariation && isBiscoito) {
-      let minQty = 1;
-      if (selectedVariation.name?.includes('4cm')) minQty = 20;
-      else if (selectedVariation.name?.includes('6cm')) minQty = 10;
-      else if (selectedVariation.name?.includes('9cm')) minQty = 4;
-      setQuantity(minQty);
+      let minSemPalito = 1;
+      if (selectedVariation.name?.includes('4cm')) minSemPalito = 20;
+      else if (selectedVariation.name?.includes('6cm')) minSemPalito = 10;
+      else if (selectedVariation.name?.includes('9cm')) minSemPalito = 4;
+      setNoPalitoCount(minSemPalito);
       setPalitoCount(0);
+      setQuantity(minSemPalito);
     }
   }, [selectedVariation, isBiscoito]);
 
@@ -108,9 +110,11 @@ export function BudgetCalculatorModal({
     }
   }
 
-  const noPalitoCount = isBiscoito ? Math.max(0, quantity - palitoCount) : 0;
+  const effectiveQuantity = isBiscoito ? (noPalitoCount + palitoCount) : quantity;
   const palitoTotalCost = (isBiscoito && isPalitoAllowed) ? (palitoCount * 2.0) : 0;
-  const subtotal = ((unitPrice + extraCostPerUnit) * quantity) + palitoTotalCost;
+  const subtotal = isBiscoito
+    ? (noPalitoCount * unitPrice) + (palitoCount * (unitPrice + (isPalitoAllowed ? 2.0 : 0)))
+    : ((unitPrice + extraCostPerUnit) * quantity);
   const finalTotal = subtotal;
 
   const availableFillingsForProduct = React.useMemo(() => {
@@ -496,89 +500,124 @@ export function BudgetCalculatorModal({
                   )}
                 </>
               ) : (
-                /* Biscoitos Extras & Palito Division */
+                /* Biscoitos Extras & Multi-Type Selection */
                 <div className="space-y-4">
-                  {isPalitoAllowed ? (
-                    <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-sm text-[#4A231A]">
-                          Divisão: Biscoitos Com Palito vs Sem Palito
-                        </h4>
-                        <p className="text-xs text-[#645451]">
-                          Desses <strong className="text-[#C27360] font-bold">{quantity} biscoitos</strong> no pedido, escolha quantos quer no palito (+R$ 2,00/un).
-                        </p>
+                  <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0] space-y-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-[#4A231A] mb-1">
+                        🍪 Escolha a Quantidade de Biscoitos ({selectedVariation?.name || 'Personalizados'})
+                      </h4>
+                      <p className="text-xs text-[#645451]">
+                        Escolha livremente a quantidade de biscoitos **Sem Palito** e **Com Palito** no mesmo orçamento:
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Counter 1: Biscoitos Sem Palito */}
+                      <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm">
+                        <div>
+                          <span className="text-xs font-bold text-[#4A231A] block">
+                            🍪 Biscoitos SEM Palito (Tradicionais)
+                          </span>
+                          <span className="text-[11px] text-[#C27360] font-semibold">
+                            {formatCurrency(unitPrice)} por unidade
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNoPalitoCount(Math.max(0, noPalitoCount - 1))}
+                            className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="text-base font-extrabold text-[#4A231A] w-7 text-center">
+                            {noPalitoCount}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setNoPalitoCount(noPalitoCount + 1)}
+                            className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="pt-2 border-t border-[#F2D7D0]/60 space-y-2">
-                        <label className="block text-xs font-bold text-[#A75644]">
-                          Quantos serão COM PALITO?
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#F2D7D0]">
+                      {/* Counter 2: Biscoitos Com Palito */}
+                      {isPalitoAllowed ? (
+                        <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm">
+                          <div>
+                            <span className="text-xs font-bold text-[#4A231A] block">
+                              🍭 Biscoitos COM Palito (+ R$ 2,00/un)
+                            </span>
+                            <span className="text-[11px] text-emerald-700 font-semibold">
+                              {formatCurrency(unitPrice + 2.0)} por unidade
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
                             <button
                               type="button"
                               onClick={() => setPalitoCount(Math.max(0, palitoCount - 1))}
-                              className="w-8 h-8 rounded-lg bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                              className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
                             >
                               -
                             </button>
-                            <span className="text-sm font-extrabold text-[#4A231A] w-8 text-center">
+                            <span className="text-base font-extrabold text-[#4A231A] w-7 text-center">
                               {palitoCount}
                             </span>
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(Math.min(quantity, palitoCount + 1))}
-                              className="w-8 h-8 rounded-lg bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                              onClick={() => setPalitoCount(palitoCount + 1)}
+                              className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
                             >
                               +
                             </button>
                           </div>
-                          <span className="text-xs font-semibold text-[#645451]">
-                            {palitoCount > 0
-                              ? `✨ ${palitoCount} com palito (+${formatCurrency(palitoCount * 2)}) e ${Math.max(0, quantity - palitoCount)} sem palito`
-                              : 'Todos sem palito (padrão)'}
-                          </span>
                         </div>
+                      ) : (
+                        <div className="p-3 bg-[#FAF6F4] rounded-xl border border-[#F2D7D0] text-xs text-[#A75644] font-medium">
+                          ℹ️ Opção no palito disponível apenas para os tamanhos de 6cm e 9cm.
+                        </div>
+                      )}
+
+                      {/* Live Summary Box */}
+                      <div className="p-3 bg-gradient-to-r from-[#FDF7F6] to-[#F9ECE9] rounded-xl border border-[#F2D7D0] text-xs font-bold text-[#4A231A] flex items-center justify-between">
+                        <span>Total de Biscoitos no Pedido:</span>
+                        <span className="text-[#C27360] font-extrabold text-sm">
+                          {noPalitoCount + palitoCount} unidades ({noPalitoCount} sem palito e {palitoCount} com palito)
+                        </span>
                       </div>
                     </div>
-                  ) : (
-                    <div className="p-3 bg-[#FAF6F4] rounded-xl border border-[#F2D7D0] text-xs text-[#A75644] font-medium">
-                      ℹ️ A opção no palito está disponível para biscoitos de 6cm e 9cm.
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
 
-              {/* Quantity */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                  {isBiscoito ? 'Quantidade Total de Biscoitos' : 'Quantidade'}
-                </label>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newQty = Math.max(1, quantity - 1);
-                      setQuantity(newQty);
-                      if (palitoCount > newQty) setPalitoCount(newQty);
-                    }}
-                    className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
-                  >
-                    -
-                  </button>
-                  <span className="text-lg font-bold text-[#4A231A] w-8 text-center">{quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
-                  >
-                    +
-                  </button>
-                  {isBiscoito && (
-                    <span className="text-xs text-[#645451] font-medium">unidades no total do pedido</span>
-                  )}
+              {/* Quantity selector for Cakes */}
+              {!isBiscoito && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                    Quantidade
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                    >
+                      -
+                    </button>
+                    <span className="text-lg font-bold text-[#4A231A] w-8 text-center">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -591,13 +630,13 @@ export function BudgetCalculatorModal({
 
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                  Orçamento Registrado no Sistema
+                  Orçamento Registrado com Sucesso
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-[#4A231A] mt-2">
                   Solicitação #{submittedQuote?.quoteNumber}
                 </h3>
                 <p className="text-xs text-[#645451] max-w-md mx-auto mt-1">
-                  Seu orçamento de <strong className="text-[#4A231A]">{formatCurrency(finalTotal)}</strong> foi registrado com sucesso na Confeitaria Cinthia Rodrigues!
+                  Seu pedido no valor de <strong className="text-[#4A231A]">{formatCurrency(finalTotal)}</strong> foi registrado! Clique abaixo para enviar no WhatsApp e encerrar.
                 </p>
               </div>
 
@@ -611,7 +650,7 @@ export function BudgetCalculatorModal({
                     className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md hover:scale-105 transition-all flex items-center justify-center gap-2"
                   >
                     <MessageCircle className="w-5 h-5" />
-                    Abrir WhatsApp da Confeitaria
+                    Enviar Pedido no WhatsApp da Confeitaria
                   </a>
                 )}
 
@@ -621,6 +660,15 @@ export function BudgetCalculatorModal({
                   className="w-full py-3 px-6 rounded-2xl bg-[#FAF6F4] hover:bg-[#F2D7D0] text-[#4A231A] font-bold text-xs border border-[#F2D7D0] transition-colors flex items-center justify-center gap-2"
                 >
                   {copied ? '✅ Texto Copiado com Sucesso!' : '📋 Copiar Resumo do Orçamento'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[#C27360] hover:bg-[#A75644] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Encerrar Venda e Fechar
                 </button>
               </div>
 
@@ -855,9 +903,19 @@ export function BudgetCalculatorModal({
             )}
             <div className="flex justify-between items-center text-xs text-[#645451]">
               <span>Quantidade:</span>
-              <span className="font-semibold text-[#4A231A]">{quantity}x</span>
+              <span className="font-semibold text-[#4A231A]">
+                {isBiscoito
+                  ? `${noPalitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
+                  : `${quantity}x`}
+              </span>
             </div>
-            {extraCostPerUnit > 0 && (
+            {isBiscoito && palitoCount > 0 && (
+              <div className="flex justify-between items-center text-xs text-[#645451]">
+                <span>Adicional Suporte no Palito:</span>
+                <span className="font-semibold text-[#C27360]">+{formatCurrency(palitoTotalCost)}</span>
+              </div>
+            )}
+            {!isBiscoito && extraCostPerUnit > 0 && (
               <div className="flex justify-between items-center text-xs text-[#645451]">
                 <span>Adicionais / Cobertura:</span>
                 <span className="font-semibold text-[#C27360]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
@@ -904,7 +962,7 @@ export function BudgetCalculatorModal({
                 className="px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
-                {loading ? 'Gerando Orçamento...' : 'Gerar Orçamento no WhatsApp'}
+                {loading ? 'Encerrando Venda...' : '✅ Encerrar Venda & Enviar no WhatsApp'}
               </button>
             )}
           </div>
