@@ -147,6 +147,9 @@ export function BudgetCalculatorModal({
     if (selectedProduct?.slug === 'kit-festa-celebrar') {
       setFrosting('Buttercream');
       setFilling2('');
+    } else if (selectedProduct?.slug === 'bolos-redondos') {
+      setFrosting('Chantily');
+      setFilling2('');
     }
   }, [selectedProduct]);
 
@@ -477,8 +480,8 @@ export function BudgetCalculatorModal({
                     </select>
                   </div>
 
-                  {/* Secondary Filling (Optional) - Enabled for Bolos Redondos & Bolos Retangulares */}
-                  {(selectedProduct?.slug === 'bolos-redondos' || selectedProduct?.slug === 'bolos-retangulares') && (
+                  {/* Secondary Filling (Optional) - Enabled for Bolos Retangulares */}
+                  {selectedProduct?.slug === 'bolos-retangulares' && (
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
                         Segundo Recheio (Opcional)
@@ -506,8 +509,8 @@ export function BudgetCalculatorModal({
                     </div>
                   )}
 
-                  {/* Frosting Selection for Mini Bolo and Bolos Redondos */}
-                  {(selectedProduct?.slug === 'mini-bolo' || selectedProduct?.slug === 'bolos-redondos') && (
+                  {/* Frosting Selection for Mini Bolo only */}
+                  {selectedProduct?.slug === 'mini-bolo' && (
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
                         <span>Tipo de Cobertura</span>
