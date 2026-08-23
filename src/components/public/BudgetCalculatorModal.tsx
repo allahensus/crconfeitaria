@@ -477,6 +477,27 @@ export function BudgetCalculatorModal({
                     </select>
                   </div>
 
+                  {/* Secondary Filling (Optional) - Enabled for Bolos Redondos & Bolos Retangulares */}
+                  {(selectedProduct?.slug === 'bolos-redondos' || selectedProduct?.slug === 'bolos-retangulares') && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                        Segundo Recheio (Opcional)
+                      </label>
+                      <select
+                        value={filling2}
+                        onChange={(e) => setFilling2(e.target.value)}
+                        className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                      >
+                        <option value="">Nenhum (Somente 1 recheio)</option>
+                        {availableFillingsForProduct.map((f) => (
+                          <option key={f.id} value={f.name}>
+                            {f.name} ({f.category})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   {/* Kit Festa Buttercream Frosting Info */}
                   {selectedProduct?.slug === 'kit-festa-celebrar' && (
                     <div className="p-3 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] text-xs text-[#4A231A] font-semibold flex items-center justify-between">
