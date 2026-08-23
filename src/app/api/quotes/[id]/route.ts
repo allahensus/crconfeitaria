@@ -41,9 +41,27 @@ export async function PUT(
 
     // Handle Conversion to Order
     if (convertToOrder) {
-      const orderCount = await prisma.order.count();
       const year = new Date().getFullYear();
-      const orderNumber = `PED-${year}-${(orderCount + 1).toString().padStart(4, '0')}`;
+      const prefix = `PED-${year}-`;
+      const lastOrder = await prisma.order.findFirst({
+        where: { orderNumber: { startsWith: prefix } },
+        orderBy: { orderNumber: 'desc' },
+      });
+
+      let nextSeq = 1;
+      if (lastOrder?.orderNumber) {
+        const parts = lastOrder.orderNumber.split('-');
+        const lastSeq = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastSeq)) {
+          nextSeq = lastSeq + 1;
+        }
+      }
+
+      let orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+      while (await prisma.order.findUnique({ where: { orderNumber } })) {
+        nextSeq++;
+        orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+      }
 
       const deliveryDate = quote.eventDate || new Date(Date.now() + 86400000 * 3);
 

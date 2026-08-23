@@ -62,10 +62,28 @@ export async function POST(request: Request) {
       });
     }
 
-    // 2. Generate Order Number
-    const count = await prisma.order.count();
+    // 2. Generate Unique Order Number (PED-YYYY-XXXX)
     const year = new Date().getFullYear();
-    const orderNumber = `PED-${year}-${(count + 1).toString().padStart(4, '0')}`;
+    const prefix = `PED-${year}-`;
+    const lastOrder = await prisma.order.findFirst({
+      where: { orderNumber: { startsWith: prefix } },
+      orderBy: { orderNumber: 'desc' },
+    });
+
+    let nextSeq = 1;
+    if (lastOrder?.orderNumber) {
+      const parts = lastOrder.orderNumber.split('-');
+      const lastSeq = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
+
+    let orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+    while (await prisma.order.findUnique({ where: { orderNumber } })) {
+      nextSeq++;
+      orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+    }
 
     const parsedTotal = parseFloat(totalAmount);
     const order = await prisma.order.create({

@@ -153,9 +153,29 @@ export function BudgetCalculatorModal({
     }
   };
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [step]);
+
   const handleSubmitQuote = async () => {
-    if (!customerName.trim() || !customerWhatsapp.trim()) {
-      setErrorMsg('Por favor, informe seu nome e número do WhatsApp para receber a confirmação.');
+    if (!customerName.trim()) {
+      setErrorMsg('Por favor, informe seu Nome Completo para continuar.');
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
+      return;
+    }
+
+    const cleanWa = customerWhatsapp.replace(/\D/g, '');
+    if (!cleanWa || cleanWa.length < 10) {
+      setErrorMsg('Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).');
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
       return;
     }
 
@@ -216,7 +236,7 @@ export function BudgetCalculatorModal({
           : 'Pix Instantâneo (50% Sinal)';
 
       const isButtercream = frosting === 'Buttercream';
-      const link = generateWhatsAppLink('5511999999999', {
+      const link = data.whatsappUrl || generateWhatsAppLink('5511999999999', {
         quoteNumber: data.quote.quoteNumber,
         customerName,
         productName: selectedProduct?.name || 'Produto',
@@ -248,8 +268,8 @@ export function BudgetCalculatorModal({
       setStep(4);
 
       // Also try opening WhatsApp in new tab
-      if (data.whatsappUrl) {
-        window.open(data.whatsappUrl, '_blank');
+      if (link) {
+        window.open(link, '_blank');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao conectar ao servidor.');
@@ -331,7 +351,7 @@ export function BudgetCalculatorModal({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div ref={containerRef} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           
           {/* STEP 1: Product & Variation Selection */}
           {step === 1 && (
@@ -704,8 +724,13 @@ export function BudgetCalculatorModal({
                     type="text"
                     placeholder="Ex: Maria Silva"
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      if (errorMsg) setErrorMsg('');
+                    }}
+                    className={`w-full p-2.5 rounded-xl border text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none ${
+                      errorMsg && !customerName.trim() ? 'border-red-500 bg-red-50/50' : 'border-[#F2D7D0]'
+                    }`}
                   />
                 </div>
 
@@ -717,8 +742,13 @@ export function BudgetCalculatorModal({
                     type="text"
                     placeholder="Ex: 11999998888"
                     value={customerWhatsapp}
-                    onChange={(e) => setCustomerWhatsapp(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    onChange={(e) => {
+                      setCustomerWhatsapp(e.target.value);
+                      if (errorMsg) setErrorMsg('');
+                    }}
+                    className={`w-full p-2.5 rounded-xl border text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none ${
+                      errorMsg && customerWhatsapp.replace(/\D/g, '').length < 10 ? 'border-red-500 bg-red-50/50' : 'border-[#F2D7D0]'
+                    }`}
                   />
                 </div>
               </div>

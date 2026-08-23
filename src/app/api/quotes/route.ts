@@ -50,15 +50,31 @@ export async function POST(request: Request) {
       finalTotal,
     } = body;
 
-    if (!customerName || !customerWhatsapp || !productName) {
+    const trimmedName = (customerName || '').trim();
+    const cleanWhatsapp = (customerWhatsapp || '').replace(/\D/g, '');
+
+    if (!trimmedName) {
       return NextResponse.json(
-        { error: 'Nome, WhatsApp e Produto são obrigatórios.' },
+        { error: 'Por favor, informe seu Nome Completo.' },
+        { status: 400 }
+      );
+    }
+
+    if (!cleanWhatsapp || cleanWhatsapp.length < 10) {
+      return NextResponse.json(
+        { error: 'Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).' },
+        { status: 400 }
+      );
+    }
+
+    if (!productName) {
+      return NextResponse.json(
+        { error: 'Por favor, selecione um produto para o orçamento.' },
         { status: 400 }
       );
     }
 
     // 1. Find or create Customer with birthDate & LGPD consent
-    const cleanWhatsapp = customerWhatsapp.replace(/\D/g, '');
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
     let customer = await prisma.customer.findFirst({
@@ -88,13 +104,32 @@ export async function POST(request: Request) {
       });
     }
 
-    // 2. Generate Quote Number (ORC-YYYY-XXXX)
-    const count = await prisma.quote.count();
+    // 2. Generate Unique Quote Number (ORC-YYYY-XXXX) safely without count collision
     const year = new Date().getFullYear();
-    const quoteNumber = `ORC-${year}-${(count + 1).toString().padStart(4, '0')}`;
+    const prefix = `ORC-${year}-`;
+    const lastQuote = await prisma.quote.findFirst({
+      where: { quoteNumber: { startsWith: prefix } },
+      orderBy: { quoteNumber: 'desc' },
+    });
+
+    let nextSeq = 1;
+    if (lastQuote?.quoteNumber) {
+      const parts = lastQuote.quoteNumber.split('-');
+      const lastSeq = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
+
+    let quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+    while (await prisma.quote.findUnique({ where: { quoteNumber } })) {
+      nextSeq++;
+      quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+    }
 
     // 3. Create Quote with Items
     const parseEventDate = eventDate ? new Date(eventDate) : null;
+    const isValidEventDate = parseEventDate && !isNaN(parseEventDate.getTime());
     const qty = parseInt(quantity) || 1;
     const price = parseFloat(unitPrice) || 0;
     const tot = parseFloat(finalTotal) || price * qty;
@@ -105,7 +140,7 @@ export async function POST(request: Request) {
         customerId: customer.id,
         customerName,
         customerWhatsapp: cleanWhatsapp,
-        eventDate: parseEventDate && !isNaN(parseEventDate.getTime()) ? parseEventDate : null,
+        eventDate: isValidEventDate ? parseEventDate : null,
         themeNotes: themeNotes || null,
         subtotal: parseFloat(subtotal) || price * qty,
         extraTotal: parseFloat(extraTotal) || 0,
@@ -142,6 +177,7 @@ export async function POST(request: Request) {
     const bakeryWhatsapp = waSetting?.value || '5511999999999';
 
     // 5. Generate WhatsApp URL
+    const formattedEventDate = isValidEventDate ? parseEventDate.toLocaleDateString('pt-BR') : undefined;
     const whatsappUrl = generateWhatsAppLink(bakeryWhatsapp, {
       quoteNumber: quote.quoteNumber,
       customerName,
@@ -153,7 +189,7 @@ export async function POST(request: Request) {
       frosting,
       extras,
       quantity: qty,
-      eventDate: eventDate ? new Date(eventDate).toLocaleDateString('pt-BR') : undefined,
+      eventDate: formattedEventDate,
       themeNotes,
       finalTotal: tot,
     });
@@ -163,8 +199,11 @@ export async function POST(request: Request) {
       quote,
       whatsappUrl,
     }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating quote:', error);
-    return NextResponse.json({ error: 'Erro ao gerar orçamento.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Erro ao gerar orçamento.' },
+      { status: 500 }
+    );
   }
 }
