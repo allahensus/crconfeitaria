@@ -120,11 +120,11 @@ export function BudgetCalculatorModal({
   const finalTotal = subtotal;
 
   const availableFillingsForProduct = React.useMemo(() => {
-    if (selectedProduct?.slug === 'bento-cake') {
+    if (selectedProduct?.slug === 'bento-cake' || selectedProduct?.slug === 'kit-festa-celebrar') {
       return [
-        { id: 'bento-brigadeiro', name: 'Brigadeiro', category: 'Cardápio Bentô' },
-        { id: 'bento-cocada', name: 'Cocada', category: 'Cardápio Bentô' },
-        { id: 'bento-ninho', name: 'Ninho', category: 'Cardápio Bentô' },
+        { id: 'ninho', name: 'Ninho', category: 'Cardápio Especial' },
+        { id: 'cocada', name: 'Cocada', category: 'Cardápio Especial' },
+        { id: 'brigadeiro-gourmet', name: 'Brigadeiro gourmet', category: 'Cardápio Especial' },
       ];
     }
     if (selectedProduct?.slug === 'mini-bolo') {
@@ -142,6 +142,13 @@ export function BudgetCalculatorModal({
       setFilling1(availableFillingsForProduct[0].name);
     }
   }, [selectedProduct, availableFillingsForProduct]);
+
+  useEffect(() => {
+    if (selectedProduct?.slug === 'kit-festa-celebrar') {
+      setFrosting('Buttercream');
+      setFilling2('');
+    }
+  }, [selectedProduct]);
 
   const handleProductChange = (prodId: string) => {
     const prod = products.find((p) => p.id === prodId);
@@ -249,6 +256,8 @@ export function BudgetCalculatorModal({
         frosting: !isBiscoito ? frosting : undefined,
         extras: isBiscoito
           ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito | Pgto: ${paymentLabel}` : `Todos sem palito | Pgto: ${paymentLabel}`)
+          : selectedProduct?.slug === 'kit-festa-celebrar'
+          ? `Cobertura Buttercream (Incluso no Kit) | Pgto: ${paymentLabel}`
           : (isButtercream ? `Cobertura Buttercream (+R$ 20,00) | Pgto: ${paymentLabel}` : `Pgto: ${paymentLabel}`),
         quantity,
         eventDate: eventDate ? new Date(eventDate).toLocaleDateString('pt-BR') : undefined,
@@ -449,7 +458,7 @@ export function BudgetCalculatorModal({
                   {/* Primary Filling */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                      {selectedProduct?.slug === 'bento-cake'
+                      {selectedProduct?.slug === 'bento-cake' || selectedProduct?.slug === 'kit-festa-celebrar'
                         ? 'Recheio Exclusivo (1 Camada Generosa)'
                         : selectedProduct?.slug === 'mini-bolo'
                         ? 'Recheio Exclusivo (Mini Bolo)'
@@ -468,8 +477,8 @@ export function BudgetCalculatorModal({
                     </select>
                   </div>
 
-                  {/* Secondary Filling (Optional) - Hidden for Bentô Cake */}
-                  {selectedProduct?.slug !== 'bento-cake' && (
+                  {/* Secondary Filling (Optional) - Hidden for Bentô Cake & Kit Festa */}
+                  {selectedProduct?.slug !== 'bento-cake' && selectedProduct?.slug !== 'kit-festa-celebrar' && (
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
                         Segundo Recheio (Opcional)
@@ -489,7 +498,15 @@ export function BudgetCalculatorModal({
                     </div>
                   )}
 
-                  {/* Frosting Selection */}
+                  {/* Kit Festa Buttercream Frosting Info */}
+                  {selectedProduct?.slug === 'kit-festa-celebrar' && (
+                    <div className="p-3 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] text-xs text-[#4A231A] font-semibold flex items-center justify-between">
+                      <span>Tipo de Cobertura:</span>
+                      <span className="text-[#C27360] font-bold">✨ Cobertura em Buttercream (Inclusa no Kit)</span>
+                    </div>
+                  )}
+
+                  {/* Frosting Selection for Mini Bolo and Bolos Redondos */}
                   {(selectedProduct?.slug === 'mini-bolo' || selectedProduct?.slug === 'bolos-redondos') && (
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
