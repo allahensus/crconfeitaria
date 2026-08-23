@@ -12,6 +12,7 @@ interface BudgetCalculatorModalProps {
   initialVariation?: any;
   products: any[];
   fillings: any[];
+  whatsappNumber?: string;
 }
 
 export function BudgetCalculatorModal({
@@ -21,6 +22,7 @@ export function BudgetCalculatorModal({
   initialVariation,
   products,
   fillings,
+  whatsappNumber = '5512997594697',
 }: BudgetCalculatorModalProps) {
   const [step, setStep] = useState(1);
 
@@ -236,7 +238,7 @@ export function BudgetCalculatorModal({
           : 'Pix Instantâneo (50% Sinal)';
 
       const isButtercream = frosting === 'Buttercream';
-      const link = data.whatsappUrl || generateWhatsAppLink('5511999999999', {
+      const link = data.whatsappUrl || generateWhatsAppLink(whatsappNumber || '5512997594697', {
         quoteNumber: data.quote.quoteNumber,
         customerName,
         productName: selectedProduct?.name || 'Produto',

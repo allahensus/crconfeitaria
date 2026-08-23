@@ -9,7 +9,7 @@ interface ContactFooterProps {
 }
 
 export function ContactFooter({ settings }: ContactFooterProps) {
-  const whatsappNumber = settings?.whatsapp_number || '5511999999999';
+  const whatsappNumber = settings?.whatsapp_number || '5512997594697';
   const instagram = settings?.instagram || '@crconfeitaria__';
 
   return (

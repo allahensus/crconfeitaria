@@ -174,7 +174,7 @@ export async function POST(request: Request) {
     const waSetting = await prisma.setting.findUnique({
       where: { key: 'whatsapp_number' },
     });
-    const bakeryWhatsapp = waSetting?.value || '5511999999999';
+    const bakeryWhatsapp = waSetting?.value || '5512997594697';
 
     // 5. Generate WhatsApp URL
     const formattedEventDate = isValidEventDate ? parseEventDate.toLocaleDateString('pt-BR') : undefined;

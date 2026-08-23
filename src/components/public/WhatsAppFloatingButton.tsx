@@ -7,7 +7,7 @@ interface WhatsAppFloatingButtonProps {
   whatsappNumber?: string;
 }
 
-export function WhatsAppFloatingButton({ whatsappNumber = '5511999999999' }: WhatsAppFloatingButtonProps) {
+export function WhatsAppFloatingButton({ whatsappNumber = '5512997594697' }: WhatsAppFloatingButtonProps) {
   const cleanPhone = whatsappNumber.replace(/\D/g, '');
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
     'Olá! Gostaria de tirar dúvidas sobre os bolos e encomendar um orçamento!'

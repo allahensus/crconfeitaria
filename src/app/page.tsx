@@ -188,6 +188,7 @@ export default function PublicPage() {
         initialVariation={selectedVariationForModal}
         products={products}
         fillings={fillings}
+        whatsappNumber={settings.whatsapp_number}
       />
     </div>
   );

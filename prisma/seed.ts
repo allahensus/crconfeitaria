@@ -25,7 +25,7 @@ async function main() {
   // 2. Settings
   const settingsData = [
     { key: 'bakery_name', value: 'Cinthia Rodrigues - Confeitaria Artesanal' },
-    { key: 'whatsapp_number', value: '5511999999999' },
+    { key: 'whatsapp_number', value: '5512997594697' },
     { key: 'instagram', value: '@crconfeitaria__' },
     { key: 'address', value: 'São Paulo - SP' },
     { key: 'welcome_message', value: 'Olá! Seja bem-vinda à Confeitaria Cinthia Rodrigues. Monte seu orçamento ou fale conosco!' },

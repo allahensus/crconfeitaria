@@ -21,7 +21,7 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         if (data) {
           setBakeryName(data.bakery_name || 'Cinthia Rodrigues - Confeitaria Artesanal');
-          setWhatsappNumber(data.whatsapp_number || '5511999999999');
+          setWhatsappNumber(data.whatsapp_number || '5512997594697');
           setInstagram(data.instagram || '@crconfeitaria__');
           setAddress(data.address || 'São Paulo - SP');
           setWelcomeMessage(data.welcome_message || '');

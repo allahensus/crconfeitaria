@@ -10,7 +10,7 @@ interface NavbarProps {
   whatsappNumber?: string;
 }
 
-export function Navbar({ onOpenBudgetModal, whatsappNumber = '5511999999999' }: NavbarProps) {
+export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
