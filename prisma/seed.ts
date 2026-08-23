@@ -237,17 +237,30 @@ async function main() {
   });
 
   // 5. Official Fillings Options
+  // 5. Official Fillings Options (Full 20-flavor Menu)
   await prisma.fillingOption.deleteMany({}); // Reset to official menu fillings
 
   const fillings = [
-    { name: 'Brigadeiro Gourmet', category: 'Clássicos' },
+    { name: 'Alpino', category: 'Chocolates' },
+    { name: 'Beijinho com Abacaxi', category: 'Frutas & Coco' },
+    { name: 'Beijinho com Morangos', category: 'Frutas & Coco' },
+    { name: 'Brigadeiro Gourmet com Bombom Sonho de Valsa', category: 'Especiais' },
+    { name: 'Brigadeiro Gourmet com Bombom Ouro Branco', category: 'Especiais' },
+    { name: 'Brigadeiro Gourmet com Morangos', category: 'Frutas' },
+    { name: 'Brigadeiro Quatro Leites com Frutas Amarelas', category: 'Frutas' },
+    { name: 'Brigadeiro Quatro Leites com Frutas Vermelhas', category: 'Frutas' },
+    { name: 'Brigadeiro Quatro Leites com Morangos', category: 'Frutas' },
+    { name: 'Brigadeiro de Nutella com Nozes', category: 'Nobre' },
+    { name: 'Doce de Leite com Ameixa', category: 'Doce de Leite' },
+    { name: 'Doce de Leite com Compota de Abacaxi', category: 'Doce de Leite' },
+    { name: 'Doce de Leite com Coco', category: 'Doce de Leite' },
+    { name: 'Doce de Leite com Praliné de Nozes', category: 'Doce de Leite' },
     { name: 'Ninho', category: 'Clássicos' },
-    { name: 'Cocada', category: 'Especial' },
-    { name: 'Prestígio', category: 'Clássicos' },
-    { name: 'Doce de Leite com Coco', category: 'Tradicional' },
+    { name: 'Ninho com Abacaxi', category: 'Frutas' },
+    { name: 'Ninho com Morangos', category: 'Frutas' },
+    { name: 'Ninho Trufado', category: 'Clássicos' },
     { name: 'Ninho com Nutella', category: 'Gourmet' },
-    { name: 'Brigadeiro com Morango', category: 'Frutas' },
-    { name: 'Ninho com Morango', category: 'Frutas' },
+    { name: 'Prestígio', category: 'Clássicos' },
   ];
 
   for (const f of fillings) {
