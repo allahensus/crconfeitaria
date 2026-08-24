@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
 import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag } from 'lucide-react';
 
 export default function AdminQuotesPage() {
@@ -143,7 +143,7 @@ export default function AdminQuotesPage() {
                       <td className="p-4">
                         <div className="font-semibold text-[#4A231A]">{q.customerName}</div>
                         <a
-                          href={`https://wa.me/${q.customerWhatsapp}`}
+                          href={`https://wa.me/${formatWhatsappForUrl(q.customerWhatsapp)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="text-[11px] text-emerald-600 font-medium hover:underline flex items-center gap-1"

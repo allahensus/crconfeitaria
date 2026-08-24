@@ -36,6 +36,16 @@ export function formatDateTime(dateInput: Date | string | null | undefined): str
   }).format(date);
 }
 
+export function formatWhatsappForUrl(phone: string): string {
+  if (!phone) return '';
+  let digits = phone.replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.length === 10 || digits.length === 11) {
+    digits = '55' + digits;
+  }
+  return digits;
+}
+
 export function generateWhatsAppLink(
   phone: string,
   quote: {
@@ -54,7 +64,7 @@ export function generateWhatsAppLink(
     finalTotal: number;
   }
 ): string {
-  const cleanPhone = phone.replace(/\D/g, '');
+  const cleanPhone = formatWhatsappForUrl(phone);
 
   let text = `*SOLICITAÇÃO DE ORÇAMENTO*\n`;
   text += `*Confeitaria Cinthia Rodrigues*\n`;

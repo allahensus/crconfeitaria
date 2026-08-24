@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import { Users, Search, MessageCircle, Cake, Mail, ShieldCheck, Gift, Tag, X } from 'lucide-react';
+import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
+import { Users, Search, MessageCircle, Cake, Mail, ShieldCheck, Gift, Tag, X, Send, Sparkles } from 'lucide-react';
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -11,6 +11,11 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'birthdays'>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  // Promo modal state
+  const [promoCustomer, setPromoCustomer] = useState<any>(null);
+  const [promoType, setPromoType] = useState<'birthday' | 'catalog' | 'discount' | 'custom'>('catalog');
+  const [promoText, setPromoText] = useState('');
 
   const loadCustomers = async () => {
     try {
@@ -58,14 +63,42 @@ export default function AdminCustomersPage() {
     return matchesSearch;
   });
 
-  const sendBirthdayWish = (c: any) => {
-    const text = `🎉 *FELIZ ANIVERSÁRIO, ${c.name.split(' ')[0].toUpperCase()}!* 🎂🎈\n\nA Confeitaria Cinthia Rodrigues deseja a você um dia repleto de doçura, amor e momentos inesquecíveis!\n\nComo nosso presente especial de aniversário, preparamos um *cupom de 10% DE DESCONTO* na sua próxima encomenda de bolo ou biscoitos! 💕\n\nCupom: *NIVER10*\n\nQuer encomendar o seu bolo de aniversário com o desconto? É só responder essa mensagem! ✨`;
-    window.open(`https://wa.me/${c.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
+  const generatePromoTemplate = (type: 'birthday' | 'catalog' | 'discount' | 'custom', customerName: string) => {
+    const firstName = customerName ? customerName.split(' ')[0] : 'Cliente';
+    if (type === 'birthday') {
+      return `🎉 *FELIZ ANIVERSÁRIO, ${firstName.toUpperCase()}!* 🎂🎈\n\nA Confeitaria Cinthia Rodrigues deseja a você um dia repleto de doçura, amor e momentos inesquecíveis!\n\nComo nosso presente especial de aniversário, preparamos um *cupom de 10% DE DESCONTO* na sua próxima encomenda de bolo ou biscoitos! 💕\n\nCupom: *NIVER10*\n\nQuer encomendar o seu bolo de aniversário com o desconto? É só responder essa mensagem! ✨`;
+    }
+    if (type === 'catalog') {
+      return `✨ *NOVIDADES EXCLUSIVAS DA CONFEITARIA CINTHIA RODRIGUES!* 🎂\n\nOlá ${firstName}! Preparamos opções especiais no nosso cardápio de bolos artesanais e biscoitos decorados.\n\nVenha conferir nosso catálogo atualizado e monte seu orçamento online:\nhttps://confeitaria-cinthia.vercel.app/\n\nEstamos à disposição para deixar sua festa deliciosa! 💕`;
+    }
+    if (type === 'discount') {
+      return `🍰 *OFERTA ESPECIAL PARA VOCÊ, ${firstName.toUpperCase()}!* ✨\n\nOlá! Estamos com um desconto exclusivo de *15% OFF* para pedidos realizados esta semana na Confeitaria Cinthia Rodrigues.\n\nAproveite para garantir seu bolo personalizado ou biscoitos amanteigados com desconto!\n\nPara aproveitar, basta responder essa mensagem com o seu pedido! 💕`;
+    }
+    return `Olá ${firstName}! Tudo bem?\n\nPassando para mandar um carinho da Confeitaria Cinthia Rodrigues! 💕`;
   };
 
-  const sendPromoMsg = (c: any) => {
-    const text = `✨ *NOVIDADES EXCLUSIVAS DA CONFEITARIA CINTHIA RODRIGUES!* 🎂\n\nOlá ${c.name.split(' ')[0]}! Preparamos opções especiais no nosso cardápio de bolos artesanais e biscoitos decorados.\n\nVenha conferir nosso catálogo atualizado e monte seu orçamento online:\nhttps://confeitaria-cinthia.vercel.app/\n\nEstamos à disposição para deixar sua festa deliciosa! 💕`;
-    window.open(`https://wa.me/${c.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
+  const handleOpenPromoModal = (c: any, defaultType: 'birthday' | 'catalog' | 'discount' | 'custom' = 'catalog') => {
+    setPromoCustomer(c);
+    setPromoType(defaultType);
+    setPromoText(generatePromoTemplate(defaultType, c.name));
+  };
+
+  const handleSelectPromoType = (type: 'birthday' | 'catalog' | 'discount' | 'custom') => {
+    setPromoType(type);
+    if (promoCustomer) {
+      setPromoText(generatePromoTemplate(type, promoCustomer.name));
+    }
+  };
+
+  const handleSendWhatsAppPromo = () => {
+    if (!promoCustomer) return;
+    const cleanPhone = formatWhatsappForUrl(promoCustomer.whatsapp);
+    if (!cleanPhone) {
+      alert('Número de WhatsApp inválido.');
+      return;
+    }
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(promoText)}`, '_blank');
+    setPromoCustomer(null);
   };
 
   return (
@@ -147,7 +180,7 @@ export default function AdminCustomersPage() {
                     </td>
                     <td className="p-4 space-y-0.5">
                       <a
-                        href={`https://wa.me/${c.whatsapp}`}
+                        href={`https://wa.me/${formatWhatsappForUrl(c.whatsapp)}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-emerald-600 font-medium hover:underline flex items-center gap-1"
@@ -189,14 +222,14 @@ export default function AdminCustomersPage() {
                     <td className="p-4 text-right space-x-1.5">
                       {isBirthdayThisMonth(c.birthDate) && (
                         <button
-                          onClick={() => sendBirthdayWish(c)}
+                          onClick={() => handleOpenPromoModal(c, 'birthday')}
                           className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-sm inline-flex items-center gap-1"
                         >
                           <Gift className="w-3.5 h-3.5" /> Enviar Parabéns
                         </button>
                       )}
                       <button
-                        onClick={() => sendPromoMsg(c)}
+                        onClick={() => handleOpenPromoModal(c, 'catalog')}
                         className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm inline-flex items-center gap-1"
                       >
                         <Tag className="w-3.5 h-3.5" /> Promoção
@@ -212,6 +245,93 @@ export default function AdminCustomersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Promo Dispatch Modal */}
+        {promoCustomer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-[#F2D7D0] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-[#F2D7D0]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#C27360] text-white flex items-center justify-center">
+                    <Tag className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-lg text-[#4A231A]">Disparar Promoção no WhatsApp</h3>
+                    <p className="text-xs text-[#645451]">Para: {promoCustomer.name} (+{formatWhatsappForUrl(promoCustomer.whatsapp)})</p>
+                  </div>
+                </div>
+                <button onClick={() => setPromoCustomer(null)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Preset Model Selectors */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                  Escolha um Modelo de Mensagem:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'catalog', label: '📖 Novidades Cardápio' },
+                    { id: 'birthday', label: '🎂 Cupom Aniversário' },
+                    { id: 'discount', label: '🏷️ Oferta Especial 15%' },
+                    { id: 'custom', label: '✍️ Mensagem Livre' },
+                  ].map((typeItem) => (
+                    <button
+                      key={typeItem.id}
+                      type="button"
+                      onClick={() => handleSelectPromoType(typeItem.id as any)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all text-center ${
+                        promoType === typeItem.id
+                          ? 'border-[#C27360] bg-[#FDF7F6] text-[#4A231A] ring-2 ring-[#C27360]/30 shadow-sm'
+                          : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FAF6F4]'
+                      }`}
+                    >
+                      {typeItem.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Text Area (Editable) */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1.5 flex items-center justify-between">
+                  <span>Texto da Mensagem (Editável)</span>
+                  <span className="text-[10px] text-[#C27360] font-semibold">Altere como desejar antes de enviar</span>
+                </label>
+                <textarea
+                  rows={7}
+                  value={promoText}
+                  onChange={(e) => setPromoText(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-[#FAF6F4] text-xs text-[#4A231A] font-sans focus:ring-2 focus:ring-[#C27360] outline-none leading-relaxed"
+                  placeholder="Escreva aqui a promoção ou mensagem..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPromoCustomer(null)}
+                  className="flex-1 py-3 rounded-xl border border-[#F2D7D0] text-[#4A231A] font-bold text-xs hover:bg-[#FAF6F4]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendWhatsAppPromo}
+                  className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  Enviar via WhatsApp
+                </button>
+              </div>
+
+            </div>
           </div>
         )}
 
