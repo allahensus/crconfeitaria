@@ -484,6 +484,16 @@ export function BudgetCalculatorModal({
                         </option>
                       ))}
                     </select>
+                    
+                    {/* Warm & Professional Transparency Note */}
+                    <div className="mt-2.5 p-3 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-1">
+                      <div className="font-bold text-[#A75644] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                        <span>✨ Transparência & Qualidade Artesanal</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-[#645451]">
+                        Os valores apresentados são uma estimativa com nossa base clássica. Recheios especiais com <strong>frutas frescas, nozes praliné ou chocolates nobres</strong> passam por uma rápida confirmação no WhatsApp para garantirmos a máxima qualidade da sua comemoração! 💕
+                      </p>
+                    </div>
                   </div>
 
                   {/* Secondary Filling (Optional) - Enabled for Bolos Retangulares */}

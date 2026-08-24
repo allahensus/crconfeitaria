@@ -160,7 +160,17 @@ export default function PublicPage() {
             ))}
           </div>
 
-          <div className="mt-8 text-center">
+          {/* Warm & Professional Transparency Note */}
+          <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm text-center space-y-1">
+            <h4 className="text-xs uppercase font-bold text-[#A75644] tracking-wider">
+              ✨ Transparência & Carinho com Nossos Clientes
+            </h4>
+            <p className="text-xs text-[#645451] leading-relaxed">
+              Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento! 💕
+            </p>
+          </div>
+
+          <div className="mt-6 text-center">
             <button
               onClick={() => handleOpenModal()}
               className="px-8 py-3 rounded-full bg-[#C27360] text-white font-bold text-sm shadow-blush hover:bg-[#A75644] transition-all"
