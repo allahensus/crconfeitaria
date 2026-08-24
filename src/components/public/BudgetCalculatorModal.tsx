@@ -151,12 +151,18 @@ export function BudgetCalculatorModal({
       setFrosting('Chantily');
       setFilling2('');
     }
+    if (selectedProduct?.slug !== 'biscoitos-amanteigados') {
+      setQuantity(1);
+    }
   }, [selectedProduct]);
 
   const handleProductChange = (prodId: string) => {
     const prod = products.find((p) => p.id === prodId);
     if (prod) {
       setSelectedProduct(prod);
+      if (prod.slug !== 'biscoitos-amanteigados') {
+        setQuantity(1);
+      }
       if (prod.variations && prod.variations.length > 0) {
         setSelectedVariation(prod.variations[0]);
       } else {
@@ -949,7 +955,12 @@ export function BudgetCalculatorModal({
               <div className="flex justify-between items-center text-xs text-[#645451]">
                 <span>Cobertura:</span>
                 <span className="font-semibold text-[#4A231A]">
-                  {frosting} {frosting === 'Buttercream' ? '(+R$ 20,00)' : '(Incluso)'}
+                  {frosting}{' '}
+                  {frosting === 'Buttercream'
+                    ? selectedProduct?.slug === 'kit-festa-celebrar'
+                      ? '(Incluso no Kit)'
+                      : '(+R$ 20,00)'
+                    : '(Incluso)'}
                 </span>
               </div>
             )}
