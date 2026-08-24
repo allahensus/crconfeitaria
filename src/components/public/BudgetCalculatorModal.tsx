@@ -112,6 +112,25 @@ export function BudgetCalculatorModal({
     }
   }
 
+  let minRequiredBiscoitos = 1;
+  if (isBiscoito) {
+    if (selectedVariation?.name?.includes('4cm')) minRequiredBiscoitos = 20;
+    else if (selectedVariation?.name?.includes('6cm')) minRequiredBiscoitos = 10;
+    else if (selectedVariation?.name?.includes('9cm')) minRequiredBiscoitos = 4;
+  }
+
+  const handleNextStep = () => {
+    if (step === 2 && isBiscoito) {
+      const totalBiscoitos = noPalitoCount + palitoCount;
+      if (totalBiscoitos < minRequiredBiscoitos) {
+        setErrorMsg(`⚠️ O pedido mínimo para biscoitos de ${selectedVariation?.name || 'este tamanho'} é de ${minRequiredBiscoitos} unidades. Adicione mais ${minRequiredBiscoitos - totalBiscoitos} unidade(s).`);
+        return;
+      }
+    }
+    setErrorMsg('');
+    setStep(step + 1);
+  };
+
   const effectiveQuantity = isBiscoito ? (noPalitoCount + palitoCount) : quantity;
   const palitoTotalCost = (isBiscoito && isPalitoAllowed) ? (palitoCount * 2.0) : 0;
   const subtotal = isBiscoito
@@ -200,6 +219,15 @@ export function BudgetCalculatorModal({
     if (!lgpdConsent) {
       setErrorMsg('Por favor, aceite os termos de proteção de dados (LGPD) para prosseguir.');
       return;
+    }
+
+    if (isBiscoito) {
+      const totalBiscoitos = noPalitoCount + palitoCount;
+      if (totalBiscoitos < minRequiredBiscoitos) {
+        setErrorMsg(`⚠️ O pedido mínimo para biscoitos de ${selectedVariation?.name || 'este tamanho'} é de ${minRequiredBiscoitos} unidades.`);
+        setStep(2);
+        return;
+      }
     }
 
     setErrorMsg('');
@@ -608,8 +636,13 @@ export function BudgetCalculatorModal({
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => setNoPalitoCount(Math.max(0, noPalitoCount - 1))}
-                            className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                            onClick={() => setNoPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - palitoCount), noPalitoCount - 1))}
+                            disabled={(noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)}
+                            className={`w-9 h-9 rounded-xl font-bold transition-colors ${
+                              (noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
+                                : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                            }`}
                           >
                             -
                           </button>
@@ -640,8 +673,13 @@ export function BudgetCalculatorModal({
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(Math.max(0, palitoCount - 1))}
-                              className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                              onClick={() => setPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - noPalitoCount), palitoCount - 1))}
+                              disabled={palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos}
+                              className={`w-9 h-9 rounded-xl font-bold transition-colors ${
+                                palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos
+                                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
+                                  : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                              }`}
                             >
                               -
                             </button>
@@ -670,6 +708,12 @@ export function BudgetCalculatorModal({
                           {noPalitoCount + palitoCount} unidades ({noPalitoCount} sem palito e {palitoCount} com palito)
                         </span>
                       </div>
+
+                      {(noPalitoCount + palitoCount) <= minRequiredBiscoitos && (
+                        <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 font-semibold flex items-center gap-1.5">
+                          <span>🔒 Trava de Mínimo: O pedido mínimo para este tamanho ({selectedVariation?.name}) é de {minRequiredBiscoitos} unidades.</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1046,7 +1090,7 @@ export function BudgetCalculatorModal({
             {step < 3 ? (
               <button
                 type="button"
-                onClick={() => setStep(step + 1)}
+                onClick={handleNextStep}
                 className="px-6 py-2.5 rounded-full bg-[#C27360] text-white text-xs font-bold hover:bg-[#A75644] transition-colors flex items-center gap-1 shadow-sm"
               >
                 Próximo Passo <ChevronRight className="w-4 h-4" />
