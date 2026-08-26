@@ -19,6 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
 
 # vercel
@@ -26,3 +27,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# test database
+prisma/test.db
+
+# data migration export (contains real customer data)
+prisma/data-export.json
+
+# local MCP server config
+.mcp.json

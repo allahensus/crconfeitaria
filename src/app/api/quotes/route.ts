@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 import { generateWhatsAppLink } from '@/lib/utils';
 
@@ -11,8 +12,9 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
-    const quotes = await prisma.quote.findMany({
+    const quotes = await db.quote.findMany({
       include: {
         items: true,
         customer: true,
@@ -29,6 +31,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
     const body = await request.json();
     const {
       customerName,
@@ -40,7 +48,6 @@ export async function POST(request: Request) {
       variation,
       cakeBase,
       filling1,
-      filling2,
       frosting,
       extras,
       quantity,
@@ -76,16 +83,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Find or create Customer with birthDate & LGPD consent
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
-    let customer = await prisma.customer.findFirst({
+    let customer = await db.customer.findFirst({
       where: { whatsapp: cleanWhatsapp },
     });
 
     if (!customer) {
-      customer = await prisma.customer.create({
+      customer = await db.customer.create({
         data: {
+          organizationId: organization.id,
           name: customerName,
           whatsapp: cleanWhatsapp,
           email: customerEmail || null,
@@ -94,8 +101,7 @@ export async function POST(request: Request) {
         },
       });
     } else {
-      // Update customer info if provided
-      await prisma.customer.update({
+      await db.customer.update({
         where: { id: customer.id },
         data: {
           name: customerName,
@@ -106,10 +112,9 @@ export async function POST(request: Request) {
       });
     }
 
-    // 2. Generate Unique Quote Number (ORC-YYYY-XXXX) safely without count collision
     const year = new Date().getFullYear();
     const prefix = `ORC-${year}-`;
-    const lastQuote = await prisma.quote.findFirst({
+    const lastQuote = await db.quote.findFirst({
       where: { quoteNumber: { startsWith: prefix } },
       orderBy: { quoteNumber: 'desc' },
     });
@@ -124,20 +129,24 @@ export async function POST(request: Request) {
     }
 
     let quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-    while (await prisma.quote.findUnique({ where: { quoteNumber } })) {
+    while (
+      await db.quote.findUnique({
+        where: { organizationId_quoteNumber: { organizationId: organization.id, quoteNumber } },
+      })
+    ) {
       nextSeq++;
       quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
     }
 
-    // 3. Create Quote with Items
     const parseEventDate = eventDate ? new Date(eventDate) : null;
     const isValidEventDate = parseEventDate && !isNaN(parseEventDate.getTime());
     const qty = parseInt(quantity) || 1;
     const price = parseFloat(unitPrice) || 0;
     const tot = parseFloat(finalTotal) || price * qty;
 
-    const quote = await prisma.quote.create({
+    const quote = await db.quote.create({
       data: {
+        organizationId: organization.id,
         quoteNumber,
         customerId: customer.id,
         customerName,
@@ -157,7 +166,6 @@ export async function POST(request: Request) {
               variation: variation || null,
               cakeBase: cakeBase || null,
               filling1: filling1 || null,
-              filling2: filling2 || null,
               frosting: frosting || null,
               extras: extras || null,
               quantity: qty,
@@ -172,13 +180,11 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Fetch bakery WhatsApp number from settings
-    const waSetting = await prisma.setting.findUnique({
-      where: { key: 'whatsapp_number' },
+    const waSetting = await db.setting.findUnique({
+      where: { organizationId_key: { organizationId: organization.id, key: 'whatsapp_number' } },
     });
     const bakeryWhatsapp = waSetting?.value || '5512997594697';
 
-    // 5. Generate WhatsApp URL
     const formattedEventDate = isValidEventDate ? parseEventDate.toLocaleDateString('pt-BR') : undefined;
     const whatsappUrl = generateWhatsAppLink(bakeryWhatsapp, {
       quoteNumber: quote.quoteNumber,
@@ -187,7 +193,6 @@ export async function POST(request: Request) {
       variation,
       cakeBase,
       filling1,
-      filling2,
       frosting,
       extras,
       quantity: qty,

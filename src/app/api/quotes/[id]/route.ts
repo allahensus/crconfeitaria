@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
 export async function GET(
@@ -7,8 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
     const { id } = await params;
-    const quote = await prisma.quote.findUnique({
+    const quote = await db.quote.findUnique({
       where: { id },
       include: { items: true, customer: true, order: true },
     });
@@ -27,23 +34,23 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
     const body = await request.json();
     const { status, convertToOrder } = body;
 
-    const quote = await prisma.quote.findUnique({
+    const quote = await db.quote.findUnique({
       where: { id },
       include: { items: true, customer: true },
     });
 
     if (!quote) return NextResponse.json({ error: 'Orçamento não encontrado' }, { status: 404 });
 
-    // Handle Conversion to Order
     if (convertToOrder) {
       const year = new Date().getFullYear();
       const prefix = `PED-${year}-`;
-      const lastOrder = await prisma.order.findFirst({
+      const lastOrder = await db.order.findFirst({
         where: { orderNumber: { startsWith: prefix } },
         orderBy: { orderNumber: 'desc' },
       });
@@ -58,15 +65,20 @@ export async function PUT(
       }
 
       let orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-      while (await prisma.order.findUnique({ where: { orderNumber } })) {
+      while (
+        await db.order.findUnique({
+          where: { organizationId_orderNumber: { organizationId: session.organizationId, orderNumber } },
+        })
+      ) {
         nextSeq++;
         orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
       }
 
       const deliveryDate = quote.eventDate || new Date(Date.now() + 86400000 * 3);
 
-      const newOrder = await prisma.order.create({
+      const newOrder = await db.order.create({
         data: {
+          organizationId: session.organizationId,
           orderNumber,
           quoteId: quote.id,
           customerId: quote.customerId,
@@ -84,7 +96,6 @@ export async function PUT(
               variationName: item.variation,
               cakeBase: item.cakeBase,
               filling1: item.filling1,
-              filling2: item.filling2,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               totalPrice: item.totalPrice,
@@ -93,9 +104,8 @@ export async function PUT(
         },
       });
 
-      // Update customer metrics
       if (quote.customerId) {
-        await prisma.customer.update({
+        await db.customer.update({
           where: { id: quote.customerId },
           data: {
             ordersCount: { increment: 1 },
@@ -104,8 +114,7 @@ export async function PUT(
         });
       }
 
-      // Mark quote as CONVERTED
-      const updatedQuote = await prisma.quote.update({
+      const updatedQuote = await db.quote.update({
         where: { id },
         data: { status: 'CONVERTED' },
         include: { items: true, order: true },
@@ -119,7 +128,7 @@ export async function PUT(
       });
     }
 
-    const updatedQuote = await prisma.quote.update({
+    const updatedQuote = await db.quote.update({
       where: { id },
       data: { status: status || quote.status },
       include: { items: true },
@@ -139,9 +148,10 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
-    await prisma.quote.delete({ where: { id } });
+    await db.quote.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao excluir orçamento' }, { status: 500 });

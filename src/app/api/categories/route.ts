@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 import { slugify } from '@/lib/utils';
 
 export async function GET() {
   try {
-    const categories = await prisma.category.findMany({
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
+    const categories = await db.category.findMany({
       orderBy: { order: 'asc' },
       include: {
         _count: {
@@ -25,6 +32,7 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const { name, description, order } = await request.json();
     if (!name) {
@@ -32,12 +40,13 @@ export async function POST(request: Request) {
     }
 
     let slug = slugify(name);
-    const category = await prisma.category.create({
+    const category = await db.category.create({
       data: {
         name,
         slug,
         description: description || null,
         order: order !== undefined ? parseInt(order) : 0,
+        organizationId: session.organizationId,
       },
     });
 

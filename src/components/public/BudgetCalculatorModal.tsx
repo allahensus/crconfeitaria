@@ -31,7 +31,6 @@ export function BudgetCalculatorModal({
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [cakeBase, setCakeBase] = useState('Baunilha');
   const [filling1, setFilling1] = useState('');
-  const [filling2, setFilling2] = useState(''); // Default empty = 1 recheio único
   const [frosting, setFrosting] = useState('Chantily');
   const [noPalitoCount, setNoPalitoCount] = useState(4); // Biscoitos Sem Palito
   const [palitoCount, setPalitoCount] = useState(0); // Biscoitos Com Palito
@@ -55,12 +54,32 @@ export function BudgetCalculatorModal({
   const isBiscoito = selectedProduct?.slug === 'biscoitos-amanteigados';
   const isPalitoAllowed = isBiscoito && (selectedVariation?.name?.includes('6cm') || selectedVariation?.name?.includes('9cm'));
 
+  function getBiscoitoStepConfig(variationName?: string): { min: number; max: number; step: number; secondTier?: number } {
+    if (variationName?.includes('4cm')) return { min: 20, max: 50, step: 5 };
+    if (variationName?.includes('6cm')) return { min: 10, max: 20, step: 2 };
+    if (variationName?.includes('9cm')) return { min: 4, max: 20, step: 2, secondTier: 10 };
+    return { min: 1, max: 999, step: 1 };
+  }
+
+  function nextBiscoitoQty(current: number, config: ReturnType<typeof getBiscoitoStepConfig>, direction: 1 | -1): number {
+    if (direction === 1) {
+      if (current <= 0) return config.min;
+      if (config.secondTier && current < config.secondTier) return config.secondTier;
+      return Math.min(config.max, current + config.step);
+    }
+    if (current <= config.min) return 0;
+    if (config.secondTier && current === config.secondTier) return config.min;
+    if (config.secondTier && current > config.secondTier) return Math.max(config.secondTier, current - config.step);
+    return Math.max(config.min, current - config.step);
+  }
+
+  const biscoitoStepConfig = getBiscoitoStepConfig(selectedVariation?.name);
+
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setSubmittedQuote(null);
       setErrorMsg('');
-      setFilling2(''); // 1 recheio único por padrão
     }
     if (initialProduct) {
       setSelectedProduct(initialProduct);
@@ -81,10 +100,7 @@ export function BudgetCalculatorModal({
 
   useEffect(() => {
     if (selectedVariation && isBiscoito) {
-      let minSemPalito = 1;
-      if (selectedVariation.name?.includes('4cm')) minSemPalito = 20;
-      else if (selectedVariation.name?.includes('6cm')) minSemPalito = 10;
-      else if (selectedVariation.name?.includes('9cm')) minSemPalito = 4;
+      const minSemPalito = getBiscoitoStepConfig(selectedVariation.name).min;
       setNoPalitoCount(minSemPalito);
       setPalitoCount(0);
       setQuantity(minSemPalito);
@@ -112,12 +128,7 @@ export function BudgetCalculatorModal({
     }
   }
 
-  let minRequiredBiscoitos = 1;
-  if (isBiscoito) {
-    if (selectedVariation?.name?.includes('4cm')) minRequiredBiscoitos = 20;
-    else if (selectedVariation?.name?.includes('6cm')) minRequiredBiscoitos = 10;
-    else if (selectedVariation?.name?.includes('9cm')) minRequiredBiscoitos = 4;
-  }
+  const minRequiredBiscoitos = biscoitoStepConfig.min;
 
   const handleNextStep = () => {
     if (step === 2 && isBiscoito) {
@@ -165,10 +176,8 @@ export function BudgetCalculatorModal({
   useEffect(() => {
     if (selectedProduct?.slug === 'kit-festa-celebrar') {
       setFrosting('Buttercream');
-      setFilling2('');
     } else if (selectedProduct?.slug === 'bolos-redondos') {
       setFrosting('Chantily');
-      setFilling2('');
     }
     if (selectedProduct?.slug !== 'biscoitos-amanteigados') {
       setQuantity(1);
@@ -241,7 +250,6 @@ export function BudgetCalculatorModal({
         variation: selectedVariation ? selectedVariation.name : null,
         cakeBase: !isBiscoito ? cakeBase : null,
         filling1: !isBiscoito ? filling1 : null,
-        filling2: !isBiscoito && filling2 ? filling2 : null,
         frosting: !isBiscoito ? frosting : null,
         extras: isBiscoito
           ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito` : 'Todos sem palito')
@@ -289,7 +297,6 @@ export function BudgetCalculatorModal({
         variation: selectedVariation?.name,
         cakeBase: !isBiscoito ? cakeBase : undefined,
         filling1: !isBiscoito ? filling1 : undefined,
-        filling2: !isBiscoito && filling2 ? filling2 : undefined,
         frosting: !isBiscoito ? frosting : undefined,
         extras: isBiscoito
           ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito | Pgto: ${paymentLabel}` : `Todos sem palito | Pgto: ${paymentLabel}`)
@@ -349,7 +356,6 @@ export function BudgetCalculatorModal({
     if (!isBiscoito) {
       text += `• *Massa:* ${cakeBase}\n`;
       text += `• *Recheio Principal:* ${filling1}\n`;
-      if (filling2) text += `• *Segundo Recheio:* ${filling2}\n`;
       text += `• *Cobertura:* ${frosting}\n`;
     }
 
@@ -524,27 +530,6 @@ export function BudgetCalculatorModal({
                     </div>
                   </div>
 
-                  {/* Secondary Filling (Optional) - Enabled for Bolos Retangulares */}
-                  {selectedProduct?.slug === 'bolos-retangulares' && (
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                        Segundo Recheio (Opcional)
-                      </label>
-                      <select
-                        value={filling2}
-                        onChange={(e) => setFilling2(e.target.value)}
-                        className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
-                      >
-                        <option value="">Nenhum (Somente 1 recheio)</option>
-                        {availableFillingsForProduct.map((f) => (
-                          <option key={f.id} value={f.name}>
-                            {f.name} ({f.category})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
                   {/* Frosting Selection for Kit Festa */}
                   {selectedProduct?.slug === 'kit-festa-celebrar' && (
                     <div>
@@ -618,7 +603,7 @@ export function BudgetCalculatorModal({
                         🍪 Escolha a Quantidade de Biscoitos ({selectedVariation?.name || 'Personalizados'})
                       </h4>
                       <p className="text-xs text-[#645451]">
-                        Escolha livremente a quantidade de biscoitos **Sem Palito** e **Com Palito** no mesmo orçamento:
+                        Escolha a quantidade de biscoitos **Sem Palito** e **Com Palito** no mesmo orçamento — as quantidades seguem nossas faixas de produção (de {biscoitoStepConfig.step} em {biscoitoStepConfig.step} unidades):
                       </p>
                     </div>
 
@@ -636,7 +621,7 @@ export function BudgetCalculatorModal({
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => setNoPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - palitoCount), noPalitoCount - 1))}
+                            onClick={() => setNoPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - palitoCount), nextBiscoitoQty(noPalitoCount, biscoitoStepConfig, -1)))}
                             disabled={(noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)}
                             className={`w-9 h-9 rounded-xl font-bold transition-colors ${
                               (noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)
@@ -651,8 +636,13 @@ export function BudgetCalculatorModal({
                           </span>
                           <button
                             type="button"
-                            onClick={() => setNoPalitoCount(noPalitoCount + 1)}
-                            className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                            onClick={() => setNoPalitoCount(nextBiscoitoQty(noPalitoCount, biscoitoStepConfig, 1))}
+                            disabled={noPalitoCount >= biscoitoStepConfig.max}
+                            className={`w-9 h-9 rounded-xl font-bold transition-colors ${
+                              noPalitoCount >= biscoitoStepConfig.max
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
+                                : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                            }`}
                           >
                             +
                           </button>
@@ -673,7 +663,7 @@ export function BudgetCalculatorModal({
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - noPalitoCount), palitoCount - 1))}
+                              onClick={() => setPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - noPalitoCount), nextBiscoitoQty(palitoCount, biscoitoStepConfig, -1)))}
                               disabled={palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos}
                               className={`w-9 h-9 rounded-xl font-bold transition-colors ${
                                 palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos
@@ -688,8 +678,13 @@ export function BudgetCalculatorModal({
                             </span>
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(palitoCount + 1)}
-                              className="w-9 h-9 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0] transition-colors"
+                              onClick={() => setPalitoCount(nextBiscoitoQty(palitoCount, biscoitoStepConfig, 1))}
+                              disabled={palitoCount >= biscoitoStepConfig.max}
+                              className={`w-9 h-9 rounded-xl font-bold transition-colors ${
+                                palitoCount >= biscoitoStepConfig.max
+                                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
+                                  : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                              }`}
                             >
                               +
                             </button>
@@ -700,6 +695,25 @@ export function BudgetCalculatorModal({
                           ℹ️ Opção no palito disponível apenas para os tamanhos de 6cm e 9cm.
                         </div>
                       )}
+
+                      {/* Sobre os Biscoitos — Informações Importantes */}
+                      <div className="p-3.5 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-2">
+                        <div className="font-bold text-[#A75644] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                          <span>🍪 Sobre os Nossos Biscoitos</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                          Amanteigados, sabor baunilha, decorados à mão com glacê real — <strong>100% artesanais</strong>, feitos um a um com muito amor e dedicação.
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                          📅 <strong>Validade:</strong> 30 dias.
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                          🌡️ <strong>Como armazenar:</strong> não podem ir à geladeira nem entrar em contato com umidade ou água. Mantenha sempre em temperatura ambiente.
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                          🌾 <strong>Ingredientes:</strong> ovo, manteiga, derivados de leite, farinha de trigo, açúcar, corante e essência de baunilha. Contém glúten e não é indicado para quem tem alergia ou intolerância a algum desses ingredientes.
+                        </p>
+                      </div>
 
                       {/* Live Summary Box */}
                       <div className="p-3 bg-gradient-to-r from-[#FDF7F6] to-[#F9ECE9] rounded-xl border border-[#F2D7D0] text-xs font-bold text-[#4A231A] flex items-center justify-between">

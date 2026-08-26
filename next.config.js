@@ -4,10 +4,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  outputFileTracingIncludes: {
-    '/api/**/*': ['./prisma/dev.db'],
-    '/*': ['./prisma/dev.db'],
-  },
 };
 
 module.exports = nextConfig;

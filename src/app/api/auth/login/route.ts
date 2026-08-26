@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { createSession } from '@/lib/auth';
+import { getCurrentOrganization } from '@/lib/tenant';
+import { userBelongsToOrganization } from '@/lib/tenant-auth';
 
 export async function POST(request: Request) {
   try {
@@ -14,11 +16,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json(
+        { error: 'Loja não encontrada.' },
+        { status: 404 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !userBelongsToOrganization(user, organization.id)) {
       return NextResponse.json(
         { error: 'Credenciais inválidas.' },
         { status: 401 }
@@ -38,6 +48,7 @@ export async function POST(request: Request) {
       email: user.email,
       name: user.name,
       role: user.role,
+      organizationId: user.organizationId,
     });
 
     return NextResponse.json({

@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { searchParams } = new URL(request.url);
-    const range = searchParams.get('range') || 'month'; // today, week, month, year, all
+    const range = searchParams.get('range') || 'month';
 
     const now = new Date();
     let startDate = new Date();
@@ -22,11 +23,10 @@ export async function GET(request: Request) {
     } else if (range === 'year') {
       startDate = new Date(now.getFullYear(), 0, 1);
     } else {
-      startDate = new Date(0); // All time
+      startDate = new Date(0);
     }
 
-    // Transactions in date range
-    const transactions = await prisma.financialTransaction.findMany({
+    const transactions = await db.financialTransaction.findMany({
       where: {
         date: { gte: startDate }
       },
@@ -37,14 +37,14 @@ export async function GET(request: Request) {
       }
     });
 
-    const expenses = await prisma.expense.findMany({
+    const expenses = await db.expense.findMany({
       where: {
         date: { gte: startDate }
       },
       orderBy: { date: 'desc' }
     });
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: {
         createdAt: { gte: startDate }
       }
@@ -60,8 +60,7 @@ export async function GET(request: Request) {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Accounts receivable (Total order amounts - Paid amounts for active orders)
-    const activeOrders = await prisma.order.findMany({
+    const activeOrders = await db.order.findMany({
       where: {
         status: { notIn: ['ENTREGUE', 'CANCELADO'] }
       }
@@ -104,6 +103,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { type, description, category, amount, paymentMethod, date, notes } = body;
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     const parsedDate = date ? new Date(date) : new Date();
 
     if (type === 'DESPESA') {
-      const expense = await prisma.expense.create({
+      const expense = await db.expense.create({
         data: {
           description,
           category,
@@ -124,10 +124,11 @@ export async function POST(request: Request) {
           paymentMethod: paymentMethod || 'Pix',
           date: parsedDate,
           notes: notes || null,
+          organizationId: session.organizationId,
         }
       });
 
-      await prisma.financialTransaction.create({
+      await db.financialTransaction.create({
         data: {
           type: 'DESPESA',
           amount: parsedAmount,
@@ -135,18 +136,20 @@ export async function POST(request: Request) {
           description,
           date: parsedDate,
           expenseId: expense.id,
+          organizationId: session.organizationId,
         }
       });
 
       return NextResponse.json(expense, { status: 201 });
     } else {
-      const transaction = await prisma.financialTransaction.create({
+      const transaction = await db.financialTransaction.create({
         data: {
           type: 'RECEITA',
           amount: parsedAmount,
           category,
           description,
           date: parsedDate,
+          organizationId: session.organizationId,
         }
       });
 

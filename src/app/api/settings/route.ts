@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const settings = await prisma.setting.findMany();
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
+    const settings = await db.setting.findMany();
     const settingsObject: Record<string, string> = {};
     settings.forEach((s) => {
       settingsObject[s.key] = s.value;
@@ -21,15 +28,16 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
-    const body = await request.json(); // Record<string, string>
+    const body = await request.json();
 
     for (const [key, value] of Object.entries(body)) {
       if (typeof value === 'string') {
-        await prisma.setting.upsert({
-          where: { key },
+        await db.setting.upsert({
+          where: { organizationId_key: { organizationId: session.organizationId, key } },
           update: { value },
-          create: { key, value },
+          create: { organizationId: session.organizationId, key, value },
         });
       }
     }

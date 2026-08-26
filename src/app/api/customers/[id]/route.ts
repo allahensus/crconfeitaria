@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(
@@ -9,9 +9,10 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
-    const customer = await prisma.customer.findUnique({
+    const customer = await db.customer.findUnique({
       where: { id },
       include: {
         orders: {
@@ -39,11 +40,12 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
     const body = await request.json();
 
-    const updatedCustomer = await prisma.customer.update({
+    const updatedCustomer = await db.customer.update({
       where: { id },
       data: {
         name: body.name,
@@ -68,9 +70,10 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
-    await prisma.customer.delete({ where: { id } });
+    await db.customer.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao excluir cliente' }, { status: 500 });

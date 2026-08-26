@@ -6,18 +6,32 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding Confeitaria Cinthia Database...');
 
+  // 0. Organization
+  const organization = await prisma.organization.upsert({
+    where: { subdomain: 'cinthia' },
+    update: {},
+    create: {
+      name: 'Confeitaria Cinthia Rodrigues',
+      subdomain: 'cinthia',
+      status: 'ACTIVE',
+    },
+  });
+  console.log('Organization ready:', organization.subdomain);
+
   // 1. Create Admin User
   const hashedPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@cinthia.com' },
     update: {
       password: hashedPassword,
+      organizationId: organization.id,
     },
     create: {
       email: 'admin@cinthia.com',
       name: 'Cinthia Rodrigues',
       password: hashedPassword,
-      role: 'ADMIN',
+      role: 'OWNER',
+      organizationId: organization.id,
     },
   });
   console.log('Admin user created:', admin.email);
@@ -34,54 +48,54 @@ async function main() {
 
   for (const s of settingsData) {
     await prisma.setting.upsert({
-      where: { key: s.key },
+      where: { organizationId_key: { organizationId: organization.id, key: s.key } },
       update: { value: s.value },
-      create: s,
+      create: { ...s, organizationId: organization.id },
     });
   }
 
   // 3. Categories
   const catBolos = await prisma.category.upsert({
-    where: { slug: 'bolos' },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'bolos' } },
     update: {},
     create: {
       name: 'Bolos Personalizados',
       slug: 'bolos',
       description: 'Bolos artesanais incríveis feitos com ingredientes selecionados.',
       order: 1,
+      organizationId: organization.id,
     },
   });
 
   const catBiscoitos = await prisma.category.upsert({
-    where: { slug: 'biscoitos' },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'biscoitos' } },
     update: {},
     create: {
       name: 'Biscoitos Amanteigados',
       slug: 'biscoitos',
-      description: 'Biscoitos artesanais personalizados desenhados à mão.',
+      description: 'Biscoitos artesanais amanteigados, perfeitos para festas.',
       order: 2,
+      organizationId: organization.id,
     },
   });
 
   const catKits = await prisma.category.upsert({
-    where: { slug: 'kits' },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'kits' } },
     update: {},
     create: {
       name: 'Kits & Festas',
       slug: 'kits',
       description: 'Kits especiais combinando bolo e biscoitos para sua festa.',
       order: 3,
+      organizationId: organization.id,
     },
   });
 
   // 4. Products & Variations
 
-  // Product 1: Bentô Cake
   await prisma.product.upsert({
-    where: { slug: 'bento-cake' },
-    update: {
-      mainImage: '/images/bento_cake.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'bento-cake' } },
+    update: { mainImage: '/images/bento_cake.jpg' },
     create: {
       name: 'Bentô Cake',
       slug: 'bento-cake',
@@ -93,6 +107,7 @@ async function main() {
       yieldInfo: '10cm, ~450g (serve 2 pessoas)',
       active: true,
       featured: true,
+      organizationId: organization.id,
       variations: {
         create: [
           { name: 'Bentô Cake Tradicional (10cm)', price: 95.0, weight: '450g', slices: '2 fatias' },
@@ -101,12 +116,9 @@ async function main() {
     },
   });
 
-  // Product 2: Mini Bolo
   await prisma.product.upsert({
-    where: { slug: 'mini-bolo' },
-    update: {
-      mainImage: '/images/mini_bolo.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'mini-bolo' } },
+    update: { mainImage: '/images/mini_bolo.jpg' },
     create: {
       name: 'Mini Bolo Artesanal',
       slug: 'mini-bolo',
@@ -118,6 +130,7 @@ async function main() {
       yieldInfo: 'Aproximadamente 7 fatias',
       active: true,
       featured: true,
+      organizationId: organization.id,
       variations: {
         create: [
           { name: 'Cobertura em Chantily', price: 110.0, slices: '7 fatias' },
@@ -127,12 +140,9 @@ async function main() {
     },
   });
 
-  // Product 3: Bolos Redondos
   await prisma.product.upsert({
-    where: { slug: 'bolos-redondos' },
-    update: {
-      mainImage: '/images/bolo_redondo.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'bolos-redondos' } },
+    update: { mainImage: '/images/bolo_redondo.jpg' },
     create: {
       name: 'Bolos Redondos Personalizados',
       slug: 'bolos-redondos',
@@ -144,6 +154,7 @@ async function main() {
       yieldInfo: 'De 9 a 24 fatias',
       active: true,
       featured: true,
+      organizationId: organization.id,
       variations: {
         create: [
           { name: '09 a 11 Fatias', price: 125.0, slices: '09-11 fatias' },
@@ -155,12 +166,9 @@ async function main() {
     },
   });
 
-  // Product 4: Bolos Retangulares
   await prisma.product.upsert({
-    where: { slug: 'bolos-retangulares' },
-    update: {
-      mainImage: '/images/bolo_retangular.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'bolos-retangulares' } },
+    update: { mainImage: '/images/bolo_retangular.jpg' },
     create: {
       name: 'Bolos Retangulares',
       slug: 'bolos-retangulares',
@@ -172,6 +180,7 @@ async function main() {
       yieldInfo: 'De 13 a 60 fatias',
       active: true,
       featured: false,
+      organizationId: organization.id,
       variations: {
         create: [
           { name: '13 a 15 Fatias', price: 145.0, slices: '13-15 fatias' },
@@ -183,39 +192,34 @@ async function main() {
     },
   });
 
-  // Product 5: Biscoitos Amanteigados
   await prisma.product.upsert({
-    where: { slug: 'biscoitos-amanteigados' },
-    update: {
-      mainImage: '/images/biscoitos_amanteigados.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'biscoitos-amanteigados' } },
+    update: { mainImage: '/images/biscoitos_amanteigados.jpg' },
     create: {
       name: 'Biscoitos Amanteigados Personalizados',
       slug: 'biscoitos-amanteigados',
       categoryId: catBiscoitos.id,
       description: 'Biscoitos amanteigados crocantes e delicados, decorados artesanalmente com glacê real no tema da sua festa.',
       mainImage: '/images/biscoitos_amanteigados.jpg',
-      basePrice: 5.0,
+      basePrice: 7.0,
       unit: 'unidade',
       yieldInfo: 'Tamanhos de 4cm a 9cm',
       active: true,
       featured: true,
+      organizationId: organization.id,
       variations: {
         create: [
-          { name: 'Biscoitos 4cm (4 desenhos) - Mínimo 20 un.', price: 5.0, slices: '4cm' },
-          { name: 'Biscoitos 6cm (5 desenhos) - Mínimo 10 un.', price: 11.90, slices: '6cm' },
+          { name: 'Biscoitos 4cm (4 desenhos) - Mínimo 20 un.', price: 7.0, slices: '4cm' },
+          { name: 'Biscoitos 6cm (5 desenhos) - Mínimo 10 un.', price: 13.0, slices: '6cm' },
           { name: 'Biscoitos 9cm (4 desenhos) - Mínimo 4 un.', price: 21.90, slices: '9cm' },
         ]
       }
     },
   });
 
-  // Product 5: Kit Festa Celebrar
   await prisma.product.upsert({
-    where: { slug: 'kit-festa-celebrar' },
-    update: {
-      mainImage: '/images/bento_cake.jpg',
-    },
+    where: { organizationId_slug: { organizationId: organization.id, slug: 'kit-festa-celebrar' } },
+    update: { mainImage: '/images/bento_cake.jpg' },
     create: {
       name: 'Kit Festa Celebrar (Bentô Cake + Biscoitos)',
       slug: 'kit-festa-celebrar',
@@ -227,6 +231,7 @@ async function main() {
       yieldInfo: 'Bentô Cake + Biscoitos Decorados',
       active: true,
       featured: true,
+      organizationId: organization.id,
       variations: {
         create: [
           { name: '10 biscoitos de 6cm (Bentô Cake + 10 Biscoitos 6cm)', price: 160.0, weight: '450g + 10 biscoitos', slices: '2 fatias + biscoitos' },
@@ -236,9 +241,8 @@ async function main() {
     },
   });
 
-  // 5. Official Fillings Options
   // 5. Official Fillings Options (Full 20-flavor Menu)
-  await prisma.fillingOption.deleteMany({}); // Reset to official menu fillings
+  await prisma.fillingOption.deleteMany({ where: { organizationId: organization.id } });
 
   const fillings = [
     { name: 'Alpino', category: 'Chocolates' },
@@ -270,6 +274,7 @@ async function main() {
         category: f.category,
         extraPrice: 0.0,
         active: true,
+        organizationId: organization.id,
       }
     });
   }
@@ -288,9 +293,11 @@ async function main() {
   ];
 
   for (const ing of ingredientsData) {
-    const existing = await prisma.ingredient.findFirst({ where: { name: ing.name } });
+    const existing = await prisma.ingredient.findFirst({
+      where: { name: ing.name, organizationId: organization.id },
+    });
     if (!existing) {
-      await prisma.ingredient.create({ data: ing });
+      await prisma.ingredient.create({ data: { ...ing, organizationId: organization.id } });
     }
   }
 
@@ -317,13 +324,15 @@ async function main() {
   ];
 
   for (const t of testimonials) {
-    const existing = await prisma.testimonial.findFirst({ where: { name: t.name } });
+    const existing = await prisma.testimonial.findFirst({
+      where: { name: t.name, organizationId: organization.id },
+    });
     if (!existing) {
-      await prisma.testimonial.create({ data: t });
+      await prisma.testimonial.create({ data: { ...t, organizationId: organization.id } });
     }
   }
 
-  // 7. Seed Initial Customer and Sample Order for Dashboard metrics
+  // 8. Seed Initial Customer and Sample Order for Dashboard metrics
   const sampleCustomer = await prisma.customer.create({
     data: {
       name: 'Maria Oliveira',
@@ -332,23 +341,25 @@ async function main() {
       notes: 'Cliente preferencial, gosta de massa de baunilha.',
       totalSpent: 420.0,
       ordersCount: 2,
+      organizationId: organization.id,
     }
   });
 
   const sampleOrder = await prisma.order.upsert({
-    where: { orderNumber: 'PED-2026-0001' },
+    where: { organizationId_orderNumber: { organizationId: organization.id, orderNumber: 'PED-2026-0001' } },
     update: {},
     create: {
       orderNumber: 'PED-2026-0001',
       customerId: sampleCustomer.id,
       customerName: sampleCustomer.name,
       customerWhatsapp: sampleCustomer.whatsapp,
-      deliveryDate: new Date(Date.now() + 86400000 * 3), // 3 days from now
+      deliveryDate: new Date(Date.now() + 86400000 * 3),
       status: 'CONFIRMADO',
       totalAmount: 235.0,
       paidAmount: 120.0,
       paymentStatus: 'PARCIAL',
       notes: 'Entregar às 15h. Tema: Jardim Encantado',
+      organizationId: organization.id,
       items: {
         create: [
           {
@@ -375,7 +386,6 @@ async function main() {
     }
   });
 
-  // Financial Transaction for the Payment
   await prisma.financialTransaction.create({
     data: {
       type: 'RECEITA',
@@ -383,10 +393,10 @@ async function main() {
       category: 'Venda de Pedido',
       description: 'Sinal Pix Pedido PED-2026-0001',
       orderId: sampleOrder.id,
+      organizationId: organization.id,
     }
   });
 
-  // Sample Expense
   const sampleExpense = await prisma.expense.create({
     data: {
       description: 'Compra de Embalagens e caixas para bolos',
@@ -394,6 +404,7 @@ async function main() {
       amount: 85.0,
       paymentMethod: 'Pix',
       notes: 'Fornecedor Embalagens SP',
+      organizationId: organization.id,
     }
   });
 
@@ -404,6 +415,7 @@ async function main() {
       category: 'Embalagens',
       description: 'Compra de Embalagens e caixas para bolos',
       expenseId: sampleExpense.id,
+      organizationId: organization.id,
     }
   });
 

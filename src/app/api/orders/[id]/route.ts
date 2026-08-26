@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(
@@ -7,8 +7,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
+
     const { id } = await params;
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id },
       include: {
         items: true,
@@ -32,12 +36,13 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
     const body = await request.json();
     const { status, addPayment } = body;
 
-    const existingOrder = await prisma.order.findUnique({
+    const existingOrder = await db.order.findUnique({
       where: { id },
       include: { payments: true },
     });
@@ -47,13 +52,12 @@ export async function PUT(
     let updatedPaidAmount = existingOrder.paidAmount;
     let paymentStatus = existingOrder.paymentStatus;
 
-    // Handle Payment Registration
     if (addPayment) {
       const paymentAmount = parseFloat(addPayment.amount);
       const paymentMethod = addPayment.paymentMethod || 'Pix';
       const notes = addPayment.notes || null;
 
-      await prisma.payment.create({
+      await db.payment.create({
         data: {
           orderId: id,
           amount: paymentAmount,
@@ -63,9 +67,9 @@ export async function PUT(
         },
       });
 
-      // Register financial transaction automatically
-      await prisma.financialTransaction.create({
+      await db.financialTransaction.create({
         data: {
+          organizationId: session.organizationId,
           type: 'RECEITA',
           amount: paymentAmount,
           category: 'Venda de Pedido',
@@ -82,7 +86,7 @@ export async function PUT(
       }
     }
 
-    const updatedOrder = await prisma.order.update({
+    const updatedOrder = await db.order.update({
       where: { id },
       data: {
         status: status || existingOrder.status,
@@ -112,9 +116,10 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
-    await prisma.order.delete({ where: { id } });
+    await db.order.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao excluir pedido' }, { status: 500 });

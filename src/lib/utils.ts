@@ -55,7 +55,6 @@ export function generateWhatsAppLink(
     variation?: string;
     cakeBase?: string;
     filling1?: string;
-    filling2?: string;
     frosting?: string;
     extras?: string;
     quantity: number;
@@ -76,7 +75,6 @@ export function generateWhatsAppLink(
   if (quote.variation) text += `• *Tamanho/Fatias:* ${quote.variation}\n`;
   if (quote.cakeBase) text += `• *Massa:* ${quote.cakeBase}\n`;
   if (quote.filling1) text += `• *Recheio Principal:* ${quote.filling1}\n`;
-  if (quote.filling2) text += `• *Segundo Recheio:* ${quote.filling2}\n`;
   if (quote.frosting) text += `• *Cobertura:* ${quote.frosting}\n`;
   if (quote.extras) text += `• *Adicionais:* ${quote.extras}\n`;
   text += `• *Quantidade:* ${quote.quantity}\n`;
