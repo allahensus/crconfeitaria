@@ -46,6 +46,7 @@ export async function POST(request: Request) {
         slug,
         description: description || null,
         order: order !== undefined ? parseInt(order) : 0,
+        organizationId: session.organizationId,
       },
     });
 

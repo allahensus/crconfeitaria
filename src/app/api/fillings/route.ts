@@ -40,6 +40,7 @@ export async function POST(request: Request) {
         category: category || 'Geral',
         extraPrice: extraPrice ? parseFloat(extraPrice) : 0,
         description: description || null,
+        organizationId: session.organizationId,
       }
     });
 
