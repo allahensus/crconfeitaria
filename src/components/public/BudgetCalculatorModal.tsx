@@ -390,30 +390,36 @@ export function BudgetCalculatorModal({
         ? 'Dinheiro em Espécie'
         : 'Pix Instantâneo (50% Sinal)';
 
-    let text = `*SOLICITAÇÃO DE ORÇAMENTO*\n`;
+    const divider = '━━━━━━━━━━━━━━━━━━━━━';
+
+    let text = `🎂 *SOLICITAÇÃO DE ORÇAMENTO*\n`;
     text += `*Confeitaria Cinthia Rodrigues*\n`;
-    text += `---------------------------------------\n\n`;
-    text += `• *Código:* ${submittedQuote.quoteNumber}\n`;
-    text += `• *Cliente:* ${customerName}\n`;
-    text += `• *Produto:* ${selectedProduct?.name}\n`;
-    text += `• *${isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}:* ${selectedVariation?.name || 'Padrão'}\n`;
+    text += `${divider}\n\n`;
+    text += `Código: *${submittedQuote.quoteNumber}*\n\n`;
+
+    text += `📦 *Pedido*\n`;
+    text += `• Produto: ${selectedProduct?.name}\n`;
+    text += `• ${isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}: ${selectedVariation?.name || 'Padrão'}\n`;
 
     if (!isBiscoito) {
-      text += `• *Massa:* ${cakeBase}\n`;
-      text += `• *Recheio Principal:* ${filling1}\n`;
-      text += `• *Cobertura:* ${frosting}\n`;
+      text += `• Massa: ${cakeBase}\n`;
+      text += `• Recheio Principal: ${filling1}\n`;
+      text += `• Cobertura: ${frosting}\n`;
     } else {
-      text += `• *Divisão:* ${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito\n`;
-      if (wantsRibbonTag) text += `• *Fita de Cetim + Tag:* ${palitoCount} un. com palito (+R$ 1,00/un)\n`;
+      text += `• Divisão: ${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito\n`;
+      if (wantsRibbonTag) text += `• Fita de Cetim + Tag: ${palitoCount} un. com palito (+R$ 1,00/un)\n`;
     }
+    text += `• Quantidade: ${effectiveQuantity}\n`;
+    text += `• Pagamento Preferido: ${paymentLabel}\n`;
 
-    text += `• *Pagamento Preferido:* ${paymentLabel}\n`;
-    text += `• *Quantidade:* ${effectiveQuantity}\n`;
-    text += `• *Data Desejada:* ${formattedDate}\n`;
-    if (themeNotes) text += `• *Tema / Observações:* ${themeNotes}\n`;
+    text += `\n👤 *Cliente*\n`;
+    text += `• Nome: ${customerName}\n`;
+    text += `• Data Desejada: ${formattedDate}\n`;
+    if (themeNotes) text += `• Observações: ${themeNotes}\n`;
 
-    text += `\n*VALOR TOTAL ESTIMADO: ${formatCurrency(finalTotal)}*\n`;
-    text += `---------------------------------------\n\n`;
+    text += `\n${divider}\n`;
+    text += `💰 *VALOR TOTAL ESTIMADO: ${formatCurrency(finalTotal)}*\n`;
+    text += `${divider}\n\n`;
     text += `_Aguardo sua confirmação para combinarmos os detalhes e a data!_`;
 
     navigator.clipboard.writeText(text);

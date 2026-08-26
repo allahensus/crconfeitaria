@@ -65,25 +65,35 @@ export function generateWhatsAppLink(
   }
 ): string {
   const cleanPhone = formatWhatsappForUrl(phone);
+  const divider = '━━━━━━━━━━━━━━━━━━━━━';
 
-  let text = `*SOLICITAÇÃO DE ORÇAMENTO*\n`;
+  let text = `🎂 *SOLICITAÇÃO DE ORÇAMENTO*\n`;
   text += `*Confeitaria Cinthia Rodrigues*\n`;
-  text += `---------------------------------------\n\n`;
+  text += `${divider}\n\n`;
 
-  if (quote.quoteNumber) text += `• *Código:* ${quote.quoteNumber}\n`;
-  text += `• *Cliente:* ${quote.customerName}\n`;
-  text += `• *Produto:* ${quote.productName}\n`;
-  if (quote.variation) text += `• *${quote.isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}:* ${quote.variation}\n`;
-  if (quote.cakeBase) text += `• *Massa:* ${quote.cakeBase}\n`;
-  if (quote.filling1) text += `• *Recheio Principal:* ${quote.filling1}\n`;
-  if (quote.frosting) text += `• *Cobertura:* ${quote.frosting}\n`;
-  if (quote.extras) text += `• *Adicionais:* ${quote.extras}\n`;
-  text += `• *Quantidade:* ${quote.quantity}\n`;
-  if (quote.eventDate) text += `• *Data Desejada:* ${quote.eventDate}\n`;
-  if (quote.themeNotes) text += `• *Tema / Observações:* ${quote.themeNotes}\n`;
+  if (quote.quoteNumber) text += `Código: *${quote.quoteNumber}*\n\n`;
 
-  text += `\n*VALOR TOTAL ESTIMADO: ${formatCurrency(quote.finalTotal)}*\n`;
-  text += `---------------------------------------\n\n`;
+  text += `📦 *Pedido*\n`;
+  text += `• Produto: ${quote.productName}\n`;
+  if (quote.variation) text += `• ${quote.isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}: ${quote.variation}\n`;
+  if (quote.cakeBase) text += `• Massa: ${quote.cakeBase}\n`;
+  if (quote.filling1) text += `• Recheio Principal: ${quote.filling1}\n`;
+  if (quote.frosting) text += `• Cobertura: ${quote.frosting}\n`;
+  text += `• Quantidade: ${quote.quantity}\n`;
+  if (quote.extras) {
+    for (const part of quote.extras.split('|').map((p) => p.trim()).filter(Boolean)) {
+      text += `• ${part}\n`;
+    }
+  }
+
+  text += `\n👤 *Cliente*\n`;
+  text += `• Nome: ${quote.customerName}\n`;
+  if (quote.eventDate) text += `• Data Desejada: ${quote.eventDate}\n`;
+  if (quote.themeNotes) text += `• Observações: ${quote.themeNotes}\n`;
+
+  text += `\n${divider}\n`;
+  text += `💰 *VALOR TOTAL ESTIMADO: ${formatCurrency(quote.finalTotal)}*\n`;
+  text += `${divider}\n\n`;
   text += `_Aguardo sua confirmação para combinarmos os detalhes e a data!_`;
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
