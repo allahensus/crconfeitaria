@@ -201,7 +201,7 @@ async function main() {
       categoryId: catBiscoitos.id,
       description: 'Biscoitos amanteigados crocantes e delicados, decorados artesanalmente com glacê real no tema da sua festa.',
       mainImage: '/images/biscoitos_amanteigados.jpg',
-      basePrice: 5.0,
+      basePrice: 7.0,
       unit: 'unidade',
       yieldInfo: 'Tamanhos de 4cm a 9cm',
       active: true,
@@ -209,8 +209,8 @@ async function main() {
       organizationId: organization.id,
       variations: {
         create: [
-          { name: 'Biscoitos 4cm (4 desenhos) - Mínimo 20 un.', price: 5.0, slices: '4cm' },
-          { name: 'Biscoitos 6cm (5 desenhos) - Mínimo 10 un.', price: 11.90, slices: '6cm' },
+          { name: 'Biscoitos 4cm (4 desenhos) - Mínimo 20 un.', price: 7.0, slices: '4cm' },
+          { name: 'Biscoitos 6cm (5 desenhos) - Mínimo 10 un.', price: 13.0, slices: '6cm' },
           { name: 'Biscoitos 9cm (4 desenhos) - Mínimo 4 un.', price: 21.90, slices: '9cm' },
         ]
       }
