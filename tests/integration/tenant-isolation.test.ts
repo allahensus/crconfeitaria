@@ -35,6 +35,21 @@ describe('cross-tenant data isolation', () => {
     await dbA.testimonial.create({ data: { name: 'Fulana', eventType: 'Aniversário', comment: 'Ótimo!' } });
     await dbA.ingredient.create({ data: { name: 'Farinha', packageQuantity: 1000, costPrice: 5 } });
     await dbA.setting.create({ data: { key: 'whatsapp_number', value: '5511999990000' } });
+    await dbA.order.create({
+      data: {
+        orderNumber: 'PED-2026-0001',
+        customerName: 'Cliente A',
+        customerWhatsapp: '11999990000',
+        deliveryDate: new Date(),
+        totalAmount: 100,
+      },
+    });
+    await dbA.expense.create({
+      data: { description: 'Ingredientes', category: 'Ingredientes', amount: 50 },
+    });
+    await dbA.financialTransaction.create({
+      data: { type: 'DESPESA', amount: 50, category: 'Ingredientes', description: 'Compra' },
+    });
 
     expect(await dbB.category.findMany()).toHaveLength(0);
     expect(await dbB.product.findMany()).toHaveLength(0);
@@ -43,6 +58,9 @@ describe('cross-tenant data isolation', () => {
     expect(await dbB.testimonial.findMany()).toHaveLength(0);
     expect(await dbB.ingredient.findMany()).toHaveLength(0);
     expect(await dbB.setting.findMany()).toHaveLength(0);
+    expect(await dbB.order.findMany()).toHaveLength(0);
+    expect(await dbB.expense.findMany()).toHaveLength(0);
+    expect(await dbB.financialTransaction.findMany()).toHaveLength(0);
 
     expect(await dbA.category.findMany()).toHaveLength(1);
     expect(await dbA.product.findMany()).toHaveLength(1);
@@ -88,5 +106,12 @@ describe('cross-tenant data isolation', () => {
     expect(quoteB.quoteNumber).toBe('ORC-2026-0001');
     expect(quoteA.organizationId).toBe(orgA.id);
     expect(quoteB.organizationId).toBe(orgB.id);
+
+    const quotesVisibleToB = await dbB.quote.findMany();
+    expect(quotesVisibleToB).toHaveLength(1);
+    expect(quotesVisibleToB[0].id).toBe(quoteB.id);
+
+    const orgAQuoteFromB = await dbB.quote.findUnique({ where: { id: quoteA.id } });
+    expect(orgAQuoteFromB).toBeNull();
   });
 });
