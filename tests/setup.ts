@@ -15,6 +15,19 @@ if (!process.env.TEST_DATABASE_URL) {
   );
 }
 
+// Guard against a misconfigured TEST_DATABASE_URL that points at the real "public"
+// schema (e.g. a copy-paste of DATABASE_URL missing the ?schema=test suffix). That
+// wouldn't touch "public" data directly, but it would silently defeat schema
+// isolation for the `db push` step in resetTestDatabase(). Fail loudly, before any
+// test runs, rather than let it slide.
+if (!process.env.TEST_DATABASE_URL.includes('schema=test')) {
+  throw new Error(
+    'TEST_DATABASE_URL must include "schema=test" to stay isolated from the production ' +
+      '"public" schema. Got: ' +
+      process.env.TEST_DATABASE_URL.replace(/:[^:@]+@/, ':[REDACTED]@')
+  );
+}
+
 // Point the app's Prisma client at the isolated "test" Postgres schema for the
 // duration of the test run, never at the real DATABASE_URL/DIRECT_URL (which point
 // at the "public" schema holding live business data).
