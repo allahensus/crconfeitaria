@@ -1,24 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { resetTestDatabase } from './helpers/testDb';
-import { PrismaClient } from '@prisma/client';
-import path from 'path';
-
-let prisma: PrismaClient;
+import { prisma } from '@/lib/prisma';
 
 describe('Organization model', () => {
   beforeAll(() => {
-    // Reset and recreate test database
     resetTestDatabase();
-
-    // Create new Prisma client pointing to test database
-    const testDbPath = path.join(process.cwd(), 'prisma', 'test.db');
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: `file:${testDbPath}`,
-        },
-      },
-    });
   });
 
   afterAll(async () => {
