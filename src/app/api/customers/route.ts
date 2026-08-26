@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET() {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
-    const customers = await prisma.customer.findMany({
+    const customers = await db.customer.findMany({
       include: {
         _count: {
           select: { orders: true, quotes: true },
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { name, whatsapp, email, cpf, address, notes } = body;
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const cleanPhone = whatsapp.replace(/\D/g, '');
-    const customer = await prisma.customer.create({
+    const customer = await db.customer.create({
       data: {
         name,
         whatsapp: cleanPhone,
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
         cpf: cpf || null,
         address: address || null,
         notes: notes || null,
+        organizationId: session.organizationId,
       },
     });
 
