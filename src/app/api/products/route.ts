@@ -68,6 +68,7 @@ export async function POST(request: Request) {
 
     const product = await db.product.create({
       data: {
+        organizationId: session.organizationId,
         name,
         slug,
         categoryId,
