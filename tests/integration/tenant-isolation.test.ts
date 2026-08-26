@@ -19,7 +19,7 @@ describe('cross-tenant data isolation', () => {
     const dbA = getScopedPrisma(orgA.id);
     const dbB = getScopedPrisma(orgB.id);
 
-    const category = await dbA.category.create({ data: { name: 'Bolos', slug: 'bolos' } });
+    const category = await dbA.category.create({ data: { name: 'Bolos', slug: 'bolos', organizationId: orgA.id } });
     await dbA.product.create({
       data: {
         name: 'Bolo de Chocolate',
@@ -28,13 +28,14 @@ describe('cross-tenant data isolation', () => {
         description: 'Delicioso',
         mainImage: '/img.jpg',
         basePrice: 100,
+        organizationId: orgA.id,
       },
     });
-    await dbA.customer.create({ data: { name: 'Cliente A', whatsapp: '11999990000' } });
-    await dbA.fillingOption.create({ data: { name: 'Ninho' } });
-    await dbA.testimonial.create({ data: { name: 'Fulana', eventType: 'Aniversário', comment: 'Ótimo!' } });
-    await dbA.ingredient.create({ data: { name: 'Farinha', packageQuantity: 1000, costPrice: 5 } });
-    await dbA.setting.create({ data: { key: 'whatsapp_number', value: '5511999990000' } });
+    await dbA.customer.create({ data: { name: 'Cliente A', whatsapp: '11999990000', organizationId: orgA.id } });
+    await dbA.fillingOption.create({ data: { name: 'Ninho', organizationId: orgA.id } });
+    await dbA.testimonial.create({ data: { name: 'Fulana', eventType: 'Aniversário', comment: 'Ótimo!', organizationId: orgA.id } });
+    await dbA.ingredient.create({ data: { name: 'Farinha', packageQuantity: 1000, costPrice: 5, organizationId: orgA.id } });
+    await dbA.setting.create({ data: { key: 'whatsapp_number', value: '5511999990000', organizationId: orgA.id } });
     await dbA.order.create({
       data: {
         orderNumber: 'PED-2026-0001',
@@ -42,13 +43,14 @@ describe('cross-tenant data isolation', () => {
         customerWhatsapp: '11999990000',
         deliveryDate: new Date(),
         totalAmount: 100,
+        organizationId: orgA.id,
       },
     });
     await dbA.expense.create({
-      data: { description: 'Ingredientes', category: 'Ingredientes', amount: 50 },
+      data: { description: 'Ingredientes', category: 'Ingredientes', amount: 50, organizationId: orgA.id },
     });
     await dbA.financialTransaction.create({
-      data: { type: 'DESPESA', amount: 50, category: 'Ingredientes', description: 'Compra' },
+      data: { type: 'DESPESA', amount: 50, category: 'Ingredientes', description: 'Compra', organizationId: orgA.id },
     });
 
     expect(await dbB.category.findMany()).toHaveLength(0);
@@ -74,8 +76,8 @@ describe('cross-tenant data isolation', () => {
     const dbA = getScopedPrisma(orgA.id);
     const dbB = getScopedPrisma(orgB.id);
 
-    await dbA.customer.create({ data: { name: 'Cliente da Loja A', whatsapp: '11999990000' } });
-    await dbB.customer.create({ data: { name: 'Cliente da Loja B', whatsapp: '11999990000' } });
+    await dbA.customer.create({ data: { name: 'Cliente da Loja A', whatsapp: '11999990000', organizationId: orgA.id } });
+    await dbB.customer.create({ data: { name: 'Cliente da Loja B', whatsapp: '11999990000', organizationId: orgB.id } });
 
     const foundByA = await dbA.customer.findFirst({ where: { whatsapp: '11999990000' } });
     const foundByB = await dbB.customer.findFirst({ where: { whatsapp: '11999990000' } });
@@ -97,6 +99,7 @@ describe('cross-tenant data isolation', () => {
       customerWhatsapp: '11999990000',
       subtotal: 100,
       finalTotal: 100,
+      organizationId: orgId,
     });
 
     const quoteA = await dbA.quote.create({ data: quoteDataFor(orgA.id) });

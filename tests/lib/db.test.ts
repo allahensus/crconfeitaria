@@ -25,7 +25,7 @@ describe('getScopedPrisma', () => {
     const dbA = getScopedPrisma(orgA.id);
     const dbB = getScopedPrisma(orgB.id);
 
-    const categoryA = await dbA.category.create({ data: { name: 'Bolos', slug: 'bolos' } });
+    const categoryA = await dbA.category.create({ data: { name: 'Bolos', slug: 'bolos', organizationId: orgA.id } });
 
     // dbB must not see orgA's category, even by exact id.
     const foundInB = await dbB.category.findUnique({ where: { id: categoryA.id } });

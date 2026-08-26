@@ -33,3 +33,6 @@ prisma/test.db
 
 # data migration export (contains real customer data)
 prisma/data-export.json
+
+# local MCP server config
+.mcp.json

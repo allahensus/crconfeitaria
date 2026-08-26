@@ -31,7 +31,6 @@ export function BudgetCalculatorModal({
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [cakeBase, setCakeBase] = useState('Baunilha');
   const [filling1, setFilling1] = useState('');
-  const [filling2, setFilling2] = useState(''); // Default empty = 1 recheio único
   const [frosting, setFrosting] = useState('Chantily');
   const [noPalitoCount, setNoPalitoCount] = useState(4); // Biscoitos Sem Palito
   const [palitoCount, setPalitoCount] = useState(0); // Biscoitos Com Palito
@@ -60,7 +59,6 @@ export function BudgetCalculatorModal({
       setStep(1);
       setSubmittedQuote(null);
       setErrorMsg('');
-      setFilling2(''); // 1 recheio único por padrão
     }
     if (initialProduct) {
       setSelectedProduct(initialProduct);
@@ -165,10 +163,8 @@ export function BudgetCalculatorModal({
   useEffect(() => {
     if (selectedProduct?.slug === 'kit-festa-celebrar') {
       setFrosting('Buttercream');
-      setFilling2('');
     } else if (selectedProduct?.slug === 'bolos-redondos') {
       setFrosting('Chantily');
-      setFilling2('');
     }
     if (selectedProduct?.slug !== 'biscoitos-amanteigados') {
       setQuantity(1);
@@ -241,7 +237,6 @@ export function BudgetCalculatorModal({
         variation: selectedVariation ? selectedVariation.name : null,
         cakeBase: !isBiscoito ? cakeBase : null,
         filling1: !isBiscoito ? filling1 : null,
-        filling2: !isBiscoito && filling2 ? filling2 : null,
         frosting: !isBiscoito ? frosting : null,
         extras: isBiscoito
           ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito` : 'Todos sem palito')
@@ -289,7 +284,6 @@ export function BudgetCalculatorModal({
         variation: selectedVariation?.name,
         cakeBase: !isBiscoito ? cakeBase : undefined,
         filling1: !isBiscoito ? filling1 : undefined,
-        filling2: !isBiscoito && filling2 ? filling2 : undefined,
         frosting: !isBiscoito ? frosting : undefined,
         extras: isBiscoito
           ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito | Pgto: ${paymentLabel}` : `Todos sem palito | Pgto: ${paymentLabel}`)
@@ -349,7 +343,6 @@ export function BudgetCalculatorModal({
     if (!isBiscoito) {
       text += `• *Massa:* ${cakeBase}\n`;
       text += `• *Recheio Principal:* ${filling1}\n`;
-      if (filling2) text += `• *Segundo Recheio:* ${filling2}\n`;
       text += `• *Cobertura:* ${frosting}\n`;
     }
 
@@ -523,27 +516,6 @@ export function BudgetCalculatorModal({
                       </p>
                     </div>
                   </div>
-
-                  {/* Secondary Filling (Optional) - Enabled for Bolos Retangulares */}
-                  {selectedProduct?.slug === 'bolos-retangulares' && (
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                        Segundo Recheio (Opcional)
-                      </label>
-                      <select
-                        value={filling2}
-                        onChange={(e) => setFilling2(e.target.value)}
-                        className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
-                      >
-                        <option value="">Nenhum (Somente 1 recheio)</option>
-                        {availableFillingsForProduct.map((f) => (
-                          <option key={f.id} value={f.name}>
-                            {f.name} ({f.category})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
 
                   {/* Frosting Selection for Kit Festa */}
                   {selectedProduct?.slug === 'kit-festa-celebrar' && (

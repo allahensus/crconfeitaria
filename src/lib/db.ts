@@ -35,6 +35,14 @@ const AUTO_WHERE_OPERATIONS = new Set([
  * intentionally NOT auto-scoped — its `where` must reference a real unique
  * constraint (e.g. the compound organizationId_key on Setting), so callers
  * doing an upsert must build that where/data shape by hand.
+ *
+ * Known limitation: this only scopes which *rows* a query can read/write by
+ * organizationId — it does NOT validate that a foreign key referenced in a
+ * create/update (e.g. `categoryId` on a `Product`) actually belongs to the
+ * same organization. Routes that accept a foreign-tenant-owned ID in the
+ * request body must validate it themselves. This is a known, accepted
+ * limitation for now (documented, not fixed in this pass) since only one
+ * real tenant exists today.
  */
 export function getScopedPrisma(organizationId: string) {
   if (!organizationId) {

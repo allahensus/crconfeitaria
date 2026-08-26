@@ -2,9 +2,20 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'confeitaria-cinthia-super-secret-key-2026'
-);
+const DEV_FALLBACK_SECRET = 'confeitaria-cinthia-super-secret-key-2026';
+
+function getJwtSecret(): string {
+  if (process.env.JWT_SECRET) {
+    return process.env.JWT_SECRET;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be set in production.');
+  }
+  console.warn('JWT_SECRET is not set — using an insecure development-only fallback. Set JWT_SECRET in .env before deploying.');
+  return DEV_FALLBACK_SECRET;
+}
+
+const SECRET_KEY = new TextEncoder().encode(getJwtSecret());
 
 export interface AuthSession {
   userId: string;

@@ -40,6 +40,8 @@ model User {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 model Category {
@@ -105,6 +107,8 @@ model FillingOption {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 model Customer {
@@ -125,6 +129,8 @@ model Customer {
   orders       Order[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([organizationId])
 }
 
 model Quote {
@@ -231,6 +237,8 @@ model Expense {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   transactions  FinancialTransaction[]
   createdAt     DateTime               @default(now())
+
+  @@index([organizationId])
 }
 
 model FinancialTransaction {
@@ -246,6 +254,8 @@ model FinancialTransaction {
   expense     Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model Setting {
@@ -269,6 +279,8 @@ model Testimonial {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([organizationId])
 }
 
 model Ingredient {
@@ -283,6 +295,8 @@ model Ingredient {
   recipeItems     RecipeItem[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+
+  @@index([organizationId])
 }
 
 model RecipeItem {
