@@ -61,6 +61,13 @@ export default function AdminQuotesPage() {
     }
   };
 
+  const handleRejectQuote = (quoteId: string) => {
+    if (confirm('Deseja recusar este orçamento? O cliente não será notificado automaticamente.')) {
+      handleUpdateStatus(quoteId, 'REJECTED');
+      if (selectedQuote?.id === quoteId) setSelectedQuote(null);
+    }
+  };
+
   const filteredQuotes = quotes.filter((q) => {
     const matchesSearch =
       q.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -180,13 +187,21 @@ export default function AdminQuotesPage() {
                         >
                           Ver Detalhes
                         </button>
-                        {q.status !== 'CONVERTED' && (
-                          <button
-                            onClick={() => handleConvertToOrder(q.id)}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm"
-                          >
-                            Converter em Pedido
-                          </button>
+                        {q.status !== 'CONVERTED' && q.status !== 'REJECTED' && (
+                          <>
+                            <button
+                              onClick={() => handleConvertToOrder(q.id)}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm"
+                            >
+                              Converter em Pedido
+                            </button>
+                            <button
+                              onClick={() => handleRejectQuote(q.id)}
+                              className="px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-600 font-bold hover:bg-red-50"
+                            >
+                              Recusar
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
@@ -242,13 +257,21 @@ export default function AdminQuotesPage() {
                 <span className="font-extrabold text-lg text-[#C27360] font-serif">
                   {formatCurrency(selectedQuote.finalTotal)}
                 </span>
-                {selectedQuote.status !== 'CONVERTED' && (
-                  <button
-                    onClick={() => handleConvertToOrder(selectedQuote.id)}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md"
-                  >
-                    Converter em Pedido Agora
-                  </button>
+                {selectedQuote.status !== 'CONVERTED' && selectedQuote.status !== 'REJECTED' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleRejectQuote(selectedQuote.id)}
+                      className="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50"
+                    >
+                      Recusar
+                    </button>
+                    <button
+                      onClick={() => handleConvertToOrder(selectedQuote.id)}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md"
+                    >
+                      Converter em Pedido Agora
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
