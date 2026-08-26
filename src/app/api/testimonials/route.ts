@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const testimonials = await prisma.testimonial.findMany({
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
+    const testimonials = await db.testimonial.findMany({
       where: { active: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -18,12 +25,14 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { name, eventType, comment, rating, active } = body;
 
-    const testimonial = await prisma.testimonial.create({
+    const testimonial = await db.testimonial.create({
       data: {
+        organizationId: session.organizationId,
         name,
         eventType: eventType || 'Cliente',
         comment,
