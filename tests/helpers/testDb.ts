@@ -6,21 +6,20 @@ import { prisma } from '@/lib/prisma';
 export const TEST_DB_PATH = path.join(process.cwd(), 'prisma', 'test.db');
 export const TEST_DATABASE_URL = `file:${TEST_DB_PATH}`;
 
-async function unlinkWithRetry(filePath: string, maxAttempts = 10) {
+async function unlinkWithRetry(filePath: string, maxAttempts = 5) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      // Delete main database file and associated SQLite WAL/SHM files
-      fs.unlinkSync(filePath);
+      // Clean up SQLite WAL and shared memory files first (they may block main file deletion)
       const walPath = `${filePath}-wal`;
       const shmPath = `${filePath}-shm`;
       if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
       if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
-      // After successful unlink, wait a bit for OS to fully release the file
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Now delete main database file
+      fs.unlinkSync(filePath);
       return;
     } catch (err) {
       if (attempt === maxAttempts) throw err;
-      const delay = 100 * 2 ** (attempt - 1); // 100ms, 200ms, 400ms, 800ms, 1600ms...
+      const delay = 50 * 2 ** (attempt - 1); // 50ms, 100ms, 200ms, 400ms
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
