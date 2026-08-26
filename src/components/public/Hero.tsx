@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Sparkles, Cake, Heart, Award, ArrowRight } from 'lucide-react';
+import { Sparkles, Heart, ArrowRight } from 'lucide-react';
 
 interface HeroProps {
   onOpenBudgetModal: () => void;
@@ -10,11 +10,7 @@ interface HeroProps {
 
 export function Hero({ onOpenBudgetModal }: HeroProps) {
   return (
-    <section className="relative overflow-hidden bg-gradient-hero py-12 md:py-20 lg:py-24">
-      {/* Decorative blurred background elements */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-[#F2D7D0] rounded-full blur-3xl opacity-40 pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#E6B9AE] rounded-full blur-3xl opacity-30 pointer-events-none" />
-
+    <section className="relative overflow-hidden bg-gradient-hero py-12 md:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
@@ -69,31 +65,31 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
             </div>
           </div>
 
-          {/* Right Featured Banner Cards Showcase */}
+          {/* Right: Editorial Photo Panel */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md lg:max-w-none">
-              
-              {/* Main Banner Image Container */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white aspect-[4/5] transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
+
+              {/* Main Photo — full, straight, no tilt: the photography is the point */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white aspect-[4/5]">
                 <Image
                   src="/images/bento_cake.jpg"
                   alt="Bentô Cake Cinthia Rodrigues"
                   fill
                   priority
-                  className="object-cover hover:scale-105 transition-transform duration-700"
+                  className="object-cover"
                 />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 text-white">
-                  <span className="bg-[#C27360] text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full w-max mb-2">
+
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/80 via-[#2A1712]/10 to-transparent flex flex-col justify-end p-6 text-white">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
                     Destaque da Confeitaria
                   </span>
-                  <h3 className="font-serif text-2xl font-bold">Bentô Cake Personalizado</h3>
-                  <p className="text-xs text-white/90">Acompanha hamburgueira decorada, colher de madeira e vela</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xl font-extrabold text-[#F9ECE9]">R$ 95,00</span>
+                  <h3 className="font-serif text-2xl font-bold leading-tight">Bentô Cake Personalizado</h3>
+                  <p className="text-xs text-white/80 mt-1">Acompanha hamburgueira decorada, colher de madeira e vela</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="font-serif text-xl font-bold text-white">R$ 95,00</span>
                     <button
                       onClick={onOpenBudgetModal}
-                      className="px-4 py-2 bg-white text-[#4A231A] text-xs font-bold rounded-full shadow hover:bg-[#FDF7F6]"
+                      className="px-4 py-2 bg-white text-[#4A231A] text-xs font-bold rounded-full shadow hover:bg-[#FDF7F6] transition-colors"
                     >
                       Pedir o Seu
                     </button>
@@ -101,15 +97,12 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
                 </div>
               </div>
 
-              {/* Floating Floating Accent Card */}
-              <div className="absolute -bottom-6 -left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-[#F2D7D0] flex items-center gap-3 hidden sm:flex">
-                <div className="w-12 h-12 rounded-xl bg-[#F9ECE9] flex items-center justify-center text-[#C27360]">
-                  <Heart className="w-6 h-6 fill-current text-[#C27360]" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[#4A231A]">Feito à Mão</h4>
-                  <p className="text-xs text-[#645451]">Massa fofinha e recheios caseiros</p>
-                </div>
+              {/* Quiet supporting detail — handmade credibility, not decoration */}
+              <div className="mt-4 flex items-center gap-2.5 px-1">
+                <Heart className="w-4 h-4 text-[#C27360] fill-current shrink-0" />
+                <p className="text-xs text-[#645451]">
+                  <span className="font-bold text-[#4A231A]">Feito à mão</span> — massa fofinha e recheios caseiros, do jeito que uma festa de verdade merece.
+                </p>
               </div>
 
             </div>
