@@ -1,10 +1,32 @@
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  subdomain String   @unique
+  status    String   @default("ACTIVE") // TRIAL, ACTIVE, SUSPENDED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users                 User[]
+  categories            Category[]
+  products              Product[]
+  fillingOptions        FillingOption[]
+  customers             Customer[]
+  quotes                Quote[]
+  orders                Order[]
+  expenses              Expense[]
+  financialTransactions FinancialTransaction[]
+  settings              Setting[]
+  testimonials          Testimonial[]
+  ingredients           Ingredient[]
 }
 
 model User {
@@ -12,7 +34,9 @@ model User {
   email     String   @unique
   name      String
   password  String
-  role      String   @default("ADMIN")
+  role      String   @default("OWNER")
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -23,6 +47,8 @@ model Category {
   slug        String    @unique
   description String?
   order       Int       @default(0)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -42,6 +68,8 @@ model Product {
   yieldInfo   String?            // ex: "7 fatias", "450g (2 pessoas)"
   active      Boolean            @default(true)
   featured    Boolean            @default(false)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   variations  ProductVariation[]
   recipeItems RecipeItem[]
   createdAt   DateTime           @default(now())
@@ -68,6 +96,8 @@ model FillingOption {
   extraPrice  Float    @default(0.0)
   active      Boolean  @default(true)
   description String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -84,6 +114,8 @@ model Customer {
   notes        String?
   totalSpent   Float     @default(0.0)
   ordersCount  Int       @default(0)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   quotes       Quote[]
   orders       Order[]
   createdAt    DateTime  @default(now())
@@ -104,6 +136,8 @@ model Quote {
   extraTotal       Float       @default(0.0)
   finalTotal       Float
   status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items            QuoteItem[]
   order            Order?
   createdAt        DateTime    @default(now())
@@ -142,6 +176,8 @@ model Order {
   paidAmount       Float                  @default(0.0)
   paymentStatus    String                 @default("PENDENTE") // PENDENTE, PARCIAL, PAGO
   notes            String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items            OrderItem[]
   payments         Payment[]
   transactions     FinancialTransaction[]
@@ -182,6 +218,8 @@ model Expense {
   date          DateTime               @default(now())
   paymentMethod String                 @default("Pix")
   notes         String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   transactions  FinancialTransaction[]
   createdAt     DateTime               @default(now())
 }
@@ -197,12 +235,16 @@ model FinancialTransaction {
   order       Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
   expenseId   String?
   expense     Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 model Setting {
   id    String @id @default(uuid())
   key   String @unique
   value String
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 model Testimonial {
@@ -213,6 +255,8 @@ model Testimonial {
   rating    Int      @default(5)
   active    Boolean  @default(true)
   avatarUrl String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
 
@@ -223,6 +267,8 @@ model Ingredient {
   packageQuantity Float        // ex: 395 (g) no pacote
   costPrice       Float        // ex: 7.50 (preço pago no mercado)
   category        String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipeItems     RecipeItem[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
