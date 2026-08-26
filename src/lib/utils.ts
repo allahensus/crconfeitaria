@@ -53,6 +53,7 @@ export function generateWhatsAppLink(
     customerName: string;
     productName: string;
     variation?: string;
+    isBiscoito?: boolean;
     cakeBase?: string;
     filling1?: string;
     frosting?: string;
@@ -72,7 +73,7 @@ export function generateWhatsAppLink(
   if (quote.quoteNumber) text += `• *Código:* ${quote.quoteNumber}\n`;
   text += `• *Cliente:* ${quote.customerName}\n`;
   text += `• *Produto:* ${quote.productName}\n`;
-  if (quote.variation) text += `• *Tamanho/Fatias:* ${quote.variation}\n`;
+  if (quote.variation) text += `• *${quote.isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}:* ${quote.variation}\n`;
   if (quote.cakeBase) text += `• *Massa:* ${quote.cakeBase}\n`;
   if (quote.filling1) text += `• *Recheio Principal:* ${quote.filling1}\n`;
   if (quote.frosting) text += `• *Cobertura:* ${quote.frosting}\n`;

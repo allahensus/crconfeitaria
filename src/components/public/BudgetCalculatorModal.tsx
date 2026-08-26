@@ -280,6 +280,7 @@ export function BudgetCalculatorModal({
         productId: selectedProduct?.id,
         productName: selectedProduct?.name || 'Bolo Personalizado',
         variation: selectedVariation ? selectedVariation.name : null,
+        isBiscoito,
         cakeBase: !isBiscoito ? cakeBase : null,
         filling1: !isBiscoito ? filling1 : null,
         frosting: !isBiscoito ? frosting : null,
@@ -332,6 +333,7 @@ export function BudgetCalculatorModal({
         customerName,
         productName: selectedProduct?.name || 'Produto',
         variation: selectedVariation?.name,
+        isBiscoito,
         cakeBase: !isBiscoito ? cakeBase : undefined,
         filling1: !isBiscoito ? filling1 : undefined,
         frosting: !isBiscoito ? frosting : undefined,
@@ -394,7 +396,7 @@ export function BudgetCalculatorModal({
     text += `• *Código:* ${submittedQuote.quoteNumber}\n`;
     text += `• *Cliente:* ${customerName}\n`;
     text += `• *Produto:* ${selectedProduct?.name}\n`;
-    text += `• *Tamanho/Fatias:* ${selectedVariation?.name || 'Padrão'}\n`;
+    text += `• *${isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}:* ${selectedVariation?.name || 'Padrão'}\n`;
 
     if (!isBiscoito) {
       text += `• *Massa:* ${cakeBase}\n`;
