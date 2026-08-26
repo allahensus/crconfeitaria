@@ -12,6 +12,7 @@ export async function backfillOrganization(prisma: PrismaClient) {
   });
 
   await prisma.user.updateMany({
+    // @ts-expect-error — organizationId is now required in the schema, this null-filter predates that and is now unreachable but harmless
     where: { organizationId: null },
     data: { organizationId: org.id, role: 'OWNER' },
   });
