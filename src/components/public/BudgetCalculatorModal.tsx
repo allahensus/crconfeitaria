@@ -1105,56 +1105,69 @@ export function BudgetCalculatorModal({
             </div>
           )}
 
-          {/* Live Summary Calculation Card */}
-          <div className="bg-[#FAF6F4] p-4 rounded-2xl border border-[#F2D7D0] space-y-2">
-            <div className="flex justify-between items-center text-xs text-[#645451]">
-              <span>Item selecionado:</span>
-              <span className="font-semibold text-[#4A231A]">
-                {selectedProduct?.name} ({selectedVariation?.name || 'Padrão'})
-              </span>
+          {/* Live Summary Calculation Card — estilo "recibo" */}
+          <div className="rounded-2xl border border-[#F2D7D0] bg-white shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-[#C27360] to-[#A75644] px-4 py-2.5 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-white" />
+              <span className="text-white text-xs font-bold uppercase tracking-wider">Resumo do Pedido</span>
             </div>
-            {frosting && selectedProduct?.slug !== 'biscoitos-amanteigados' && (
-              <div className="flex justify-between items-center text-xs text-[#645451]">
-                <span>Cobertura:</span>
+
+            <div className="px-4 pt-3.5 pb-1">
+              <p className="font-serif font-bold text-base text-[#4A231A] leading-snug">
+                {selectedProduct?.name}
+              </p>
+              <p className="text-xs text-[#A75644] font-semibold">
+                {selectedVariation?.name || 'Padrão'}
+              </p>
+            </div>
+
+            <div className="px-4 py-2 space-y-2">
+              {frosting && selectedProduct?.slug !== 'biscoitos-amanteigados' && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#645451]">Cobertura</span>
+                  <span className="font-semibold text-[#4A231A]">
+                    {frosting}{' '}
+                    {frosting === 'Buttercream'
+                      ? selectedProduct?.slug === 'kit-festa-celebrar'
+                        ? '(Incluso no Kit)'
+                        : '(+R$ 20,00)'
+                      : '(Incluso)'}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#645451]">Quantidade</span>
                 <span className="font-semibold text-[#4A231A]">
-                  {frosting}{' '}
-                  {frosting === 'Buttercream'
-                    ? selectedProduct?.slug === 'kit-festa-celebrar'
-                      ? '(Incluso no Kit)'
-                      : '(+R$ 20,00)'
-                    : '(Incluso)'}
+                  {isBiscoito
+                    ? `${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
+                    : `${quantity}x`}
                 </span>
               </div>
-            )}
-            <div className="flex justify-between items-center text-xs text-[#645451]">
-              <span>Quantidade:</span>
-              <span className="font-semibold text-[#4A231A]">
-                {isBiscoito
-                  ? `${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
-                  : `${quantity}x`}
-              </span>
+              {isBiscoito && palitoCount > 0 && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#645451]">Adicional Suporte no Palito</span>
+                  <span className="font-semibold text-[#C27360]">+{formatCurrency(palitoTotalCost)}</span>
+                </div>
+              )}
+              {isBiscoito && wantsRibbonTag && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#645451]">Fita de Cetim + Tag</span>
+                  <span className="font-semibold text-[#C27360]">+{formatCurrency(ribbonTagCost)}</span>
+                </div>
+              )}
+              {!isBiscoito && extraCostPerUnit > 0 && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#645451]">Adicionais / Cobertura</span>
+                  <span className="font-semibold text-[#C27360]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
+                </div>
+              )}
             </div>
-            {isBiscoito && palitoCount > 0 && (
-              <div className="flex justify-between items-center text-xs text-[#645451]">
-                <span>Adicional Suporte no Palito:</span>
-                <span className="font-semibold text-[#C27360]">+{formatCurrency(palitoTotalCost)}</span>
-              </div>
-            )}
-            {isBiscoito && wantsRibbonTag && (
-              <div className="flex justify-between items-center text-xs text-[#645451]">
-                <span>Fita de Cetim + Tag:</span>
-                <span className="font-semibold text-[#C27360]">+{formatCurrency(ribbonTagCost)}</span>
-              </div>
-            )}
-            {!isBiscoito && extraCostPerUnit > 0 && (
-              <div className="flex justify-between items-center text-xs text-[#645451]">
-                <span>Adicionais / Cobertura:</span>
-                <span className="font-semibold text-[#C27360]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
-              </div>
-            )}
-            <div className="pt-2 border-t border-[#F2D7D0] flex justify-between items-center">
-              <span className="font-bold text-sm text-[#4A231A]">Total Estimado:</span>
-              <span className="font-serif font-extrabold text-xl text-[#C27360]">
+
+            <div className="mx-4 border-t border-dashed border-[#E5B9AC]" />
+
+            <div className="px-4 py-3 flex items-center justify-between bg-[#FDF7F6]">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#4A231A]">Total Estimado</span>
+              <span className="font-serif font-extrabold text-2xl text-[#C27360]">
                 {formatCurrency(finalTotal)}
               </span>
             </div>
