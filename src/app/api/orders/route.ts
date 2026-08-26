@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status');
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
       };
     }
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: whereClause,
       include: {
         items: true,
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { customerName, customerWhatsapp, deliveryDate, status, totalAmount, notes, items } = body;
@@ -53,19 +55,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 });
     }
 
-    // 1. Find or create customer
     const cleanPhone = customerWhatsapp.replace(/\D/g, '');
-    let customer = await prisma.customer.findFirst({ where: { whatsapp: cleanPhone } });
+    let customer = await db.customer.findFirst({ where: { whatsapp: cleanPhone } });
     if (!customer) {
-      customer = await prisma.customer.create({
-        data: { name: customerName, whatsapp: cleanPhone },
+      customer = await db.customer.create({
+        data: { name: customerName, whatsapp: cleanPhone, organizationId: session.organizationId },
       });
     }
 
-    // 2. Generate Unique Order Number (PED-YYYY-XXXX)
     const year = new Date().getFullYear();
     const prefix = `PED-${year}-`;
-    const lastOrder = await prisma.order.findFirst({
+    const lastOrder = await db.order.findFirst({
       where: { orderNumber: { startsWith: prefix } },
       orderBy: { orderNumber: 'desc' },
     });
@@ -80,14 +80,19 @@ export async function POST(request: Request) {
     }
 
     let orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-    while (await prisma.order.findUnique({ where: { orderNumber } })) {
+    while (
+      await db.order.findUnique({
+        where: { organizationId_orderNumber: { organizationId: session.organizationId, orderNumber } },
+      })
+    ) {
       nextSeq++;
       orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
     }
 
     const parsedTotal = parseFloat(totalAmount);
-    const order = await prisma.order.create({
+    const order = await db.order.create({
       data: {
+        organizationId: session.organizationId,
         orderNumber,
         customerId: customer.id,
         customerName,
@@ -105,7 +110,6 @@ export async function POST(request: Request) {
                 variationName: i.variationName || null,
                 cakeBase: i.cakeBase || null,
                 filling1: i.filling1 || null,
-                filling2: i.filling2 || null,
                 quantity: parseInt(i.quantity) || 1,
                 unitPrice: parseFloat(i.unitPrice),
                 totalPrice: parseFloat(i.totalPrice || i.unitPrice * i.quantity),
@@ -119,8 +123,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Update customer stats
-    await prisma.customer.update({
+    await db.customer.update({
       where: { id: customer.id },
       data: {
         ordersCount: { increment: 1 },
