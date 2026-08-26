@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const fillings = await prisma.fillingOption.findMany({
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
+    const fillings = await db.fillingOption.findMany({
       where: { active: true },
       orderBy: { name: 'asc' }
     });
@@ -20,13 +27,14 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const { name, category, extraPrice, description } = await request.json();
     if (!name) {
       return NextResponse.json({ error: 'Nome do recheio é obrigatório' }, { status: 400 });
     }
 
-    const filling = await prisma.fillingOption.create({
+    const filling = await db.fillingOption.create({
       data: {
         name,
         category: category || 'Geral',
