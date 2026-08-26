@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { resetTestDatabase } from './helpers/testDb';
 import { prisma } from '@/lib/prisma';
 import { backfillOrganization } from '../prisma/scripts/backfill-organization';
 
 describe('backfillOrganization', () => {
-  beforeAll(() => {
-    resetTestDatabase();
+  beforeEach(async () => {
+    await resetTestDatabase();
   });
 
   afterAll(async () => {

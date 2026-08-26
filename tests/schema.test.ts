@@ -3,8 +3,8 @@ import { resetTestDatabase } from './helpers/testDb';
 import { prisma } from '@/lib/prisma';
 
 describe('Organization model', () => {
-  beforeAll(() => {
-    resetTestDatabase();
+  beforeAll(async () => {
+    await resetTestDatabase();
   });
 
   afterAll(async () => {
