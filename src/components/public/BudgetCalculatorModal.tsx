@@ -55,10 +55,47 @@ export function BudgetCalculatorModal({
   const isPalitoAllowed = isBiscoito && (selectedVariation?.name?.includes('6cm') || selectedVariation?.name?.includes('9cm'));
 
   function getBiscoitoStepConfig(variationName?: string): { min: number; max: number; step: number; secondTier?: number } {
-    if (variationName?.includes('4cm')) return { min: 20, max: 50, step: 5 };
-    if (variationName?.includes('6cm')) return { min: 10, max: 20, step: 2 };
-    if (variationName?.includes('9cm')) return { min: 4, max: 20, step: 2, secondTier: 10 };
+    // max is a soft ceiling for the preset tiers below — "+ Adicionar mais" can still go past it.
+    if (variationName?.includes('4cm')) return { min: 20, max: 200, step: 5 };
+    if (variationName?.includes('6cm')) return { min: 10, max: 100, step: 2 };
+    if (variationName?.includes('9cm')) return { min: 4, max: 100, step: 2, secondTier: 10 };
     return { min: 1, max: 999, step: 1 };
+  }
+
+  const BISCOITO_TIERS: Record<string, { qty: number; desenhos: number; price: number }[]> = {
+    '4cm': [
+      { qty: 20, desenhos: 4, price: 140.0 },
+      { qty: 25, desenhos: 5, price: 175.0 },
+      { qty: 30, desenhos: 6, price: 210.0 },
+      { qty: 35, desenhos: 7, price: 245.0 },
+      { qty: 40, desenhos: 8, price: 280.0 },
+      { qty: 45, desenhos: 9, price: 315.0 },
+      { qty: 50, desenhos: 10, price: 350.0 },
+    ],
+    '6cm': [
+      { qty: 10, desenhos: 5, price: 130.0 },
+      { qty: 12, desenhos: 6, price: 156.0 },
+      { qty: 14, desenhos: 7, price: 182.0 },
+      { qty: 16, desenhos: 8, price: 208.0 },
+      { qty: 18, desenhos: 9, price: 234.0 },
+      { qty: 20, desenhos: 10, price: 260.0 },
+    ],
+    '9cm': [
+      { qty: 4, desenhos: 4, price: 87.6 },
+      { qty: 10, desenhos: 5, price: 219.0 },
+      { qty: 12, desenhos: 6, price: 262.8 },
+      { qty: 14, desenhos: 7, price: 306.6 },
+      { qty: 16, desenhos: 8, price: 350.4 },
+      { qty: 18, desenhos: 9, price: 394.2 },
+      { qty: 20, desenhos: 10, price: 438.0 },
+    ],
+  };
+
+  function getBiscoitoTiers(variationName?: string) {
+    if (variationName?.includes('4cm')) return BISCOITO_TIERS['4cm'];
+    if (variationName?.includes('6cm')) return BISCOITO_TIERS['6cm'];
+    if (variationName?.includes('9cm')) return BISCOITO_TIERS['9cm'];
+    return [];
   }
 
   function nextBiscoitoQty(current: number, config: ReturnType<typeof getBiscoitoStepConfig>, direction: 1 | -1): number {
@@ -74,6 +111,7 @@ export function BudgetCalculatorModal({
   }
 
   const biscoitoStepConfig = getBiscoitoStepConfig(selectedVariation?.name);
+  const biscoitoTiers = getBiscoitoTiers(selectedVariation?.name);
 
   useEffect(() => {
     if (isOpen) {
@@ -603,9 +641,45 @@ export function BudgetCalculatorModal({
                         🍪 Escolha a Quantidade de Biscoitos ({selectedVariation?.name || 'Personalizados'})
                       </h4>
                       <p className="text-xs text-[#645451]">
-                        Escolha a quantidade de biscoitos **Sem Palito** e **Com Palito** no mesmo orçamento — as quantidades seguem nossas faixas de produção (de {biscoitoStepConfig.step} em {biscoitoStepConfig.step} unidades):
+                        Escolha uma das faixas abaixo, ou ajuste manualmente com os botões — depois divida entre **Sem Palito** e **Com Palito** como preferir:
                       </p>
                     </div>
+
+                    {/* Faixas Prontas (Grupos) */}
+                    {biscoitoTiers.length > 0 && (
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#A75644] block mb-2">
+                          Faixas Disponíveis ({selectedVariation?.name?.match(/\d+cm/)?.[0] || ''})
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {biscoitoTiers.map((tier) => {
+                            const isSelected = noPalitoCount + palitoCount === tier.qty;
+                            return (
+                              <button
+                                key={tier.qty}
+                                type="button"
+                                onClick={() => {
+                                  setNoPalitoCount(tier.qty);
+                                  setPalitoCount(0);
+                                }}
+                                className={`p-2.5 rounded-xl border text-center transition-all ${
+                                  isSelected
+                                    ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
+                                    : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                                }`}
+                              >
+                                <span className="block text-xs font-extrabold text-[#4A231A]">{tier.qty} un.</span>
+                                <span className="block text-[10px] text-[#645451]">({tier.desenhos} desenhos)</span>
+                                <span className="block text-[11px] font-bold text-[#C27360] mt-0.5">{formatCurrency(tier.price)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[10px] text-[#A75644] mt-1.5">
+                          ➕ Quer mais que a maior faixa? Use os botões "+" abaixo pra adicionar mais unidades.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       {/* Counter 1: Biscoitos Sem Palito */}
