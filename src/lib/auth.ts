@@ -11,6 +11,7 @@ export interface AuthSession {
   email: string;
   name: string;
   role: string;
+  organizationId: string;
 }
 
 export async function createSession(session: AuthSession) {
