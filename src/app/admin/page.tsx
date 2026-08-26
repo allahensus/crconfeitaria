@@ -30,31 +30,69 @@ import {
   Cell,
 } from 'recharts';
 
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function buildMonthlyRevenueExpense(transactions: any[]) {
+  const now = new Date();
+  const months: { key: string; name: string; receita: number; despesa: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, name: MONTH_LABELS[d.getMonth()], receita: 0, despesa: 0 });
+  }
+  const byKey = new Map(months.map((m) => [m.key, m]));
+  for (const t of transactions) {
+    const d = new Date(t.date);
+    const bucket = byKey.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (!bucket) continue;
+    if (t.type === 'RECEITA') bucket.receita += t.amount;
+    else if (t.type === 'DESPESA') bucket.despesa += t.amount;
+  }
+  return months;
+}
+
+function buildPaymentMethodsBreakdown(orders: any[]) {
+  const totals: Record<string, number> = {};
+  for (const o of orders) {
+    for (const p of o.payments || []) {
+      totals[p.paymentMethod] = (totals[p.paymentMethod] || 0) + p.amount;
+    }
+  }
+  const totalPaid = Object.values(totals).reduce((a, b) => a + b, 0);
+  if (totalPaid === 0) return [];
+  return Object.entries(totals)
+    .map(([name, amount]) => ({ name, amount, value: Math.round((amount / totalPaid) * 100) }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [finRes, ordRes, qutoRes, custRes] = await Promise.all([
+        const [finRes, finAllRes, ordRes, qutoRes, custRes] = await Promise.all([
           fetch('/api/finance?range=month'),
+          fetch('/api/finance?range=all'),
           fetch('/api/orders'),
           fetch('/api/quotes'),
           fetch('/api/customers'),
         ]);
 
-        const [finData, ordData, qutoData, custData] = await Promise.all([
+        const [finData, finAllData, ordData, qutoData, custData] = await Promise.all([
           finRes.json(),
+          finAllRes.json(),
           ordRes.json(),
           qutoRes.json(),
           custRes.json(),
         ]);
 
         if (finData && finData.metrics) setMetrics(finData.metrics);
+        if (finAllData && Array.isArray(finAllData.transactions)) setAllTransactions(finAllData.transactions);
         if (Array.isArray(ordData)) setOrders(ordData);
         if (Array.isArray(qutoData)) setQuotes(qutoData);
         if (Array.isArray(custData)) setCustomers(custData);
@@ -80,22 +118,11 @@ export default function AdminDashboardPage() {
   const pendingQuotesCount = quotes.filter((q) => q.status === 'PENDING').length;
   const approvedQuotesCount = quotes.filter((q) => q.status === 'APPROVED' || q.status === 'CONVERTED').length;
 
-  // Chart sample data
-  const revenueVsExpenseData = [
-    { name: 'Jan', receita: 1200, despesa: 450 },
-    { name: 'Fev', receita: 1850, despesa: 600 },
-    { name: 'Mar', receita: 2400, despesa: 800 },
-    { name: 'Abr', receita: 3100, despesa: 950 },
-    { name: 'Mai', receita: (metrics?.totalRevenue || 0) + 1500, despesa: (metrics?.totalExpenses || 0) + 400 },
-  ];
+  // Dados reais: últimos 6 meses de receita/despesa e distribuição real de formas de pagamento
+  const revenueVsExpenseData = buildMonthlyRevenueExpense(allTransactions);
+  const paymentMethodsData = buildPaymentMethodsBreakdown(orders);
 
-  const paymentMethodsData = [
-    { name: 'Pix', value: 70 },
-    { name: 'Cartão', value: 20 },
-    { name: 'Dinheiro', value: 10 },
-  ];
-
-  const COLORS = ['#C27360', '#D59483', '#E6B9AE'];
+  const COLORS = ['#C27360', '#D59483', '#E6B9AE', '#A75644', '#4A231A'];
 
   return (
     <div className="flex min-h-screen bg-[#FAF6F4]">
@@ -369,38 +396,49 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-[#645451]">Distribuição das vendas por método</p>
             </div>
 
-            <div className="h-60 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={paymentMethodsData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {paymentMethodsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-[#F2D7D0]">
-              {paymentMethodsData.map((p, i) => (
-                <div key={p.name} className="flex justify-between items-center text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-[#4A231A] font-medium">{p.name}</span>
-                  </div>
-                  <span className="font-bold text-[#C27360]">{p.value}%</span>
+            {paymentMethodsData.length === 0 ? (
+              <div className="h-60 w-full flex flex-col items-center justify-center text-center gap-2 text-[#645451]">
+                <PieChartIcon className="w-8 h-8 text-[#F2D7D0]" />
+                <p className="text-xs">
+                  Nenhum pagamento registrado ainda.<br />Assim que houver pagamentos em Pedidos, a distribuição aparece aqui.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="h-60 w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={paymentMethodsData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {paymentMethodsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-2 pt-2 border-t border-[#F2D7D0]">
+                  {paymentMethodsData.map((p, i) => (
+                    <div key={p.name} className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="text-[#4A231A] font-medium">{p.name}</span>
+                      </div>
+                      <span className="font-bold text-[#C27360]">{p.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
         </div>
