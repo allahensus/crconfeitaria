@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function PUT(
@@ -11,12 +11,13 @@ export async function PUT(
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await context.params;
     const body = await request.json();
     const { name, unit, packageQuantity, costPrice, category } = body;
 
-    const ingredient = await prisma.ingredient.update({
+    const ingredient = await db.ingredient.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -43,9 +44,10 @@ export async function DELETE(
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await context.params;
-    await prisma.ingredient.delete({ where: { id } });
+    await db.ingredient.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

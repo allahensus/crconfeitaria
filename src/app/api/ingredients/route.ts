@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const ingredients = await prisma.ingredient.findMany({
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
+    const ingredients = await db.ingredient.findMany({
       orderBy: { name: 'asc' },
     });
     return NextResponse.json(ingredients);
@@ -20,6 +27,7 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { name, unit, packageQuantity, costPrice, category } = body;
@@ -28,13 +36,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
     }
 
-    const ingredient = await prisma.ingredient.create({
+    const ingredient = await db.ingredient.create({
       data: {
         name,
         unit: unit || 'g',
         packageQuantity: parseFloat(packageQuantity),
         costPrice: parseFloat(costPrice),
         category: category || 'Ingredientes',
+        organizationId: session.organizationId,
       },
     });
 
