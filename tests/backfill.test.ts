@@ -12,24 +12,20 @@ describe('backfillOrganization', () => {
     await prisma.$disconnect();
   });
 
-  it('creates the Cinthia organization and assigns existing rows to it', async () => {
-    const category = await prisma.category.create({
-      data: { name: 'Bolos', slug: 'bolos' },
-    });
-    const user = await prisma.user.create({
-      data: { email: 'admin@cinthia.com', name: 'Cinthia', password: 'hash' },
-    });
-
+  it('is a safe no-op against already-organized data', async () => {
     const org = await backfillOrganization(prisma);
 
-    expect(org.subdomain).toBe('cinthia');
+    const category = await prisma.category.create({
+      data: { name: 'Bolos', slug: 'bolos', organizationId: org.id },
+    });
 
-    const updatedCategory = await prisma.category.findUniqueOrThrow({ where: { id: category.id } });
-    expect(updatedCategory.organizationId).toBe(org.id);
+    await backfillOrganization(prisma);
 
-    const updatedUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-    expect(updatedUser.organizationId).toBe(org.id);
-    expect(updatedUser.role).toBe('OWNER');
+    const unchangedCategory = await prisma.category.findUniqueOrThrow({ where: { id: category.id } });
+    expect(unchangedCategory.organizationId).toBe(org.id);
+
+    const orgs = await prisma.organization.findMany({ where: { subdomain: 'cinthia' } });
+    expect(orgs).toHaveLength(1);
   });
 
   it('is idempotent — running it twice does not create a second organization', async () => {

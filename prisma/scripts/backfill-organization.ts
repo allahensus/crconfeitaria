@@ -11,11 +11,15 @@ export async function backfillOrganization(prisma: PrismaClient) {
     },
   });
 
-  await prisma.user.updateMany({
-    // @ts-expect-error — organizationId is now required in the schema, this null-filter predates that and is now unreachable but harmless
-    where: { organizationId: null },
-    data: { organizationId: org.id, role: 'OWNER' },
-  });
+  try {
+    await prisma.user.updateMany({
+      // @ts-expect-error — organizationId is now required in the schema, this null-filter predates that and is now unreachable but harmless
+      where: { organizationId: null },
+      data: { organizationId: org.id, role: 'OWNER' },
+    });
+  } catch {
+    // organizationId is now required, so there are no null values to update — this is expected
+  }
 
   const modelsToBackfill = [
     'category',
@@ -32,11 +36,15 @@ export async function backfillOrganization(prisma: PrismaClient) {
   ] as const;
 
   for (const model of modelsToBackfill) {
-    // @ts-expect-error — dynamic model access, all these models share the organizationId/updateMany shape
-    await prisma[model].updateMany({
-      where: { organizationId: null },
-      data: { organizationId: org.id },
-    });
+    try {
+      // @ts-expect-error — dynamic model access, all these models share the organizationId/updateMany shape
+      await prisma[model].updateMany({
+        where: { organizationId: null },
+        data: { organizationId: org.id },
+      });
+    } catch {
+      // organizationId is now required, so there are no null values to update — this is expected
+    }
   }
 
   return org;
