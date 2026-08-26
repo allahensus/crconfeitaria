@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/public/Navbar';
 import { Hero } from '@/components/public/Hero';
+import { IcingDivider } from '@/components/public/IcingDivider';
 import { CategoryFilter } from '@/components/public/CategoryFilter';
 import { ProductCard } from '@/components/public/ProductCard';
 import { BudgetCalculatorModal } from '@/components/public/BudgetCalculatorModal';
@@ -82,6 +83,7 @@ export default function PublicPage() {
 
       {/* Hero Banner */}
       <Hero onOpenBudgetModal={() => handleOpenModal()} />
+      <IcingDivider />
 
       {/* Catalog Showcase Section */}
       <section id="catalogo" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -163,10 +165,10 @@ export default function PublicPage() {
           {/* Warm & Professional Transparency Note */}
           <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm text-center space-y-1">
             <h4 className="text-xs uppercase font-bold text-[#A75644] tracking-wider">
-              ✨ Transparência & Carinho com Nossos Clientes
+              Transparência & Carinho com Nossos Clientes
             </h4>
             <p className="text-xs text-[#645451] leading-relaxed">
-              Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento! 💕
+              Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento.
             </p>
           </div>
 

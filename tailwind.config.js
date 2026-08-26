@@ -33,7 +33,6 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
-        script: ['var(--font-script)', 'cursive'],
       },
       boxShadow: {
         'soft': '0 4px 20px -2px rgba(195, 115, 96, 0.08), 0 2px 6px -1px rgba(74, 35, 26, 0.04)',

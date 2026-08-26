@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBudgetModal: (product?: any) => void;
@@ -94,37 +94,37 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
             <a
               href="#catalogo"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base"
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
             >
-              🎂 Nosso Catálogo
+              <Cake className="w-4 h-4 text-[#C27360]" /> Nosso Catálogo
             </a>
             <a
               href="#sabores"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base"
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
             >
-              🍓 Cardápio de Recheios
+              <HeartIcon className="w-4 h-4 text-[#C27360]" /> Cardápio de Recheios
             </a>
             <a
               href="#depoimentos"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base"
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
             >
-              ⭐ Depoimentos
+              <Star className="w-4 h-4 text-[#C27360]" /> Depoimentos
             </a>
             <a
               href="#contato"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base"
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
             >
-              📍 Horários e Endereço
+              <MapPin className="w-4 h-4 text-[#C27360]" /> Horários e Endereço
             </a>
             <Link
               href="/admin/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 text-xs text-[#874132] font-semibold uppercase tracking-wider"
+              className="px-3 py-2 text-xs text-[#874132] font-semibold uppercase tracking-wider flex items-center gap-2"
             >
-              🔐 Acesso Restrito - Confeiteira
+              <Lock className="w-3.5 h-3.5" /> Acesso Restrito - Confeiteira
             </Link>
           </nav>
           <div className="pt-2">
