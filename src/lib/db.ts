@@ -49,19 +49,21 @@ export function getScopedPrisma(organizationId: string) {
             return query(args);
           }
 
+          const scopedArgs = args as any;
+
           if (AUTO_WHERE_OPERATIONS.has(operation)) {
-            args.where = { ...(args.where ?? {}), organizationId };
+            scopedArgs.where = { ...(scopedArgs.where ?? {}), organizationId };
           }
 
-          if (operation === 'create' && args.data) {
-            args.data = { ...args.data, organizationId };
+          if (operation === 'create' && scopedArgs.data) {
+            scopedArgs.data = { ...scopedArgs.data, organizationId };
           }
 
-          if (operation === 'createMany' && Array.isArray(args.data)) {
-            args.data = args.data.map((d: Record<string, unknown>) => ({ ...d, organizationId }));
+          if (operation === 'createMany' && Array.isArray(scopedArgs.data)) {
+            scopedArgs.data = scopedArgs.data.map((d: Record<string, unknown>) => ({ ...d, organizationId }));
           }
 
-          return query(args);
+          return query(scopedArgs);
         },
       },
     },
