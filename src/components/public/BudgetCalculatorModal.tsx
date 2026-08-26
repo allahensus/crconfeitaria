@@ -54,12 +54,12 @@ export function BudgetCalculatorModal({
   const isBiscoito = selectedProduct?.slug === 'biscoitos-amanteigados';
   const isPalitoAllowed = isBiscoito && (selectedVariation?.name?.includes('6cm') || selectedVariation?.name?.includes('9cm'));
 
-  function getBiscoitoStepConfig(variationName?: string): { min: number; max: number; step: number; secondTier?: number } {
+  function getBiscoitoStepConfig(variationName?: string): { min: number; max: number } {
     // max is a soft ceiling for the preset tiers below — "+ Adicionar mais" can still go past it.
-    if (variationName?.includes('4cm')) return { min: 20, max: 200, step: 5 };
-    if (variationName?.includes('6cm')) return { min: 10, max: 100, step: 2 };
-    if (variationName?.includes('9cm')) return { min: 4, max: 100, step: 2, secondTier: 10 };
-    return { min: 1, max: 999, step: 1 };
+    if (variationName?.includes('4cm')) return { min: 20, max: 200 };
+    if (variationName?.includes('6cm')) return { min: 10, max: 100 };
+    if (variationName?.includes('9cm')) return { min: 4, max: 100 };
+    return { min: 1, max: 999 };
   }
 
   const BISCOITO_TIERS: Record<string, { qty: number; desenhos: number; price: number }[]> = {
@@ -101,13 +101,10 @@ export function BudgetCalculatorModal({
   function nextBiscoitoQty(current: number, config: ReturnType<typeof getBiscoitoStepConfig>, direction: 1 | -1): number {
     if (direction === 1) {
       if (current <= 0) return config.min;
-      if (config.secondTier && current < config.secondTier) return config.secondTier;
-      return Math.min(config.max, current + config.step);
+      return Math.min(config.max, current + 1);
     }
     if (current <= config.min) return 0;
-    if (config.secondTier && current === config.secondTier) return config.min;
-    if (config.secondTier && current > config.secondTier) return Math.max(config.secondTier, current - config.step);
-    return Math.max(config.min, current - config.step);
+    return current - 1;
   }
 
   const biscoitoStepConfig = getBiscoitoStepConfig(selectedVariation?.name);
