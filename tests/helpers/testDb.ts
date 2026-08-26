@@ -38,6 +38,14 @@ export async function resetTestDatabase() {
   // .env out of the way for the duration of the push and restore it no matter what.
   const envPath = path.join(process.cwd(), '.env');
   const envBackupPath = path.join(process.cwd(), '.env.bak-during-test-reset');
+
+  // Self-heal: if a previous run crashed between the rename below and its finally
+  // restore, .env would be stranded as .env.bak-during-test-reset with no real .env
+  // on disk. Restore it before doing anything else so the app's config isn't lost.
+  if (!fs.existsSync(envPath) && fs.existsSync(envBackupPath)) {
+    fs.renameSync(envBackupPath, envPath);
+  }
+
   const hadEnv = fs.existsSync(envPath);
   if (hadEnv) {
     fs.renameSync(envPath, envBackupPath);
