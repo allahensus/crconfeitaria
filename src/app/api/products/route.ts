@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScopedPrisma } from '@/lib/db';
+import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 import { slugify } from '@/lib/utils';
 
 export async function GET(request: Request) {
   try {
+    const organization = await getCurrentOrganization();
+    if (!organization) {
+      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
+    }
+    const db = getScopedPrisma(organization.id);
+
     const { searchParams } = new URL(request.url);
     const categorySlug = searchParams.get('category');
     const featuredOnly = searchParams.get('featured') === 'true';
-    const activeOnly = searchParams.get('active') !== 'false'; // default true for public
+    const activeOnly = searchParams.get('active') !== 'false';
 
     const whereClause: any = {};
     if (activeOnly) whereClause.active = true;
@@ -17,7 +24,7 @@ export async function GET(request: Request) {
       whereClause.category = { slug: categorySlug };
     }
 
-    const products = await prisma.product.findMany({
+    const products = await db.product.findMany({
       where: whereClause,
       include: {
         category: true,
@@ -42,6 +49,7 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
     const { name, categoryId, description, mainImage, basePrice, unit, yieldInfo, featured, active, variations } = body;
@@ -51,12 +59,14 @@ export async function POST(request: Request) {
     }
 
     let slug = slugify(name);
-    const existingSlug = await prisma.product.findUnique({ where: { slug } });
+    const existingSlug = await db.product.findUnique({
+      where: { organizationId_slug: { organizationId: session.organizationId, slug } },
+    });
     if (existingSlug) {
       slug = `${slug}-${Date.now().toString().slice(-4)}`;
     }
 
-    const product = await prisma.product.create({
+    const product = await db.product.create({
       data: {
         name,
         slug,
