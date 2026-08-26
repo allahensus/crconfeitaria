@@ -170,7 +170,13 @@ export function BudgetCalculatorModal({
   const noPalitoBiscoitoCount = biscoitoTotal - palitoCount;
   const effectiveQuantity = isBiscoito ? biscoitoTotal : quantity;
   const palitoTotalCost = (isBiscoito && isPalitoAllowed) ? (palitoCount * 2.0) : 0;
-  const ribbonTagCost = (isBiscoito && wantsRibbonTag) ? biscoitoTotal * 1.0 : 0;
+  const ribbonTagCost = (isBiscoito && wantsRibbonTag) ? palitoCount * 1.0 : 0;
+
+  useEffect(() => {
+    if (palitoCount === 0 && wantsRibbonTag) {
+      setWantsRibbonTag(false);
+    }
+  }, [palitoCount, wantsRibbonTag]);
   const subtotal = isBiscoito
     ? (noPalitoBiscoitoCount * unitPrice) + (palitoCount * (unitPrice + (isPalitoAllowed ? 2.0 : 0))) + ribbonTagCost
     : ((unitPrice + extraCostPerUnit) * quantity);
@@ -282,7 +288,7 @@ export function BudgetCalculatorModal({
               palitoCount > 0
                 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoBiscoitoCount} un sem palito`
                 : 'Todos sem palito',
-              wantsRibbonTag ? 'Fita de Cetim + Tag (+R$ 1,00/un)' : null,
+              wantsRibbonTag ? `Fita de Cetim + Tag em ${palitoCount} un. com palito (+R$ 1,00/un)` : null,
             ].filter(Boolean).join(' | ')
           : null,
         quantity: effectiveQuantity,
@@ -334,7 +340,7 @@ export function BudgetCalculatorModal({
               palitoCount > 0
                 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoBiscoitoCount} un sem palito`
                 : 'Todos sem palito',
-              wantsRibbonTag ? 'Fita de Cetim + Tag (+R$ 1,00/un)' : null,
+              wantsRibbonTag ? `Fita de Cetim + Tag em ${palitoCount} un. com palito (+R$ 1,00/un)` : null,
               `Pgto: ${paymentLabel}`,
             ].filter(Boolean).join(' | ')
           : selectedProduct?.slug === 'kit-festa-celebrar'
@@ -396,7 +402,7 @@ export function BudgetCalculatorModal({
       text += `• *Cobertura:* ${frosting}\n`;
     } else {
       text += `• *Divisão:* ${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito\n`;
-      if (wantsRibbonTag) text += `• *Fita de Cetim + Tag:* Sim (+R$ 1,00/un)\n`;
+      if (wantsRibbonTag) text += `• *Fita de Cetim + Tag:* ${palitoCount} un. com palito (+R$ 1,00/un)\n`;
     }
 
     text += `• *Pagamento Preferido:* ${paymentLabel}\n`;
@@ -728,34 +734,41 @@ export function BudgetCalculatorModal({
                         </div>
                       )}
 
-                      {/* Fita de Cetim + Tag */}
-                      <button
-                        type="button"
-                        onClick={() => setWantsRibbonTag(!wantsRibbonTag)}
-                        className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
-                          wantsRibbonTag
-                            ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
-                            : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
-                        }`}
-                      >
-                        <div>
-                          <span className="text-xs font-bold text-[#4A231A] block">
-                            🎀 Adicionar Fita de Cetim + Tag Personalizada
-                          </span>
-                          <span className="text-[11px] text-[#C27360] font-semibold">
-                            + R$ 1,00 por unidade
-                          </span>
-                        </div>
-                        <span
-                          className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                            wantsRibbonTag
-                              ? 'bg-[#C27360] border-[#C27360] text-white'
-                              : 'border-[#F2D7D0] text-transparent'
+                      {/* Fita de Cetim + Tag — só disponível nos biscoitos Com Palito */}
+                      {isPalitoAllowed && (
+                        <button
+                          type="button"
+                          onClick={() => palitoCount > 0 && setWantsRibbonTag(!wantsRibbonTag)}
+                          disabled={palitoCount === 0}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
+                            palitoCount === 0
+                              ? 'border-[#F2D7D0] bg-gray-50 opacity-60 cursor-not-allowed'
+                              : wantsRibbonTag
+                              ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
+                              : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
                           }`}
                         >
-                          ✓
-                        </span>
-                      </button>
+                          <div>
+                            <span className="text-xs font-bold text-[#4A231A] block">
+                              🎀 Fita de Cetim + Tag nos Biscoitos Com Palito
+                            </span>
+                            <span className="text-[11px] text-[#C27360] font-semibold">
+                              {palitoCount === 0
+                                ? 'Escolha ao menos 1 unidade Com Palito acima para habilitar'
+                                : `+ R$ 1,00 por unidade com palito (${palitoCount} un.)`}
+                            </span>
+                          </div>
+                          <span
+                            className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                              wantsRibbonTag && palitoCount > 0
+                                ? 'bg-[#C27360] border-[#C27360] text-white'
+                                : 'border-[#F2D7D0] text-transparent'
+                            }`}
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      )}
 
                       {/* Sobre os Biscoitos — Informações Importantes */}
                       <div className="p-3.5 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-2">
