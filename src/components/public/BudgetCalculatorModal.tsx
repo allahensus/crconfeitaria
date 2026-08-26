@@ -32,8 +32,9 @@ export function BudgetCalculatorModal({
   const [cakeBase, setCakeBase] = useState('Baunilha');
   const [filling1, setFilling1] = useState('');
   const [frosting, setFrosting] = useState('Chantily');
-  const [noPalitoCount, setNoPalitoCount] = useState(4); // Biscoitos Sem Palito
-  const [palitoCount, setPalitoCount] = useState(0); // Biscoitos Com Palito
+  const [biscoitoTotal, setBiscoitoTotal] = useState(4); // Total de biscoitos (escolhido pela faixa)
+  const [palitoCount, setPalitoCount] = useState(0); // Quantos, dentro do total, são Com Palito
+  const [wantsRibbonTag, setWantsRibbonTag] = useState(false); // Fita de cetim + tag (+R$1,00/un)
   const [quantity, setQuantity] = useState(1);
   const [eventDate, setEventDate] = useState('');
   const [themeNotes, setThemeNotes] = useState('');
@@ -54,12 +55,11 @@ export function BudgetCalculatorModal({
   const isBiscoito = selectedProduct?.slug === 'biscoitos-amanteigados';
   const isPalitoAllowed = isBiscoito && (selectedVariation?.name?.includes('6cm') || selectedVariation?.name?.includes('9cm'));
 
-  function getBiscoitoStepConfig(variationName?: string): { min: number; max: number } {
-    // max is a soft ceiling for the preset tiers below — "+ Adicionar mais" can still go past it.
-    if (variationName?.includes('4cm')) return { min: 20, max: 200 };
-    if (variationName?.includes('6cm')) return { min: 10, max: 100 };
-    if (variationName?.includes('9cm')) return { min: 4, max: 100 };
-    return { min: 1, max: 999 };
+  function getBiscoitoStepConfig(variationName?: string): { min: number } {
+    if (variationName?.includes('4cm')) return { min: 20 };
+    if (variationName?.includes('6cm')) return { min: 10 };
+    if (variationName?.includes('9cm')) return { min: 4 };
+    return { min: 1 };
   }
 
   const BISCOITO_TIERS: Record<string, { qty: number; desenhos: number; price: number }[]> = {
@@ -98,15 +98,6 @@ export function BudgetCalculatorModal({
     return [];
   }
 
-  function nextBiscoitoQty(current: number, config: ReturnType<typeof getBiscoitoStepConfig>, direction: 1 | -1): number {
-    if (direction === 1) {
-      if (current <= 0) return config.min;
-      return Math.min(config.max, current + 1);
-    }
-    if (current <= config.min) return 0;
-    return current - 1;
-  }
-
   const biscoitoStepConfig = getBiscoitoStepConfig(selectedVariation?.name);
   const biscoitoTiers = getBiscoitoTiers(selectedVariation?.name);
 
@@ -136,9 +127,9 @@ export function BudgetCalculatorModal({
   useEffect(() => {
     if (selectedVariation && isBiscoito) {
       const minSemPalito = getBiscoitoStepConfig(selectedVariation.name).min;
-      setNoPalitoCount(minSemPalito);
+      setBiscoitoTotal(minSemPalito);
       setPalitoCount(0);
-      setQuantity(minSemPalito);
+      setWantsRibbonTag(false);
     }
   }, [selectedVariation, isBiscoito]);
 
@@ -167,9 +158,8 @@ export function BudgetCalculatorModal({
 
   const handleNextStep = () => {
     if (step === 2 && isBiscoito) {
-      const totalBiscoitos = noPalitoCount + palitoCount;
-      if (totalBiscoitos < minRequiredBiscoitos) {
-        setErrorMsg(`⚠️ O pedido mínimo para biscoitos de ${selectedVariation?.name || 'este tamanho'} é de ${minRequiredBiscoitos} unidades. Adicione mais ${minRequiredBiscoitos - totalBiscoitos} unidade(s).`);
+      if (biscoitoTotal < minRequiredBiscoitos) {
+        setErrorMsg(`⚠️ O pedido mínimo para biscoitos de ${selectedVariation?.name || 'este tamanho'} é de ${minRequiredBiscoitos} unidades.`);
         return;
       }
     }
@@ -177,10 +167,12 @@ export function BudgetCalculatorModal({
     setStep(step + 1);
   };
 
-  const effectiveQuantity = isBiscoito ? (noPalitoCount + palitoCount) : quantity;
+  const noPalitoBiscoitoCount = biscoitoTotal - palitoCount;
+  const effectiveQuantity = isBiscoito ? biscoitoTotal : quantity;
   const palitoTotalCost = (isBiscoito && isPalitoAllowed) ? (palitoCount * 2.0) : 0;
+  const ribbonTagCost = (isBiscoito && wantsRibbonTag) ? biscoitoTotal * 1.0 : 0;
   const subtotal = isBiscoito
-    ? (noPalitoCount * unitPrice) + (palitoCount * (unitPrice + (isPalitoAllowed ? 2.0 : 0)))
+    ? (noPalitoBiscoitoCount * unitPrice) + (palitoCount * (unitPrice + (isPalitoAllowed ? 2.0 : 0))) + ribbonTagCost
     : ((unitPrice + extraCostPerUnit) * quantity);
   const finalTotal = subtotal;
 
@@ -266,8 +258,7 @@ export function BudgetCalculatorModal({
     }
 
     if (isBiscoito) {
-      const totalBiscoitos = noPalitoCount + palitoCount;
-      if (totalBiscoitos < minRequiredBiscoitos) {
+      if (biscoitoTotal < minRequiredBiscoitos) {
         setErrorMsg(`⚠️ O pedido mínimo para biscoitos de ${selectedVariation?.name || 'este tamanho'} é de ${minRequiredBiscoitos} unidades.`);
         setStep(2);
         return;
@@ -287,9 +278,14 @@ export function BudgetCalculatorModal({
         filling1: !isBiscoito ? filling1 : null,
         frosting: !isBiscoito ? frosting : null,
         extras: isBiscoito
-          ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito` : 'Todos sem palito')
+          ? [
+              palitoCount > 0
+                ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoBiscoitoCount} un sem palito`
+                : 'Todos sem palito',
+              wantsRibbonTag ? 'Fita de Cetim + Tag (+R$ 1,00/un)' : null,
+            ].filter(Boolean).join(' | ')
           : null,
-        quantity,
+        quantity: effectiveQuantity,
         unitPrice: unitPrice + extraCostPerUnit,
         eventDate,
         themeNotes,
@@ -334,11 +330,17 @@ export function BudgetCalculatorModal({
         filling1: !isBiscoito ? filling1 : undefined,
         frosting: !isBiscoito ? frosting : undefined,
         extras: isBiscoito
-          ? (palitoCount > 0 ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoCount} un sem palito | Pgto: ${paymentLabel}` : `Todos sem palito | Pgto: ${paymentLabel}`)
+          ? [
+              palitoCount > 0
+                ? `${palitoCount} un com palito (+R$ 2,00/un) e ${noPalitoBiscoitoCount} un sem palito`
+                : 'Todos sem palito',
+              wantsRibbonTag ? 'Fita de Cetim + Tag (+R$ 1,00/un)' : null,
+              `Pgto: ${paymentLabel}`,
+            ].filter(Boolean).join(' | ')
           : selectedProduct?.slug === 'kit-festa-celebrar'
           ? `Cobertura ${frosting} (${frosting === 'Buttercream' ? 'Incluso no Kit' : 'Sem Buttercream'}) | Pgto: ${paymentLabel}`
           : (isButtercream ? `Cobertura Buttercream (+R$ 20,00) | Pgto: ${paymentLabel}` : `Pgto: ${paymentLabel}`),
-        quantity,
+        quantity: effectiveQuantity,
         eventDate: eventDate ? new Date(eventDate).toLocaleDateString('pt-BR') : undefined,
         themeNotes: themeNotes || undefined,
         finalTotal,
@@ -392,10 +394,13 @@ export function BudgetCalculatorModal({
       text += `• *Massa:* ${cakeBase}\n`;
       text += `• *Recheio Principal:* ${filling1}\n`;
       text += `• *Cobertura:* ${frosting}\n`;
+    } else {
+      text += `• *Divisão:* ${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito\n`;
+      if (wantsRibbonTag) text += `• *Fita de Cetim + Tag:* Sim (+R$ 1,00/un)\n`;
     }
 
     text += `• *Pagamento Preferido:* ${paymentLabel}\n`;
-    text += `• *Quantidade:* ${quantity}\n`;
+    text += `• *Quantidade:* ${effectiveQuantity}\n`;
     text += `• *Data Desejada:* ${formattedDate}\n`;
     if (themeNotes) text += `• *Tema / Observações:* ${themeNotes}\n`;
 
@@ -638,7 +643,7 @@ export function BudgetCalculatorModal({
                         🍪 Escolha a Quantidade de Biscoitos ({selectedVariation?.name || 'Personalizados'})
                       </h4>
                       <p className="text-xs text-[#645451]">
-                        Escolha uma das faixas abaixo, ou ajuste manualmente com os botões — depois divida entre **Sem Palito** e **Com Palito** como preferir:
+                        Escolha uma das faixas abaixo{isPalitoAllowed ? ' — depois, se quiser, escolha quantos desses vêm no palito' : ''}:
                       </p>
                     </div>
 
@@ -650,13 +655,13 @@ export function BudgetCalculatorModal({
                         </span>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {biscoitoTiers.map((tier) => {
-                            const isSelected = noPalitoCount + palitoCount === tier.qty;
+                            const isSelected = biscoitoTotal === tier.qty;
                             return (
                               <button
                                 key={tier.qty}
                                 type="button"
                                 onClick={() => {
-                                  setNoPalitoCount(tier.qty);
+                                  setBiscoitoTotal(tier.qty);
                                   setPalitoCount(0);
                                 }}
                                 className={`p-2.5 rounded-xl border text-center transition-all ${
@@ -672,72 +677,28 @@ export function BudgetCalculatorModal({
                             );
                           })}
                         </div>
-                        <p className="text-[10px] text-[#A75644] mt-1.5">
-                          ➕ Quer mais que a maior faixa? Use os botões "+" abaixo pra adicionar mais unidades.
-                        </p>
                       </div>
                     )}
 
                     <div className="space-y-3">
-                      {/* Counter 1: Biscoitos Sem Palito */}
-                      <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm">
-                        <div>
-                          <span className="text-xs font-bold text-[#4A231A] block">
-                            🍪 Biscoitos SEM Palito (Tradicionais)
-                          </span>
-                          <span className="text-[11px] text-[#C27360] font-semibold">
-                            {formatCurrency(unitPrice)} por unidade
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setNoPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - palitoCount), nextBiscoitoQty(noPalitoCount, biscoitoStepConfig, -1)))}
-                            disabled={(noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)}
-                            className={`w-9 h-9 rounded-xl font-bold transition-colors ${
-                              (noPalitoCount + palitoCount) <= minRequiredBiscoitos && noPalitoCount <= Math.max(0, minRequiredBiscoitos - palitoCount)
-                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
-                            }`}
-                          >
-                            -
-                          </button>
-                          <span className="text-base font-extrabold text-[#4A231A] w-7 text-center">
-                            {noPalitoCount}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setNoPalitoCount(nextBiscoitoQty(noPalitoCount, biscoitoStepConfig, 1))}
-                            disabled={noPalitoCount >= biscoitoStepConfig.max}
-                            className={`w-9 h-9 rounded-xl font-bold transition-colors ${
-                              noPalitoCount >= biscoitoStepConfig.max
-                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
-                            }`}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Counter 2: Biscoitos Com Palito */}
+                      {/* Divisão Com Palito (dentro do total escolhido) */}
                       {isPalitoAllowed ? (
                         <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm">
                           <div>
                             <span className="text-xs font-bold text-[#4A231A] block">
-                              🍭 Biscoitos COM Palito (+ R$ 2,00/un)
+                              🍭 Quantos Com Palito? (+ R$ 2,00/un)
                             </span>
-                            <span className="text-[11px] text-emerald-700 font-semibold">
-                              {formatCurrency(unitPrice + 2.0)} por unidade
+                            <span className="text-[11px] text-[#645451]">
+                              Dos {biscoitoTotal} escolhidos, quantos vêm no palito
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(Math.max(Math.max(0, minRequiredBiscoitos - noPalitoCount), nextBiscoitoQty(palitoCount, biscoitoStepConfig, -1)))}
-                              disabled={palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos}
+                              onClick={() => setPalitoCount(Math.max(0, palitoCount - 1))}
+                              disabled={palitoCount <= 0}
                               className={`w-9 h-9 rounded-xl font-bold transition-colors ${
-                                palitoCount <= 0 || (noPalitoCount + palitoCount) <= minRequiredBiscoitos
+                                palitoCount <= 0
                                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
                                   : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
                               }`}
@@ -749,10 +710,10 @@ export function BudgetCalculatorModal({
                             </span>
                             <button
                               type="button"
-                              onClick={() => setPalitoCount(nextBiscoitoQty(palitoCount, biscoitoStepConfig, 1))}
-                              disabled={palitoCount >= biscoitoStepConfig.max}
+                              onClick={() => setPalitoCount(Math.min(biscoitoTotal, palitoCount + 1))}
+                              disabled={palitoCount >= biscoitoTotal}
                               className={`w-9 h-9 rounded-xl font-bold transition-colors ${
-                                palitoCount >= biscoitoStepConfig.max
+                                palitoCount >= biscoitoTotal
                                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
                                   : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
                               }`}
@@ -766,6 +727,35 @@ export function BudgetCalculatorModal({
                           ℹ️ Opção no palito disponível apenas para os tamanhos de 6cm e 9cm.
                         </div>
                       )}
+
+                      {/* Fita de Cetim + Tag */}
+                      <button
+                        type="button"
+                        onClick={() => setWantsRibbonTag(!wantsRibbonTag)}
+                        className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
+                          wantsRibbonTag
+                            ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
+                            : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                        }`}
+                      >
+                        <div>
+                          <span className="text-xs font-bold text-[#4A231A] block">
+                            🎀 Adicionar Fita de Cetim + Tag Personalizada
+                          </span>
+                          <span className="text-[11px] text-[#C27360] font-semibold">
+                            + R$ 1,00 por unidade
+                          </span>
+                        </div>
+                        <span
+                          className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                            wantsRibbonTag
+                              ? 'bg-[#C27360] border-[#C27360] text-white'
+                              : 'border-[#F2D7D0] text-transparent'
+                          }`}
+                        >
+                          ✓
+                        </span>
+                      </button>
 
                       {/* Sobre os Biscoitos — Informações Importantes */}
                       <div className="p-3.5 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-2">
@@ -790,15 +780,9 @@ export function BudgetCalculatorModal({
                       <div className="p-3 bg-gradient-to-r from-[#FDF7F6] to-[#F9ECE9] rounded-xl border border-[#F2D7D0] text-xs font-bold text-[#4A231A] flex items-center justify-between">
                         <span>Total de Biscoitos no Pedido:</span>
                         <span className="text-[#C27360] font-extrabold text-sm">
-                          {noPalitoCount + palitoCount} unidades ({noPalitoCount} sem palito e {palitoCount} com palito)
+                          {biscoitoTotal} unidades ({noPalitoBiscoitoCount} sem palito e {palitoCount} com palito)
                         </span>
                       </div>
-
-                      {(noPalitoCount + palitoCount) <= minRequiredBiscoitos && (
-                        <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 font-semibold flex items-center gap-1.5">
-                          <span>🔒 Trava de Mínimo: O pedido mínimo para este tamanho ({selectedVariation?.name}) é de {minRequiredBiscoitos} unidades.</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1131,7 +1115,7 @@ export function BudgetCalculatorModal({
               <span>Quantidade:</span>
               <span className="font-semibold text-[#4A231A]">
                 {isBiscoito
-                  ? `${noPalitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
+                  ? `${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
                   : `${quantity}x`}
               </span>
             </div>
@@ -1139,6 +1123,12 @@ export function BudgetCalculatorModal({
               <div className="flex justify-between items-center text-xs text-[#645451]">
                 <span>Adicional Suporte no Palito:</span>
                 <span className="font-semibold text-[#C27360]">+{formatCurrency(palitoTotalCost)}</span>
+              </div>
+            )}
+            {isBiscoito && wantsRibbonTag && (
+              <div className="flex justify-between items-center text-xs text-[#645451]">
+                <span>Fita de Cetim + Tag:</span>
+                <span className="font-semibold text-[#C27360]">+{formatCurrency(ribbonTagCost)}</span>
               </div>
             )}
             {!isBiscoito && extraCostPerUnit > 0 && (
