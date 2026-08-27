@@ -67,23 +67,23 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
 
           {/* Right: Editorial Photo Panel — real work, not a single stock-feeling shot */}
           <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none grid grid-cols-2 gap-3">
+            <div className="relative mx-auto max-w-md lg:max-w-none flex gap-3 h-[420px] sm:h-[480px] lg:h-[560px]">
 
-              {/* Main Photo — spans both columns, full and straight: the photography is the point */}
-              <div className="col-span-2 relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white aspect-[16/11]">
+              {/* Main Photo — its own natural portrait shape, not forced into a landscape crop */}
+              <div className="relative w-[58%] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white h-full">
                 <Image
                   src="/images/hero-bolo-destaque.jpg"
                   alt="Bolo artesanal decorado à mão, Confeitaria Cinthia Rodrigues"
                   fill
                   priority
-                  className="object-cover"
+                  className="object-cover object-top"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/75 via-[#2A1712]/5 to-transparent flex flex-col justify-end p-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/75 via-[#2A1712]/5 to-transparent flex flex-col justify-end p-5 text-white">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
                     Feito à Mão, Peça por Peça
                   </span>
-                  <h3 className="font-serif text-2xl font-bold leading-tight">Bolos Artesanais Personalizados</h3>
+                  <h3 className="font-serif text-xl leading-tight font-bold">Bolos Artesanais Personalizados</h3>
                   <div className="mt-3">
                     <button
                       onClick={onOpenBudgetModal}
@@ -95,29 +95,31 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
                 </div>
               </div>
 
-              {/* Two supporting shots — the range of the craft */}
-              <div className="relative rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white aspect-square">
-                <Image
-                  src="/images/hero-biscoitos-destaque.jpg"
-                  alt="Biscoitos amanteigados decorados à mão"
-                  fill
-                  className="object-cover"
-                />
-                <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                  Biscoitos
-                </span>
-              </div>
+              {/* Two supporting shots, stacked — the range of the craft */}
+              <div className="w-[42%] flex flex-col gap-3">
+                <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
+                  <Image
+                    src="/images/hero-biscoitos-destaque.jpg"
+                    alt="Biscoitos amanteigados decorados à mão"
+                    fill
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                    Biscoitos
+                  </span>
+                </div>
 
-              <div className="relative rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white aspect-square">
-                <Image
-                  src="/images/hero-bentocake-destaque.jpg"
-                  alt="Bentô Cake artesanal personalizado"
-                  fill
-                  className="object-cover"
-                />
-                <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                  Bentô Cake
-                </span>
+                <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
+                  <Image
+                    src="/images/hero-bentocake-destaque.jpg"
+                    alt="Bentô Cake artesanal personalizado"
+                    fill
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                    Bentô Cake
+                  </span>
+                </div>
               </div>
 
             </div>
