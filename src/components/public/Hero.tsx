@@ -65,46 +65,69 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
             </div>
           </div>
 
-          {/* Right: Editorial Photo Panel */}
+          {/* Right: Editorial Photo Panel — real work, not a single stock-feeling shot */}
           <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
+            <div className="relative mx-auto max-w-md lg:max-w-none grid grid-cols-2 gap-3">
 
-              {/* Main Photo — full, straight, no tilt: the photography is the point */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white aspect-[4/5]">
+              {/* Main Photo — spans both columns, full and straight: the photography is the point */}
+              <div className="col-span-2 relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white aspect-[16/11]">
                 <Image
-                  src="/images/bento_cake.jpg"
-                  alt="Bentô Cake Cinthia Rodrigues"
+                  src="/images/hero-bolo-destaque.jpg"
+                  alt="Bolo artesanal decorado à mão, Confeitaria Cinthia Rodrigues"
                   fill
                   priority
                   className="object-cover"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/80 via-[#2A1712]/10 to-transparent flex flex-col justify-end p-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/75 via-[#2A1712]/5 to-transparent flex flex-col justify-end p-6 text-white">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
-                    Destaque da Confeitaria
+                    Feito à Mão, Peça por Peça
                   </span>
-                  <h3 className="font-serif text-2xl font-bold leading-tight">Bentô Cake Personalizado</h3>
-                  <p className="text-xs text-white/80 mt-1">Acompanha hamburgueira decorada, colher de madeira e vela</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="font-serif text-xl font-bold text-white">R$ 95,00</span>
+                  <h3 className="font-serif text-2xl font-bold leading-tight">Bolos Artesanais Personalizados</h3>
+                  <div className="mt-3">
                     <button
                       onClick={onOpenBudgetModal}
                       className="px-4 py-2 bg-white text-[#4A231A] text-xs font-bold rounded-full shadow hover:bg-[#FDF7F6] transition-colors"
                     >
-                      Pedir o Seu
+                      Montar o Meu
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Quiet supporting detail — handmade credibility, not decoration */}
-              <div className="mt-4 flex items-center gap-2.5 px-1">
-                <Heart className="w-4 h-4 text-[#C27360] fill-current shrink-0" />
-                <p className="text-xs text-[#645451]">
-                  <span className="font-bold text-[#4A231A]">Feito à mão</span> — massa fofinha e recheios caseiros, do jeito que uma festa de verdade merece.
-                </p>
+              {/* Two supporting shots — the range of the craft */}
+              <div className="relative rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white aspect-square">
+                <Image
+                  src="/images/hero-biscoitos-destaque.jpg"
+                  alt="Biscoitos amanteigados decorados à mão"
+                  fill
+                  className="object-cover"
+                />
+                <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  Biscoitos
+                </span>
               </div>
 
+              <div className="relative rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white aspect-square">
+                <Image
+                  src="/images/hero-bentocake-destaque.jpg"
+                  alt="Bentô Cake artesanal personalizado"
+                  fill
+                  className="object-cover"
+                />
+                <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  Bentô Cake
+                </span>
+              </div>
+
+            </div>
+
+            {/* Quiet supporting detail — handmade credibility, not decoration */}
+            <div className="mt-4 flex items-center gap-2.5 px-1 max-w-md mx-auto lg:mx-0 lg:max-w-none">
+              <Heart className="w-4 h-4 text-[#C27360] fill-current shrink-0" />
+              <p className="text-xs text-[#645451]">
+                <span className="font-bold text-[#4A231A]">Feito à mão</span> — massa fofinha e recheios caseiros, do jeito que uma festa de verdade merece.
+              </p>
             </div>
           </div>
 
