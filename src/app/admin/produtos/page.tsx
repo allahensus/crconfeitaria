@@ -270,9 +270,20 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="p-4 border-t border-[#F2D7D0]/60 flex items-center justify-between bg-gray-50">
-                  <span className="font-bold text-base text-[#4A231A] font-serif">
-                    {formatCurrency(p.basePrice)}
-                  </span>
+                  <div>
+                    {p.variations && p.variations.length > 0 && (
+                      <span className="text-[9px] uppercase font-bold text-[#A75644] block">
+                        A partir de
+                      </span>
+                    )}
+                    <span className="font-bold text-base text-[#4A231A] font-serif">
+                      {formatCurrency(
+                        p.variations && p.variations.length > 0
+                          ? Math.min(...p.variations.map((v: any) => v.price))
+                          : p.basePrice
+                      )}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleOpenEdit(p)}
