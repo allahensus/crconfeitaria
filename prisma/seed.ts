@@ -217,16 +217,16 @@ async function main() {
     },
   });
 
-  await prisma.product.upsert({
+  const kitFestaCelebrar = await prisma.product.upsert({
     where: { organizationId_slug: { organizationId: organization.id, slug: 'kit-festa-celebrar' } },
-    update: { mainImage: '/images/bento_cake.jpg' },
+    update: { mainImage: '/images/bento_cake.jpg', basePrice: 95.0 },
     create: {
       name: 'Kit Festa Celebrar (Bentô Cake + Biscoitos)',
       slug: 'kit-festa-celebrar',
       categoryId: catKits.id,
       description: 'Combo perfeito para comemorações! Acompanha 1 Bentô Cake artesanal com cobertura em Buttercream + Biscoitos Amanteigados desenhados no tema da festa.',
       mainImage: '/images/bento_cake.jpg',
-      basePrice: 160.0,
+      basePrice: 95.0,
       unit: 'kit',
       yieldInfo: 'Bentô Cake + Biscoitos Decorados',
       active: true,
@@ -234,11 +234,21 @@ async function main() {
       organizationId: organization.id,
       variations: {
         create: [
-          { name: '10 biscoitos de 6cm (Bentô Cake + 10 Biscoitos 6cm)', price: 160.0, weight: '450g + 10 biscoitos', slices: '2 fatias + biscoitos' },
-          { name: '5 biscoitos de 9cm (sendo 1 no palito) (Bentô Cake + 5 Biscoitos 9cm)', price: 160.0, weight: '450g + 5 biscoitos', slices: '2 fatias + biscoitos' },
+          { name: 'Bentô Cake + 10 Biscoitos 6cm', price: 225.0, weight: '450g + 10 biscoitos', slices: '2 fatias + biscoitos' },
+          { name: 'Bentô Cake + 6 Biscoitos 9cm', price: 226.40, weight: '450g + 6 biscoitos', slices: '2 fatias + biscoitos' },
         ]
       }
     },
+  });
+
+  // Keep name/price in sync for orgs seeded before this correction.
+  await prisma.productVariation.updateMany({
+    where: { productId: kitFestaCelebrar.id, name: { contains: '6cm' } },
+    data: { name: 'Bentô Cake + 10 Biscoitos 6cm', price: 225.0 },
+  });
+  await prisma.productVariation.updateMany({
+    where: { productId: kitFestaCelebrar.id, name: { contains: '9cm' } },
+    data: { name: 'Bentô Cake + 6 Biscoitos 9cm', price: 226.40 },
   });
 
   // 5. Official Fillings Options (Full 20-flavor Menu)

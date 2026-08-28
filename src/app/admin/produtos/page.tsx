@@ -87,36 +87,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleImportLocalPath = async () => {
-    if (!mainImage || (!mainImage.includes('\\') && !mainImage.includes(':/') && !mainImage.includes(':\\'))) {
-      return;
-    }
-
-    setUploading(true);
-    setUploadMsg('Copiando imagem do seu computador...');
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ localPath: mainImage }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setMainImage(data.url);
-        setUploadMsg('✅ Arquivo local importado com sucesso!');
-        setTimeout(() => setUploadMsg(''), 4000);
-      } else {
-        setUploadMsg(`⚠️ ${data.error || 'Não foi possível ler o arquivo do caminho informado.'}`);
-      }
-    } catch (err: any) {
-      setUploadMsg('⚠️ Erro ao importar caminho local.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleOpenCreate = () => {
     setEditingId(null);
     setName('');
@@ -431,29 +401,17 @@ export default function AdminProductsPage() {
                       onChange={handleFileUpload}
                       className="hidden"
                     />
-                    <span className="text-xs text-gray-500">ou insira o caminho abaixo</span>
+                    <span className="text-xs text-gray-500">ou cole a URL de uma imagem</span>
                   </div>
 
-                  {/* Windows Local Path / Web URL Input */}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Ex: C:\Users\...\bisc.jpeg ou /uploads/bisc.jpeg"
-                      value={mainImage}
-                      onChange={(e) => setMainImage(e.target.value)}
-                      className="flex-1 p-2.5 rounded-xl border border-[#F2D7D0] bg-white text-xs outline-none focus:ring-2 focus:ring-[#C27360]"
-                    />
-                    {(mainImage.includes('\\') || mainImage.includes(':\\')) && (
-                      <button
-                        type="button"
-                        onClick={handleImportLocalPath}
-                        disabled={uploading}
-                        className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-colors"
-                      >
-                        {uploading ? 'Importando...' : 'Importar do PC'}
-                      </button>
-                    )}
-                  </div>
+                  {/* Image URL Input */}
+                  <input
+                    type="text"
+                    placeholder="Ex: https://exemplo.com/foto.jpeg"
+                    value={mainImage}
+                    onChange={(e) => setMainImage(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#F2D7D0] bg-white text-xs outline-none focus:ring-2 focus:ring-[#C27360]"
+                  />
 
                   {uploadMsg && (
                     <p className="text-xs font-semibold text-[#C27360]">{uploadMsg}</p>
