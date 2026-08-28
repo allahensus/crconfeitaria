@@ -6,9 +6,24 @@ import { Sparkles, Heart, ArrowRight } from 'lucide-react';
 
 interface HeroProps {
   onOpenBudgetModal: () => void;
+  settings?: Record<string, string>;
 }
 
-export function Hero({ onOpenBudgetModal }: HeroProps) {
+function heroPhoto(settings: Record<string, string> | undefined, key: string, fallbackSrc: string, fallbackPosY = 50) {
+  const s = settings || {};
+  return {
+    src: s[`hero_${key}_image`] || fallbackSrc,
+    zoom: parseFloat(s[`hero_${key}_zoom`] || '1') || 1,
+    posX: parseFloat(s[`hero_${key}_pos_x`] ?? '50'),
+    posY: s[`hero_${key}_pos_y`] !== undefined ? parseFloat(s[`hero_${key}_pos_y`]) : fallbackPosY,
+  };
+}
+
+export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
+  const mainPhoto = heroPhoto(settings, 'main', '/images/hero-bolo-destaque.jpg', 0);
+  const biscoitosPhoto = heroPhoto(settings, 'biscoitos', '/images/hero-biscoitos-destaque.jpg', 50);
+  const bentocakePhoto = heroPhoto(settings, 'bentocake', '/images/hero-bentocake-destaque.jpg', 50);
+
   return (
     <section className="relative overflow-hidden bg-gradient-hero py-12 md:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -72,11 +87,15 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
               {/* Main Photo — its own natural portrait shape, not forced into a landscape crop */}
               <div className="relative w-[58%] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white h-full">
                 <Image
-                  src="/images/hero-bolo-destaque.jpg"
+                  src={mainPhoto.src}
                   alt="Bolo artesanal decorado à mão, Confeitaria Cinthia Rodrigues"
                   fill
                   priority
-                  className="object-cover object-top"
+                  className="object-cover"
+                  style={{
+                    objectPosition: `${mainPhoto.posX}% ${mainPhoto.posY}%`,
+                    transform: `scale(${mainPhoto.zoom})`,
+                  }}
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/75 via-[#2A1712]/5 to-transparent flex flex-col justify-end p-5 text-white">
@@ -99,10 +118,14 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
               <div className="w-[42%] flex flex-col gap-3">
                 <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
                   <Image
-                    src="/images/hero-biscoitos-destaque.jpg"
+                    src={biscoitosPhoto.src}
                     alt="Biscoitos amanteigados decorados à mão"
                     fill
                     className="object-cover"
+                    style={{
+                      objectPosition: `${biscoitosPhoto.posX}% ${biscoitosPhoto.posY}%`,
+                      transform: `scale(${biscoitosPhoto.zoom})`,
+                    }}
                   />
                   <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
                     Biscoitos
@@ -111,10 +134,14 @@ export function Hero({ onOpenBudgetModal }: HeroProps) {
 
                 <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
                   <Image
-                    src="/images/hero-bentocake-destaque.jpg"
+                    src={bentocakePhoto.src}
                     alt="Bentô Cake artesanal personalizado"
                     fill
                     className="object-cover"
+                    style={{
+                      objectPosition: `${bentocakePhoto.posX}% ${bentocakePhoto.posY}%`,
+                      transform: `scale(${bentocakePhoto.zoom})`,
+                    }}
                   />
                   <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
                     Bentô Cake

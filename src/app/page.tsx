@@ -82,7 +82,7 @@ export default function PublicPage() {
       />
 
       {/* Hero Banner */}
-      <Hero onOpenBudgetModal={() => handleOpenModal()} />
+      <Hero onOpenBudgetModal={() => handleOpenModal()} settings={settings} />
       <IcingDivider />
 
       {/* Catalog Showcase Section */}
