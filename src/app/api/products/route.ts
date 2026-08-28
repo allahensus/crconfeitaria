@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
-    const { name, categoryId, description, mainImage, basePrice, unit, yieldInfo, featured, active, variations } = body;
+    const { name, categoryId, description, mainImage, imageFit, imageZoom, imagePosX, imagePosY, basePrice, unit, yieldInfo, featured, active, variations } = body;
 
     if (!name || !categoryId || !description || basePrice === undefined) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
@@ -74,6 +74,10 @@ export async function POST(request: Request) {
         categoryId,
         description,
         mainImage: mainImage || '/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg',
+        imageFit: imageFit === 'cover' ? 'cover' : 'contain',
+        imageZoom: imageZoom !== undefined ? parseFloat(imageZoom) : 1,
+        imagePosX: imagePosX !== undefined ? parseFloat(imagePosX) : 50,
+        imagePosY: imagePosY !== undefined ? parseFloat(imagePosY) : 50,
         basePrice: parseFloat(basePrice),
         unit: unit || 'unidade',
         yieldInfo: yieldInfo || null,

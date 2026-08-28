@@ -18,6 +18,10 @@ export default function AdminProductsPage() {
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [mainImage, setMainImage] = useState('/images/bento_cake.jpg');
+  const [imageFit, setImageFit] = useState<'contain' | 'cover'>('contain');
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePosX, setImagePosX] = useState(50);
+  const [imagePosY, setImagePosY] = useState(50);
   const [basePrice, setBasePrice] = useState('');
   const [yieldInfo, setYieldInfo] = useState('');
   const [featured, setFeatured] = useState(false);
@@ -75,6 +79,10 @@ export default function AdminProductsPage() {
       const data = await res.json();
       if (res.ok && data.url) {
         setMainImage(data.url);
+        setImageFit('contain');
+        setImageZoom(1);
+        setImagePosX(50);
+        setImagePosY(50);
         setUploadMsg('✅ Imagem salva com sucesso!');
         setTimeout(() => setUploadMsg(''), 4000);
       } else {
@@ -92,6 +100,10 @@ export default function AdminProductsPage() {
     setName('');
     setDescription('');
     setMainImage('/images/bento_cake.jpg');
+    setImageFit('contain');
+    setImageZoom(1);
+    setImagePosX(50);
+    setImagePosY(50);
     setBasePrice('95');
     setYieldInfo('');
     setFeatured(false);
@@ -106,6 +118,10 @@ export default function AdminProductsPage() {
     setCategoryId(p.categoryId);
     setDescription(p.description);
     setMainImage(p.mainImage);
+    setImageFit(p.imageFit === 'cover' ? 'cover' : 'contain');
+    setImageZoom(p.imageZoom ?? 1);
+    setImagePosX(p.imagePosX ?? 50);
+    setImagePosY(p.imagePosY ?? 50);
     setBasePrice(p.basePrice.toString());
     setYieldInfo(p.yieldInfo || '');
     setFeatured(p.featured);
@@ -126,6 +142,10 @@ export default function AdminProductsPage() {
         categoryId,
         description,
         mainImage,
+        imageFit,
+        imageZoom,
+        imagePosX,
+        imagePosY,
         basePrice: parseFloat(basePrice),
         yieldInfo,
         featured,
@@ -217,7 +237,15 @@ export default function AdminProductsPage() {
                     <img
                       src={p.mainImage}
                       alt={p.name}
-                      className="w-full h-full object-contain"
+                      className={p.imageFit === 'cover' ? 'w-full h-full object-cover' : 'w-full h-full object-contain'}
+                      style={
+                        p.imageFit === 'cover'
+                          ? {
+                              objectPosition: `${p.imagePosX ?? 50}% ${p.imagePosY ?? 50}%`,
+                              transform: `scale(${p.imageZoom ?? 1})`,
+                            }
+                          : undefined
+                      }
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}
@@ -428,32 +456,112 @@ export default function AdminProductsPage() {
                     <p className="text-xs font-semibold text-[#C27360]">{uploadMsg}</p>
                   )}
 
-                  {/* Live Image Preview */}
+                  {/* Live Image Preview + Ajuste de Zoom/Posição */}
                   {mainImage && (
-                    <div className="flex items-center gap-3 pt-2 p-3 bg-white rounded-xl border border-[#F2D7D0]">
-                      <div className="relative w-20 h-20 rounded-xl border border-[#E6B9AE] overflow-hidden bg-gray-50 shadow-sm flex items-center justify-center shrink-0">
+                    <div className="pt-2 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-[11px] font-bold text-[#4A231A]">
+                          Pré-visualização (como aparece no site)
+                        </span>
+                        <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#874132] cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={imageFit === 'cover'}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setImageFit(checked ? 'cover' : 'contain');
+                              if (checked) {
+                                setImageZoom(1);
+                                setImagePosX(50);
+                                setImagePosY(50);
+                              }
+                            }}
+                          />
+                          Ajustar zoom/posição manualmente
+                        </label>
+                      </div>
+
+                      <div className="relative w-full max-w-xs mx-auto aspect-[4/3] rounded-xl border border-[#E6B9AE] overflow-hidden bg-[#FDF7F6] shadow-sm">
                         <img
                           key={mainImage}
                           src={mainImage}
                           alt="Pré-visualização do produto"
-                          className="w-full h-full object-cover"
+                          className={imageFit === 'cover' ? 'w-full h-full object-cover' : 'w-full h-full object-contain'}
+                          style={
+                            imageFit === 'cover'
+                              ? {
+                                  objectPosition: `${imagePosX}% ${imagePosY}%`,
+                                  transform: `scale(${imageZoom})`,
+                                }
+                              : undefined
+                          }
                           onError={(e) => {
                             console.error('Image load error for:', mainImage);
                           }}
                         />
                       </div>
-                      <div className="text-[11px] text-gray-600 space-y-1 overflow-hidden">
-                        <span className="font-bold text-[#4A231A] block">Caminho / URL da Imagem:</span>
-                        <code className="text-[11px] bg-[#FAF6F4] px-2 py-1 rounded border border-[#F2D7D0] text-[#874132] font-mono block truncate max-w-xs">
+
+                      {imageFit === 'cover' && (
+                        <div className="space-y-3 bg-white p-3 rounded-xl border border-[#F2D7D0]">
+                          <div>
+                            <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                              <span>Zoom</span>
+                              <span>{Math.round(imageZoom * 100)}%</span>
+                            </label>
+                            <input
+                              type="range"
+                              min="1"
+                              max="2.5"
+                              step="0.05"
+                              value={imageZoom}
+                              onChange={(e) => setImageZoom(parseFloat(e.target.value))}
+                              className="w-full accent-[#C27360]"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                              <span>Posição Horizontal</span>
+                              <span>{Math.round(imagePosX)}%</span>
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="1"
+                              value={imagePosX}
+                              onChange={(e) => setImagePosX(parseFloat(e.target.value))}
+                              className="w-full accent-[#C27360]"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                              <span>Posição Vertical</span>
+                              <span>{Math.round(imagePosY)}%</span>
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="1"
+                              value={imagePosY}
+                              onChange={(e) => setImagePosY(parseFloat(e.target.value))}
+                              className="w-full accent-[#C27360]"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-[11px] bg-[#FAF6F4] px-2 py-1 rounded border border-[#F2D7D0] text-[#874132] font-mono block truncate">
                           {mainImage}
                         </code>
                         <a
                           href={mainImage}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#C27360] font-bold hover:underline inline-flex items-center gap-1 text-[11px]"
+                          className="text-[#C27360] font-bold hover:underline text-[11px] shrink-0"
                         >
-                          🔗 Ver imagem completa em nova aba
+                          Ver 🔗
                         </a>
                       </div>
                     </div>

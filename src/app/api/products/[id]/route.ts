@@ -47,7 +47,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { name, categoryId, description, mainImage, basePrice, unit, yieldInfo, featured, active, variations } = body;
+    const { name, categoryId, description, mainImage, imageFit, imageZoom, imagePosX, imagePosY, basePrice, unit, yieldInfo, featured, active, variations } = body;
 
     if (Array.isArray(variations)) {
       await db.productVariation.deleteMany({
@@ -62,6 +62,10 @@ export async function PUT(
         categoryId,
         description,
         mainImage,
+        imageFit: imageFit === 'cover' ? 'cover' : 'contain',
+        imageZoom: imageZoom !== undefined ? parseFloat(imageZoom) : 1,
+        imagePosX: imagePosX !== undefined ? parseFloat(imagePosX) : 50,
+        imagePosY: imagePosY !== undefined ? parseFloat(imagePosY) : 50,
         basePrice: parseFloat(basePrice),
         unit,
         yieldInfo,

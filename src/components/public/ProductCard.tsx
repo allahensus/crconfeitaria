@@ -16,6 +16,7 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
     : product.basePrice;
 
   const hasVariations = product.variations && product.variations.length > 0;
+  const isCoverFit = product.imageFit === 'cover';
 
   return (
     <div className="group bg-white rounded-3xl overflow-hidden border border-[#F2D7D0] shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
@@ -25,7 +26,17 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
           <img
             src={product.mainImage}
             alt={product.name}
-            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full transition-transform duration-500 ${
+              isCoverFit ? 'object-cover' : 'object-contain group-hover:scale-105'
+            }`}
+            style={
+              isCoverFit
+                ? {
+                    objectPosition: `${product.imagePosX ?? 50}% ${product.imagePosY ?? 50}%`,
+                    transform: `scale(${product.imageZoom ?? 1})`,
+                  }
+                : undefined
+            }
             onError={(e) => {
               // Fallback to bento cake if image fails
               (e.target as HTMLImageElement).src = '/images/bento_cake.jpg';

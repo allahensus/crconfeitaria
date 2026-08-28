@@ -67,6 +67,10 @@ model Product {
   category    Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   description String
   mainImage   String
+  imageFit    String             @default("contain") // "contain" (full photo, no crop) or "cover" (manual zoom/position)
+  imageZoom   Float              @default(1) // used when imageFit = "cover"
+  imagePosX   Float              @default(50) // 0-100, used when imageFit = "cover"
+  imagePosY   Float              @default(50) // 0-100, used when imageFit = "cover"
   gallery     String?            // JSON string array
   basePrice   Float
   unit        String             @default("unidade") // unidade, kg, etc.
