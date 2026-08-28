@@ -584,38 +584,6 @@ export function BudgetCalculatorModal({
                     </div>
                   </div>
 
-                  {/* Frosting Selection for Kit Festa */}
-                  {selectedProduct?.slug === 'kit-festa-celebrar' && (
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
-                        <span>Tipo de Cobertura do Kit</span>
-                        <span className="text-[11px] font-semibold text-[#C27360]">
-                          {frosting === 'Buttercream' ? '✨ Buttercream (Incluso no Kit)' : 'Chantily (Sem Buttercream)'}
-                        </span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { label: 'Buttercream', sub: '✨ Incluso no Kit (Padrão)' },
-                          { label: 'Chantily', sub: 'Sem Buttercream (Incluso)' },
-                        ].map((cob) => (
-                          <button
-                            key={cob.label}
-                            type="button"
-                            onClick={() => setFrosting(cob.label)}
-                            className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center ${
-                              frosting === cob.label
-                                ? 'border-[#C27360] bg-[#FDF7F6] text-[#4A231A] ring-2 ring-[#C27360]/30 font-bold shadow-sm'
-                                : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FAF6F4]'
-                            }`}
-                          >
-                            <span className="text-xs font-bold">{cob.label}</span>
-                            <span className="text-[10px] opacity-80 mt-0.5">{cob.sub}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Frosting Selection for Mini Bolo only */}
                   {selectedProduct?.slug === 'mini-bolo' && (
                     <div>
