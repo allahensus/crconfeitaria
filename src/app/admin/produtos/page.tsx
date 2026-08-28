@@ -217,7 +217,7 @@ export default function AdminProductsPage() {
                     <img
                       src={p.mainImage}
                       alt={p.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}
