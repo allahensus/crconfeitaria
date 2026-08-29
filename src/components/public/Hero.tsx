@@ -85,20 +85,20 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
             <div className="relative mx-auto max-w-md lg:max-w-none flex gap-3 h-[420px] sm:h-[480px] lg:h-[560px]">
 
               {/* Main Photo — its own natural portrait shape, not forced into a landscape crop */}
-              <div className="relative w-[58%] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white h-full">
+              <div className="group relative w-[58%] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-[#4A231A]/5 bg-white h-full transition-shadow duration-500 hover:shadow-blush">
                 <Image
                   src={mainPhoto.src}
                   alt="Bolo artesanal decorado à mão, Confeitaria Cinthia Rodrigues"
                   fill
                   priority
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 ease-out scale-[var(--zoom)] group-hover:scale-[calc(var(--zoom)*1.06)]"
                   style={{
                     objectPosition: `${mainPhoto.posX}% ${mainPhoto.posY}%`,
-                    transform: `scale(${mainPhoto.zoom})`,
-                  }}
+                    '--zoom': mainPhoto.zoom,
+                  } as React.CSSProperties}
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/75 via-[#2A1712]/5 to-transparent flex flex-col justify-end p-5 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/80 via-[#2A1712]/10 to-transparent group-hover:from-[#2A1712]/85 transition-colors duration-500 flex flex-col justify-end p-5 text-white">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
                     Feito à Mão, Peça por Peça
                   </span>
@@ -116,37 +116,47 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
 
               {/* Two supporting shots, stacked — the range of the craft */}
               <div className="w-[42%] flex flex-col gap-3">
-                <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
+                <a
+                  href="#catalogo"
+                  className="group relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white block transition-all duration-500 hover:shadow-blush hover:-translate-y-0.5"
+                >
                   <Image
                     src={biscoitosPhoto.src}
                     alt="Biscoitos amanteigados decorados à mão"
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 ease-out scale-[var(--zoom)] group-hover:scale-[calc(var(--zoom)*1.08)]"
                     style={{
                       objectPosition: `${biscoitosPhoto.posX}% ${biscoitosPhoto.posY}%`,
-                      transform: `scale(${biscoitosPhoto.zoom})`,
-                    }}
+                      '--zoom': biscoitosPhoto.zoom,
+                    } as React.CSSProperties}
                   />
-                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-1">
                     Biscoitos
+                    <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                   </span>
-                </div>
+                </a>
 
-                <div className="relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white">
+                <a
+                  href="#catalogo"
+                  className="group relative flex-1 rounded-2xl overflow-hidden shadow-lg ring-1 ring-[#4A231A]/5 bg-white block transition-all duration-500 hover:shadow-blush hover:-translate-y-0.5"
+                >
                   <Image
                     src={bentocakePhoto.src}
                     alt="Bentô Cake artesanal personalizado"
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 ease-out scale-[var(--zoom)] group-hover:scale-[calc(var(--zoom)*1.08)]"
                     style={{
                       objectPosition: `${bentocakePhoto.posX}% ${bentocakePhoto.posY}%`,
-                      transform: `scale(${bentocakePhoto.zoom})`,
-                    }}
+                      '--zoom': bentocakePhoto.zoom,
+                    } as React.CSSProperties}
                   />
-                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-1">
                     Bentô Cake
+                    <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                   </span>
-                </div>
+                </a>
               </div>
 
             </div>
