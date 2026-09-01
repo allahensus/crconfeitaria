@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { formatCurrency } from '@/lib/utils';
 import { Cake, Plus, Edit2, Trash2, Star, Check, X, Search, Layers, Image as ImageIcon } from 'lucide-react';
@@ -234,10 +235,12 @@ export default function AdminProductsPage() {
               >
                 <div>
                   <div className="relative aspect-[4/3] bg-gray-100">
-                    <img
+                    <Image
                       src={p.mainImage}
                       alt={p.name}
-                      className={p.imageFit === 'cover' ? 'w-full h-full object-cover' : 'w-full h-full object-contain'}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className={p.imageFit === 'cover' ? 'object-cover' : 'object-contain'}
                       style={
                         p.imageFit === 'cover'
                           ? {

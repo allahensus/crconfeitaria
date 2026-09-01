@@ -11,6 +11,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
+  const [imgSrc, setImgSrc] = React.useState(product.mainImage);
+
   const minPrice = product.variations && product.variations.length > 0
     ? Math.min(...product.variations.map((v: any) => v.price))
     : product.basePrice;
@@ -23,10 +25,12 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
       <div>
         {/* Product Image */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#FDF7F6]">
-          <img
-            src={product.mainImage}
+          <Image
+            src={imgSrc}
             alt={product.name}
-            className={`w-full h-full transition-transform duration-500 ${
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className={`transition-transform duration-500 ${
               isCoverFit ? 'object-cover' : 'object-contain group-hover:scale-105'
             }`}
             style={
@@ -37,10 +41,7 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
                   }
                 : undefined
             }
-            onError={(e) => {
-              // Fallback to bento cake if image fails
-              (e.target as HTMLImageElement).src = '/images/bento_cake.jpg';
-            }}
+            onError={() => setImgSrc('/images/bento_cake.jpg')}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
           
