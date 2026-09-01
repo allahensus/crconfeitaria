@@ -311,36 +311,8 @@ async function main() {
     }
   }
 
-  // 7. Testimonials
-  const testimonials = [
-    {
-      name: 'Mariana Silva',
-      eventType: 'Aniversário Infantil',
-      comment: 'O bolo de Ninho com Morangos estava divino e super delicado! Todos os convidados elogiaram muito.',
-      rating: 5,
-    },
-    {
-      name: 'Camila Rocha',
-      eventType: 'Mesversário',
-      comment: 'Os biscoitos personalizados do Bentô Cake superaram minhas expectativas. Dá até pena de comer de tão lindo!',
-      rating: 5,
-    },
-    {
-      name: 'Fernanda Lima',
-      eventType: 'Casamento',
-      comment: 'Atendimento impecável via WhatsApp e a entrega foi super pontual. O bolo retangular rendeu maravilhosamente.',
-      rating: 5,
-    }
-  ];
-
-  for (const t of testimonials) {
-    const existing = await prisma.testimonial.findFirst({
-      where: { name: t.name, organizationId: organization.id },
-    });
-    if (!existing) {
-      await prisma.testimonial.create({ data: { ...t, organizationId: organization.id } });
-    }
-  }
+  // 7. Testimonials are managed by the confeiteira herself in /admin/depoimentos
+  // with real customer reviews -- intentionally not seeded with placeholder data.
 
   // 8. Seed Initial Customer and Sample Order for Dashboard metrics
   const sampleCustomer = await prisma.customer.create({

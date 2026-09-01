@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Quote,
 } from 'lucide-react';
 
 export function AdminSidebar() {
@@ -40,6 +41,7 @@ export function AdminSidebar() {
     { label: 'Categorias', href: '/admin/categorias', icon: FolderTree },
     { label: 'Clientes (CRM)', href: '/admin/clientes', icon: Users },
     { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign },
+    { label: 'Depoimentos', href: '/admin/depoimentos', icon: Quote },
     { label: 'Configurações', href: '/admin/configuracoes', icon: Settings },
   ];
 

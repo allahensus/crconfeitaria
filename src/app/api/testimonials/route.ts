@@ -3,7 +3,7 @@ import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const organization = await getCurrentOrganization();
     if (!organization) {
@@ -11,8 +11,11 @@ export async function GET() {
     }
     const db = getScopedPrisma(organization.id);
 
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get('active') !== 'all';
+
     const testimonials = await db.testimonial.findMany({
-      where: { active: true },
+      where: activeOnly ? { active: true } : undefined,
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(testimonials);

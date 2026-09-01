@@ -8,6 +8,8 @@ interface TestimonialsProps {
 }
 
 export function Testimonials({ testimonials }: TestimonialsProps) {
+  if (!testimonials || testimonials.length === 0) return null;
+
   return (
     <section id="depoimentos" className="py-16 bg-[#FAF6F4]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
