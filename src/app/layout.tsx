@@ -17,11 +17,24 @@ const inter = Inter({
   display: 'swap',
 });
 
+// TODO: update if/when a custom domain replaces the default *.vercel.app one.
+const siteUrl = 'https://crconfeitaria.vercel.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Cinthia Rodrigues - Confeitaria Artesanal | Bolos e Biscoitos Personalizados',
   description: 'Bolos artesanais, Bentô Cakes, biscoitos amanteigados e doces para tornar seus momentos inesquecíveis. Solicite seu orçamento online!',
   keywords: ['confeitaria artesanal', 'bento cake', 'bolos personalizados', 'biscoitos amanteigados', 'Cinthia Rodrigues'],
   openGraph: {
+    title: 'Cinthia Rodrigues - Confeitaria Artesanal',
+    description: 'Bolos e biscoitos personalizados sob encomenda em São Paulo.',
+    images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
+    url: siteUrl,
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Cinthia Rodrigues - Confeitaria Artesanal',
     description: 'Bolos e biscoitos personalizados sob encomenda em São Paulo.',
     images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
