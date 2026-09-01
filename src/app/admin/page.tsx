@@ -16,6 +16,8 @@ import {
   Award,
   Users,
   PlusCircle,
+  Percent,
+  Trophy,
 } from 'lucide-react';
 import {
   BarChart,
@@ -48,6 +50,21 @@ function buildMonthlyRevenueExpense(transactions: any[]) {
     else if (t.type === 'DESPESA') bucket.despesa += t.amount;
   }
   return months;
+}
+
+function buildTopProducts(orders: any[]) {
+  const totals = new Map<string, { name: string; quantity: number; revenue: number }>();
+  for (const o of orders) {
+    for (const item of o.items || []) {
+      const existing = totals.get(item.productName) || { name: item.productName, quantity: 0, revenue: 0 };
+      existing.quantity += item.quantity;
+      existing.revenue += item.totalPrice;
+      totals.set(item.productName, existing);
+    }
+  }
+  return Array.from(totals.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
 }
 
 function buildPaymentMethodsBreakdown(orders: any[]) {
@@ -121,6 +138,18 @@ export default function AdminDashboardPage() {
   // Dados reais: últimos 6 meses de receita/despesa e distribuição real de formas de pagamento
   const revenueVsExpenseData = buildMonthlyRevenueExpense(allTransactions);
   const paymentMethodsData = buildPaymentMethodsBreakdown(orders);
+  const topProducts = buildTopProducts(orders);
+
+  // Taxa de conversão: de todos os orçamentos recebidos, quantos viraram pedido
+  const convertedQuotesCount = quotes.filter((q) => q.status === 'CONVERTED').length;
+  const conversionRate = quotes.length > 0 ? (convertedQuotesCount / quotes.length) * 100 : 0;
+
+  // Taxa de clientes recorrentes: de quem já comprou ao menos 1x, quantos voltaram
+  const customersWithOrders = customers.filter((c) => (c._count?.orders || 0) >= 1);
+  const recurringCustomersCount = customersWithOrders.filter((c) => (c._count?.orders || 0) >= 2).length;
+  const recurringRate = customersWithOrders.length > 0
+    ? (recurringCustomersCount / customersWithOrders.length) * 100
+    : 0;
 
   const COLORS = ['#C27360', '#D59483', '#E6B9AE', '#A75644', '#4A231A'];
 
@@ -154,7 +183,7 @@ export default function AdminDashboardPage() {
         {/* 10 Key Indicator Metric Cards */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
               <div key={i} className="h-28 rounded-2xl bg-gray-200" />
             ))}
           </div>
@@ -305,6 +334,42 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
+            {/* Card 9: Taxa de Conversão (Orçamento -> Pedido) */}
+            <div className="bg-white p-5 rounded-2xl border border-[#F2D7D0] shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#645451]">
+                  Conversão Orçamento → Pedido
+                </span>
+                <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
+                  {quotes.length > 0 ? `${conversionRate.toFixed(0)}%` : '—'}
+                </h3>
+                <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
+                  {convertedQuotesCount} de {quotes.length} orçamento(s)
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-[#F9ECE9] text-[#A75644] flex items-center justify-center font-bold">
+                <Percent className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Card 10: Clientes Recorrentes */}
+            <div className="bg-white p-5 rounded-2xl border border-[#F2D7D0] shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#645451]">
+                  Clientes Recorrentes
+                </span>
+                <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
+                  {customersWithOrders.length > 0 ? `${recurringRate.toFixed(0)}%` : '—'}
+                </h3>
+                <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
+                  {recurringCustomersCount} de {customersWithOrders.length} cliente(s) voltaram
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-[#FDF7F6] text-[#C27360] flex items-center justify-center font-bold">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -441,6 +506,52 @@ export default function AdminDashboardPage() {
             )}
           </div>
 
+        </div>
+
+        {/* Top Products Panel */}
+        <div className="bg-white p-6 rounded-3xl border border-[#F2D7D0] shadow-card space-y-4">
+          <div>
+            <h3 className="font-serif text-lg font-bold text-[#4A231A] flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-[#C27360]" /> Produtos Mais Vendidos
+            </h3>
+            <p className="text-xs text-[#645451]">Ranking por faturamento, com base nos pedidos já feitos</p>
+          </div>
+
+          {topProducts.length === 0 ? (
+            <p className="text-xs text-[#645451] py-4">
+              Nenhum item vendido ainda. Assim que os pedidos tiverem produtos, o ranking aparece aqui.
+            </p>
+          ) : (
+            <div className="space-y-3 pt-2">
+              {topProducts.map((p, i) => {
+                const maxRevenue = topProducts[0].revenue || 1;
+                return (
+                  <div key={p.name} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-[#F9ECE9] text-[#A75644] text-xs font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-xs font-semibold text-[#4A231A] truncate">{p.name}</span>
+                        <span className="text-xs font-bold text-[#C27360] font-serif shrink-0">
+                          {formatCurrency(p.revenue)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#FAF6F4] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#C27360] to-[#A75644]"
+                          style={{ width: `${Math.max(4, (p.revenue / maxRevenue) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-[#645451] font-semibold shrink-0 w-16 text-right">
+                      {p.quantity} un.
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </main>
