@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { formatCurrency, generateWhatsAppLink } from '@/lib/utils';
 import { X, Sparkles, Check, ChevronRight, ChevronLeft, Calendar, MessageCircle, Cake, Info } from 'lucide-react';
+import { AvailabilityDatePicker } from './AvailabilityDatePicker';
 
 interface BudgetCalculatorModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface BudgetCalculatorModalProps {
   products: any[];
   fillings: any[];
   whatsappNumber?: string;
+  blockedDates?: string[];
+  minLeadDays?: number;
 }
 
 export function BudgetCalculatorModal({
@@ -23,6 +26,8 @@ export function BudgetCalculatorModal({
   products,
   fillings,
   whatsappNumber = '5512997594697',
+  blockedDates = [],
+  minLeadDays = 3,
 }: BudgetCalculatorModalProps) {
   const [step, setStep] = useState(1);
 
@@ -269,6 +274,12 @@ export function BudgetCalculatorModal({
         setStep(2);
         return;
       }
+    }
+
+    if (eventDate && blockedDates.includes(eventDate)) {
+      setErrorMsg('⚠️ Essa data já está com a agenda cheia. Por favor, escolha outra data.');
+      setStep(3);
+      return;
     }
 
     setErrorMsg('');
@@ -949,12 +960,15 @@ export function BudgetCalculatorModal({
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
                   Data Desejada da Entrega / Festa
                 </label>
-                <input
-                  type="date"
+                <AvailabilityDatePicker
                   value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  onChange={setEventDate}
+                  blockedDates={blockedDates}
+                  minDaysFromNow={minLeadDays}
                 />
+                <p className="text-[10px] text-[#645451] mt-1.5">
+                  Dias em cinza já estão com a agenda cheia. Pedimos no mínimo {minLeadDays} dia{minLeadDays !== 1 ? 's' : ''} de antecedência.
+                </p>
               </div>
 
               {/* Payment Method Choice */}

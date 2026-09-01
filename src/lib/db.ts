@@ -12,6 +12,7 @@ const TENANT_SCOPED_MODELS = new Set([
   'Setting',
   'Testimonial',
   'Ingredient',
+  'BlockedDate',
 ]);
 
 const AUTO_WHERE_OPERATIONS = new Set([

@@ -18,6 +18,7 @@ export default function PublicPage() {
   const [fillings, setFillings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
   
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,20 +29,22 @@ export default function PublicPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [prodRes, catRes, fillRes, testRes, setRes] = await Promise.all([
+        const [prodRes, catRes, fillRes, testRes, setRes, blockedRes] = await Promise.all([
           fetch('/api/products'),
           fetch('/api/categories'),
           fetch('/api/fillings'),
           fetch('/api/testimonials'),
           fetch('/api/settings'),
+          fetch('/api/blocked-dates'),
         ]);
 
-        const [prods, cats, fills, tests, sets] = await Promise.all([
+        const [prods, cats, fills, tests, sets, blocked] = await Promise.all([
           prodRes.json(),
           catRes.json(),
           fillRes.json(),
           testRes.json(),
           setRes.json(),
+          blockedRes.json(),
         ]);
 
         if (Array.isArray(prods)) setProducts(prods);
@@ -49,6 +52,9 @@ export default function PublicPage() {
         if (Array.isArray(fills)) setFillings(fills);
         if (Array.isArray(tests)) setTestimonials(tests);
         if (typeof sets === 'object' && sets !== null) setSettings(sets);
+        if (Array.isArray(blocked)) {
+          setBlockedDates(blocked.map((b: any) => b.date.slice(0, 10)));
+        }
       } catch (err) {
         console.error('Error loading public storefront data:', err);
       } finally {
@@ -201,6 +207,8 @@ export default function PublicPage() {
         products={products}
         fillings={fillings}
         whatsappNumber={settings.whatsapp_number}
+        blockedDates={blockedDates}
+        minLeadDays={settings.min_lead_days ? parseInt(settings.min_lead_days) : 3}
       />
     </div>
   );

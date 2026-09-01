@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Settings, Save, CheckCircle2, MessageCircle, Phone, Instagram, MapPin, Image as ImageIcon } from 'lucide-react';
+import { Settings, Save, CheckCircle2, MessageCircle, Phone, Instagram, MapPin, Image as ImageIcon, CalendarClock } from 'lucide-react';
 
 interface HeroPhotoState {
   image: string;
@@ -17,6 +17,7 @@ export default function AdminSettingsPage() {
   const [instagram, setInstagram] = useState('');
   const [address, setAddress] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [minLeadDays, setMinLeadDays] = useState('3');
 
   const [heroMain, setHeroMain] = useState<HeroPhotoState>({ image: '/images/hero-bolo-destaque.jpg', zoom: 1, posX: 50, posY: 0 });
   const [heroBiscoitos, setHeroBiscoitos] = useState<HeroPhotoState>({ image: '/images/hero-biscoitos-destaque.jpg', zoom: 1, posX: 50, posY: 50 });
@@ -36,6 +37,7 @@ export default function AdminSettingsPage() {
           setInstagram(data.instagram || '@crconfeitaria__');
           setAddress(data.address || 'São Paulo - SP');
           setWelcomeMessage(data.welcome_message || '');
+          setMinLeadDays(data.min_lead_days || '3');
           setHeroMain({
             image: data.hero_main_image || '/images/hero-bolo-destaque.jpg',
             zoom: parseFloat(data.hero_main_zoom || '1') || 1,
@@ -76,6 +78,7 @@ export default function AdminSettingsPage() {
           instagram,
           address,
           welcome_message: welcomeMessage,
+          min_lead_days: minLeadDays,
           hero_main_image: heroMain.image,
           hero_main_zoom: String(heroMain.zoom),
           hero_main_pos_x: String(heroMain.posX),
@@ -173,6 +176,25 @@ export default function AdminSettingsPage() {
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1 flex items-center gap-1">
+                  <CalendarClock className="w-3.5 h-3.5 text-[#C27360]" /> Prazo Mínimo de Antecedência
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={minLeadDays}
+                    onChange={(e) => setMinLeadDays(e.target.value)}
+                    className="w-24 p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                  <span className="text-xs text-[#645451]">dia(s) antes da data desejada</span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  No calendário do orçamento, o cliente não consegue escolher datas mais próximas do que isso.
+                </p>
               </div>
 
             </div>

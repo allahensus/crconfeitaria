@@ -28,6 +28,7 @@ model Organization {
   settings              Setting[]
   testimonials          Testimonial[]
   ingredients           Ingredient[]
+  blockedDates          BlockedDate[]
 }
 
 model User {
@@ -312,5 +313,16 @@ model RecipeItem {
   quantityUsed Float      // ex: 150 (g usados por unidade de produto)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model BlockedDate {
+  id             String   @id @default(uuid())
+  date           DateTime // stored at midnight UTC, one row per unavailable calendar day
+  reason         String?  // ex: "Agenda lotada", "Folga"
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, date])
 }
 
