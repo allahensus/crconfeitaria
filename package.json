@@ -10,6 +10,9 @@
     "test": "vitest run",
     "db:push": "prisma db push",
     "db:seed": "node --import tsx/esm prisma/seed.ts || ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts",
+    "db:push:prod": "node scripts/with-env.js .env.production.local \"npm run db:push\"",
+    "db:seed:prod": "node scripts/with-env.js .env.production.local \"npm run db:seed\"",
+    "db:studio:prod": "node scripts/with-env.js .env.production.local \"npx prisma studio\"",
     "postinstall": "prisma generate"
   },
   "dependencies": {
