@@ -11,6 +11,11 @@ if (!TEST_DATABASE_URL) {
   );
 }
 
+// Must use Supabase's pooler host (like DATABASE_URL), not the direct
+// "db.<ref>.supabase.co" host: the direct host is IPv6-only, which fails with
+// Prisma error P1001 ("Can't reach database server") on IPv4-only runners
+// like GitHub Actions. See .env.example for the exact connection format.
+
 export async function resetTestDatabase() {
   await prisma.$disconnect();
 
