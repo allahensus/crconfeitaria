@@ -34,6 +34,10 @@ export function BudgetCalculatorModal({
   // Form State
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
+  // Tracks whether the variation arrived pre-chosen (customer clicked a specific
+  // cobertura pill on the catalog card) vs. defaulted -- lets Mini Bolo skip
+  // re-asking in Step 1 only when the choice was truly already made.
+  const [variationPreselected, setVariationPreselected] = useState(false);
   const [cakeBase, setCakeBase] = useState('Baunilha');
   const [filling1, setFilling1] = useState('');
   const [frosting, setFrosting] = useState('Chantily');
@@ -121,13 +125,17 @@ export function BudgetCalculatorModal({
       setSelectedProduct(initialProduct);
       if (initialVariation) {
         setSelectedVariation(initialVariation);
+        setVariationPreselected(true);
       } else if (initialProduct.variations && initialProduct.variations.length > 0) {
         setSelectedVariation(initialProduct.variations[0]);
+        setVariationPreselected(false);
       } else {
         setSelectedVariation(null);
+        setVariationPreselected(false);
       }
     } else if (products.length > 0) {
       setSelectedProduct(products[0]);
+      setVariationPreselected(false);
       if (products[0].variations && products[0].variations.length > 0) {
         setSelectedVariation(products[0].variations[0]);
       }
@@ -289,6 +297,7 @@ export function BudgetCalculatorModal({
     const prod = products.find((p) => p.id === prodId);
     if (prod) {
       setSelectedProduct(prod);
+      setVariationPreselected(false);
       if (prod.slug !== 'biscoitos-amanteigados') {
         setQuantity(1);
       }
@@ -597,30 +606,40 @@ export function BudgetCalculatorModal({
                 </div>
               </div>
 
-              {/* Variations (Sizes/Slices) */}
+              {/* Variations (Sizes/Slices) -- for Mini Bolo, skip re-asking when the
+                  cobertura was already picked from the catalog card */}
               {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
-                    2. Escolha o Tamanho / Rendimento
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {selectedProduct.variations.map((v: any) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onClick={() => setSelectedVariation(v)}
-                        className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                          selectedVariation?.id === v.id
-                            ? 'border-[#C27360] bg-[#C27360] text-white font-medium shadow-sm'
-                            : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FDF7F6]'
-                        }`}
-                      >
-                        <span className="text-xs font-semibold">{v.name}</span>
-                        <span className="text-xs font-bold">{formatCurrency(v.price)}</span>
-                      </button>
-                    ))}
+                selectedProduct.slug === 'mini-bolo' && variationPreselected ? (
+                  <div className="p-3 rounded-xl bg-[#FDF7F6] border border-[#F2D7D0] flex items-center justify-between">
+                    <span className="text-xs text-[#645451]">Cobertura escolhida</span>
+                    <span className="text-xs font-bold text-[#4A231A]">
+                      {selectedVariation?.name} ({formatCurrency(selectedVariation?.price)})
+                    </span>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                      2. Escolha o Tamanho / Rendimento
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {selectedProduct.variations.map((v: any) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVariation(v)}
+                          className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                            selectedVariation?.id === v.id
+                              ? 'border-[#C27360] bg-[#C27360] text-white font-medium shadow-sm'
+                              : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FDF7F6]'
+                          }`}
+                        >
+                          <span className="text-xs font-semibold">{v.name}</span>
+                          <span className="text-xs font-bold">{formatCurrency(v.price)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
               )}
             </div>
           )}
