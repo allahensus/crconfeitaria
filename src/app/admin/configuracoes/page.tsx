@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Settings, Save, CheckCircle2, MessageCircle, Phone, Instagram, MapPin, Image as ImageIcon, CalendarClock } from 'lucide-react';
+import { Settings, Save, CheckCircle2, MessageCircle, Phone, Instagram, MapPin, Image as ImageIcon, CalendarClock, QrCode } from 'lucide-react';
 
 interface HeroPhotoState {
   image: string;
@@ -18,6 +18,9 @@ export default function AdminSettingsPage() {
   const [address, setAddress] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [minLeadDays, setMinLeadDays] = useState('3');
+  const [pixKey, setPixKey] = useState('');
+  const [pixBeneficiaryName, setPixBeneficiaryName] = useState('');
+  const [pixCity, setPixCity] = useState('');
 
   const [heroMain, setHeroMain] = useState<HeroPhotoState>({ image: '/images/hero-bolo-destaque.jpg', zoom: 1, posX: 50, posY: 0 });
   const [heroBiscoitos, setHeroBiscoitos] = useState<HeroPhotoState>({ image: '/images/hero-biscoitos-destaque.jpg', zoom: 1, posX: 50, posY: 50 });
@@ -38,6 +41,9 @@ export default function AdminSettingsPage() {
           setAddress(data.address || 'São Paulo - SP');
           setWelcomeMessage(data.welcome_message || '');
           setMinLeadDays(data.min_lead_days || '3');
+          setPixKey(data.pix_key || '');
+          setPixBeneficiaryName(data.pix_beneficiary_name || '');
+          setPixCity(data.pix_city || '');
           setHeroMain({
             image: data.hero_main_image || '/images/hero-bolo-destaque.jpg',
             zoom: parseFloat(data.hero_main_zoom || '1') || 1,
@@ -79,6 +85,9 @@ export default function AdminSettingsPage() {
           address,
           welcome_message: welcomeMessage,
           min_lead_days: minLeadDays,
+          pix_key: pixKey,
+          pix_beneficiary_name: pixBeneficiaryName,
+          pix_city: pixCity,
           hero_main_image: heroMain.image,
           hero_main_zoom: String(heroMain.zoom),
           hero_main_pos_x: String(heroMain.posX),
@@ -197,6 +206,62 @@ export default function AdminSettingsPage() {
                 </p>
               </div>
 
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-[#F2D7D0] p-6 md:p-8 shadow-card">
+            <div className="mb-5">
+              <h2 className="font-serif text-lg font-bold text-[#4A231A] flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-[#C27360]" /> Cobrança via Pix
+              </h2>
+              <p className="text-xs text-[#645451]">
+                Cadastre sua chave Pix pra gerar QR Code de cobrança direto nos pedidos, sem precisar de conta em
+                gateway de pagamento.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  Chave Pix
+                </label>
+                <input
+                  type="text"
+                  placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                  value={pixKey}
+                  onChange={(e) => setPixKey(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Nome do Titular
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Como está na conta"
+                    value={pixBeneficiaryName}
+                    onChange={(e) => setPixBeneficiaryName(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Cidade
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Sao Paulo"
+                    value={pixCity}
+                    onChange={(e) => setPixCity(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-gray-500">
+                Não usamos nenhum banco ou gateway de pagamento — o QR Code é gerado direto com a sua chave Pix, o
+                dinheiro cai direto na sua conta.
+              </p>
             </div>
           </div>
 

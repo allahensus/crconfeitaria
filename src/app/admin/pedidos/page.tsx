@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { PixChargeModal } from '@/components/admin/PixChargeModal';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   ShoppingBag,
@@ -37,6 +38,7 @@ export default function AdminOrdersPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Pix');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
 
   const loadOrders = async () => {
     try {
@@ -320,12 +322,20 @@ export default function AdminOrdersPage() {
                     <span>{formatCurrency(Math.max(0, selectedOrder.totalAmount - selectedOrder.paidAmount))}</span>
                   </div>
 
-                  <button
-                    onClick={() => setIsPaymentModalOpen(true)}
-                    className="w-full mt-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
-                  >
-                    + Registrar Novo Pagamento (Pix/Cartão/Dinheiro)
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button
+                      onClick={() => setIsPixModalOpen(true)}
+                      className="py-2 rounded-xl bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold text-xs shadow-sm"
+                    >
+                      Gerar Cobrança Pix
+                    </button>
+                    <button
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
+                    >
+                      + Registrar Pagamento
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -388,6 +398,15 @@ export default function AdminOrdersPage() {
               </form>
             </div>
           </div>
+        )}
+
+        {isPixModalOpen && selectedOrder && (
+          <PixChargeModal
+            onClose={() => setIsPixModalOpen(false)}
+            defaultAmount={Math.max(0, selectedOrder.totalAmount - selectedOrder.paidAmount)}
+            txid={selectedOrder.orderNumber}
+            customerName={selectedOrder.customerName}
+          />
         )}
 
       </main>
