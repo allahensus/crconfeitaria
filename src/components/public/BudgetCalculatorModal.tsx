@@ -167,9 +167,11 @@ export function BudgetCalculatorModal({
     : 0;
 
   let extraCostPerUnit = 0;
-  // Cobertura em Buttercream surcharge (+R$ 20,00 para Mini Bolo / Bolos Redondos)
+  // Cobertura em Buttercream surcharge (+R$ 20,00 para Bolos Redondos).
+  // Mini Bolo's Buttercream/Chantily price difference is already baked into
+  // the variation price, so it's not added again here.
   if (frosting === 'Buttercream') {
-    if (selectedProduct?.slug === 'mini-bolo' || selectedProduct?.slug === 'bolos-redondos') {
+    if (selectedProduct?.slug === 'bolos-redondos') {
       extraCostPerUnit += 20.0;
     }
   }
@@ -273,6 +275,15 @@ export function BudgetCalculatorModal({
       setQuantity(1);
     }
   }, [selectedProduct]);
+
+  // Mini Bolo's cobertura is already decided by which variation was picked
+  // ("Cobertura em Chantily" vs "Cobertura em Buttercream", priced differently) --
+  // derive frosting from it instead of asking again in a separate step.
+  useEffect(() => {
+    if (selectedProduct?.slug === 'mini-bolo' && selectedVariation?.name) {
+      setFrosting(selectedVariation.name.includes('Buttercream') ? 'Buttercream' : 'Chantily');
+    }
+  }, [selectedProduct, selectedVariation]);
 
   const handleProductChange = (prodId: string) => {
     const prod = products.find((p) => p.id === prodId);
@@ -430,9 +441,9 @@ export function BudgetCalculatorModal({
               wantsRibbonTag ? `Fita de Cetim + Tag em ${palitoCount} un. com palito (+R$ 1,00/un)` : null,
               `Pgto: ${paymentLabel}`,
             ].filter(Boolean).join(' | ')
-          : selectedProduct?.slug === 'kit-festa-celebrar'
-          ? `Cobertura ${frosting} (${frosting === 'Buttercream' ? 'Incluso no Kit' : 'Sem Buttercream'}) | Pgto: ${paymentLabel}`
-          : (isButtercream ? `Cobertura Buttercream (+R$ 20,00) | Pgto: ${paymentLabel}` : `Pgto: ${paymentLabel}`),
+          : selectedProduct?.slug === 'bolos-redondos' && isButtercream
+          ? `Cobertura Buttercream (+R$ 20,00) | Pgto: ${paymentLabel}`
+          : `Pgto: ${paymentLabel}`,
         quantity: effectiveQuantity,
         eventDate: eventDate ? new Date(eventDate).toLocaleDateString('pt-BR') : undefined,
         themeNotes: themeNotes || undefined,
@@ -673,37 +684,6 @@ export function BudgetCalculatorModal({
                     </div>
                   </div>
 
-                  {/* Frosting Selection for Mini Bolo only */}
-                  {selectedProduct?.slug === 'mini-bolo' && (
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
-                        <span>Tipo de Cobertura</span>
-                        <span className="text-[11px] font-semibold text-[#C27360]">
-                          {frosting === 'Buttercream' ? '✨ Buttercream (+ R$ 20,00)' : 'Chantily (Incluso)'}
-                        </span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { label: 'Chantily', sub: 'Massa & Cobertura Leve' },
-                          { label: 'Buttercream', sub: '+ R$ 20,00 (Creme de Manteiga)' },
-                        ].map((cob) => (
-                          <button
-                            key={cob.label}
-                            type="button"
-                            onClick={() => setFrosting(cob.label)}
-                            className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center ${
-                              frosting === cob.label
-                                ? 'border-[#C27360] bg-[#FDF7F6] text-[#4A231A] ring-2 ring-[#C27360]/30 font-bold shadow-sm'
-                                : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FAF6F4]'
-                            }`}
-                          >
-                            <span className="text-sm">{cob.label}</span>
-                            <span className="text-[10px] text-[#A75644] font-medium mt-0.5">{cob.sub}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </>
               ) : (
                 /* Biscoitos Extras & Multi-Type Selection */
@@ -1236,7 +1216,7 @@ export function BudgetCalculatorModal({
             </div>
 
             <div className="px-4 py-2 space-y-2">
-              {frosting && selectedProduct?.slug !== 'biscoitos-amanteigados' && (
+              {frosting && selectedProduct?.slug !== 'biscoitos-amanteigados' && selectedProduct?.slug !== 'mini-bolo' && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#645451]">Cobertura</span>
                   <span className="font-semibold text-[#4A231A]">
