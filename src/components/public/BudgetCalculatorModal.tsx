@@ -340,6 +340,12 @@ export function BudgetCalculatorModal({
       return;
     }
 
+    if (!paymentMethod) {
+      setErrorMsg('⚠️ Por favor, escolha a forma de pagamento preferida antes de enviar.');
+      setStep(3);
+      return;
+    }
+
     setErrorMsg('');
     setLoading(true);
 
@@ -1092,8 +1098,11 @@ export function BudgetCalculatorModal({
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
                   <span>Forma de Pagamento Preferida</span>
-                  <span className="text-[11px] font-semibold text-[#C27360]">Opcional</span>
+                  <span className="text-[11px] font-semibold text-[#C27360]">Escolha uma opção</span>
                 </label>
+                <p className="text-[11px] text-[#645451] mb-2 -mt-1">
+                  💌 É só uma preferência por agora! Depois que a Cinthia aprovar seu orçamento, ela mesma vai te chamar no WhatsApp para combinar o sinal.
+                </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {/* Pix Button */}

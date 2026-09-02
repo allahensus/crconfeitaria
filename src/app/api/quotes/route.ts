@@ -107,6 +107,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!preferredPaymentMethod) {
+      return NextResponse.json(
+        { error: 'Por favor, escolha a forma de pagamento preferida.' },
+        { status: 400 }
+      );
+    }
+
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
     let customer = await db.customer.findFirst({
