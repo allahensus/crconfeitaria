@@ -12,7 +12,7 @@ export async function PUT(
     const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
-    const { code, discountType, discountValue, active, expiresAt } = await request.json();
+    const { code, discountType, discountValue, active, expiresAt, maxUses, oncePerCustomer } = await request.json();
 
     const coupon = await db.coupon.update({
       where: { id },
@@ -22,6 +22,8 @@ export async function PUT(
         ...(discountValue !== undefined && { discountValue: parseFloat(discountValue) }),
         ...(active !== undefined && { active: Boolean(active) }),
         ...(expiresAt !== undefined && { expiresAt: expiresAt ? new Date(expiresAt) : null }),
+        ...(maxUses !== undefined && { maxUses: maxUses !== null && maxUses !== '' ? parseInt(maxUses) : null }),
+        ...(oncePerCustomer !== undefined && { oncePerCustomer: Boolean(oncePerCustomer) }),
       },
     });
 

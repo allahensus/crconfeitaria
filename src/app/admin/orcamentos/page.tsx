@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { PixChargeModal } from '@/components/admin/PixChargeModal';
 import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
-import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag, Tag } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag, Tag, QrCode } from 'lucide-react';
 
 export default function AdminQuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -11,6 +12,7 @@ export default function AdminQuotesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
 
   const loadQuotes = async () => {
     try {
@@ -274,7 +276,13 @@ export default function AdminQuotesPage() {
                   {formatCurrency(selectedQuote.finalTotal)}
                 </span>
                 {selectedQuote.status !== 'CONVERTED' && selectedQuote.status !== 'REJECTED' && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <button
+                      onClick={() => setIsPixModalOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-bold text-xs hover:bg-emerald-50 flex items-center gap-1.5"
+                    >
+                      <QrCode className="w-3.5 h-3.5" /> Cobrar Sinal via Pix
+                    </button>
                     <button
                       onClick={() => handleRejectQuote(selectedQuote.id)}
                       className="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50"
@@ -292,6 +300,15 @@ export default function AdminQuotesPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {isPixModalOpen && selectedQuote && (
+          <PixChargeModal
+            onClose={() => setIsPixModalOpen(false)}
+            defaultAmount={selectedQuote.finalTotal}
+            txid={selectedQuote.quoteNumber}
+            customerName={selectedQuote.customerName}
+          />
         )}
 
       </main>

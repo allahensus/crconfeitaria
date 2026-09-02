@@ -204,7 +204,7 @@ export function BudgetCalculatorModal({
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponInput }),
+        body: JSON.stringify({ code: couponInput, whatsapp: customerWhatsapp }),
       });
       const data = await res.json();
       if (res.ok && data.valid) {
@@ -316,7 +316,13 @@ export function BudgetCalculatorModal({
       }
     }
 
-    if (eventDate && blockedDates.includes(eventDate)) {
+    if (!eventDate) {
+      setErrorMsg('⚠️ Por favor, escolha a data desejada da entrega/festa antes de enviar.');
+      setStep(3);
+      return;
+    }
+
+    if (blockedDates.includes(eventDate)) {
       setErrorMsg('⚠️ Essa data já está com a agenda cheia. Por favor, escolha outra data.');
       setStep(3);
       return;
@@ -1000,7 +1006,7 @@ export function BudgetCalculatorModal({
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
-                  Data Desejada da Entrega / Festa
+                  Data Desejada da Entrega / Festa *
                 </label>
                 <AvailabilityDatePicker
                   value={eventDate}

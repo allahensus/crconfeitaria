@@ -320,13 +320,15 @@ model RecipeItem {
 }
 
 model Coupon {
-  id             String    @id @default(uuid())
-  code           String // ex: "NIVER10" -- stored uppercase, matched case-insensitively
-  discountType   String    @default("PERCENT") // PERCENT or FIXED
-  discountValue  Float // 10 = 10% (PERCENT) or R$10,00 (FIXED)
-  active         Boolean   @default(true)
-  expiresAt      DateTime?
-  usageCount     Int       @default(0)
+  id              String    @id @default(uuid())
+  code            String // ex: "NIVER10" -- stored uppercase, matched case-insensitively
+  discountType    String    @default("PERCENT") // PERCENT or FIXED
+  discountValue   Float // 10 = 10% (PERCENT) or R$10,00 (FIXED)
+  active          Boolean   @default(true)
+  expiresAt       DateTime?
+  maxUses         Int? // null = sem limite total de usos
+  oncePerCustomer Boolean   @default(true) // mesmo WhatsApp não pode reusar o código
+  usageCount      Int       @default(0)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime  @default(now())

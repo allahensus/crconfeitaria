@@ -3,6 +3,7 @@ import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 import { generateWhatsAppLink } from '@/lib/utils';
+import { checkCouponEligibility } from '@/lib/coupons';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +87,25 @@ export async function POST(request: Request) {
       );
     }
 
+    const parsedEventDateCheck = eventDate ? new Date(eventDate) : null;
+    if (!parsedEventDateCheck || isNaN(parsedEventDateCheck.getTime())) {
+      return NextResponse.json(
+        { error: 'Por favor, escolha a data desejada da entrega/festa.' },
+        { status: 400 }
+      );
+    }
+
+    const eventDateStr = eventDate.slice(0, 10);
+    const isBlockedDate = await db.blockedDate.findFirst({
+      where: { date: new Date(`${eventDateStr}T00:00:00.000Z`) },
+    });
+    if (isBlockedDate) {
+      return NextResponse.json(
+        { error: 'Essa data já está com a agenda cheia. Por favor, escolha outra data.' },
+        { status: 400 }
+      );
+    }
+
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
     let customer = await db.customer.findFirst({
@@ -156,12 +176,18 @@ export async function POST(request: Request) {
       const coupon = await db.coupon.findUnique({
         where: { organizationId_code: { organizationId: organization.id, code: cleanCode } },
       });
-      const isValidCoupon =
-        coupon && coupon.active && (!coupon.expiresAt || new Date(coupon.expiresAt) >= new Date());
-      if (isValidCoupon) {
+      let alreadyUsedByCustomer = false;
+      if (coupon?.oncePerCustomer) {
+        const priorUse = await db.quote.findFirst({
+          where: { couponCode: coupon.code, customerWhatsapp: cleanWhatsapp },
+        });
+        alreadyUsedByCustomer = !!priorUse;
+      }
+      const eligibility = checkCouponEligibility(coupon, alreadyUsedByCustomer);
+      if (eligibility.ok) {
         appliedDiscount = parseFloat(discount) || 0;
-        appliedCouponCode = coupon.code;
-        await db.coupon.update({ where: { id: coupon.id }, data: { usageCount: { increment: 1 } } });
+        appliedCouponCode = coupon!.code;
+        await db.coupon.update({ where: { id: coupon!.id }, data: { usageCount: { increment: 1 } } });
       }
     }
 

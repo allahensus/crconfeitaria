@@ -16,6 +16,8 @@ export default function AdminCouponsPage() {
   const [discountValue, setDiscountValue] = useState('10');
   const [active, setActive] = useState(true);
   const [expiresAt, setExpiresAt] = useState('');
+  const [maxUses, setMaxUses] = useState('');
+  const [oncePerCustomer, setOncePerCustomer] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
   const loadData = async () => {
@@ -41,6 +43,8 @@ export default function AdminCouponsPage() {
     setDiscountValue('10');
     setActive(true);
     setExpiresAt('');
+    setMaxUses('');
+    setOncePerCustomer(true);
     setErrorMsg('');
     setIsModalOpen(true);
   };
@@ -52,6 +56,8 @@ export default function AdminCouponsPage() {
     setDiscountValue(c.discountValue.toString());
     setActive(c.active);
     setExpiresAt(c.expiresAt ? c.expiresAt.slice(0, 10) : '');
+    setMaxUses(c.maxUses !== null && c.maxUses !== undefined ? c.maxUses.toString() : '');
+    setOncePerCustomer(c.oncePerCustomer !== undefined ? c.oncePerCustomer : true);
     setErrorMsg('');
     setIsModalOpen(true);
   };
@@ -60,7 +66,15 @@ export default function AdminCouponsPage() {
     e.preventDefault();
     setErrorMsg('');
     try {
-      const payload = { code, discountType, discountValue, active, expiresAt: expiresAt || null };
+      const payload = {
+        code,
+        discountType,
+        discountValue,
+        active,
+        expiresAt: expiresAt || null,
+        maxUses: maxUses ? parseInt(maxUses) : null,
+        oncePerCustomer,
+      };
       const url = editingId ? `/api/coupons/${editingId}` : '/api/coupons';
       const method = editingId ? 'PUT' : 'POST';
 
@@ -142,7 +156,12 @@ export default function AdminCouponsPage() {
                     <td className="p-4">
                       {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('pt-BR') : 'Sem prazo'}
                     </td>
-                    <td className="p-4">{c.usageCount}x</td>
+                    <td className="p-4">
+                      {c.usageCount}{c.maxUses ? ` / ${c.maxUses}` : ''}x
+                      {c.oncePerCustomer && (
+                        <span className="block text-[9px] text-gray-500">1x por cliente</span>
+                      )}
+                    </td>
                     <td className="p-4">
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
@@ -239,17 +258,44 @@ export default function AdminCouponsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
-                  Validade (opcional)
-                </label>
-                <input
-                  type="date"
-                  value={expiresAt}
-                  onChange={(e) => setExpiresAt(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Validade (opcional)
+                  </label>
+                  <input
+                    type="date"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Limite de Usos
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Sem limite"
+                    value={maxUses}
+                    onChange={(e) => setMaxUses(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
               </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={oncePerCustomer}
+                  onChange={(e) => setOncePerCustomer(e.target.checked)}
+                  className="w-4 h-4 accent-[#C27360]"
+                />
+                <span className="text-sm text-[#4A3531] font-medium">
+                  Cada cliente só pode usar este cupom uma vez (pelo WhatsApp)
+                </span>
+              </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input

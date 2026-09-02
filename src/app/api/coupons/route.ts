@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     const db = getScopedPrisma(session.organizationId);
 
-    const { code, discountType, discountValue, active, expiresAt } = await request.json();
+    const { code, discountType, discountValue, active, expiresAt, maxUses, oncePerCustomer } = await request.json();
 
     if (!code || !discountValue) {
       return NextResponse.json({ error: 'Código e valor do desconto são obrigatórios' }, { status: 400 });
@@ -38,6 +38,8 @@ export async function POST(request: Request) {
         discountValue: parseFloat(discountValue),
         active: active !== undefined ? Boolean(active) : true,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        maxUses: maxUses !== null && maxUses !== undefined && maxUses !== '' ? parseInt(maxUses) : null,
+        oncePerCustomer: oncePerCustomer !== undefined ? Boolean(oncePerCustomer) : true,
         organizationId: session.organizationId,
       },
     });

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
+import { checkCouponEligibility } from '@/lib/coupons';
 
 // Public: the storefront calls this to check a coupon before applying its
-// discount. Only ever returns the fields a customer needs -- never usageCount
-// or other internal bookkeeping.
+// discount. Only ever returns the fields a customer needs -- never
+// usageCount or other internal bookkeeping.
 export async function POST(request: Request) {
   try {
     const organization = await getCurrentOrganization();
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     }
     const db = getScopedPrisma(organization.id);
 
-    const { code } = await request.json();
+    const { code, whatsapp } = await request.json();
     if (!code) {
       return NextResponse.json({ valid: false, error: 'Informe um código de cupom.' }, { status: 400 });
     }
@@ -23,19 +24,27 @@ export async function POST(request: Request) {
       where: { organizationId_code: { organizationId: organization.id, code: cleanCode } },
     });
 
-    if (!coupon || !coupon.active) {
-      return NextResponse.json({ valid: false, error: 'Cupom inválido ou não encontrado.' }, { status: 404 });
+    let alreadyUsedByCustomer = false;
+    if (coupon?.oncePerCustomer && whatsapp) {
+      const cleanWhatsapp = String(whatsapp).replace(/\D/g, '');
+      if (cleanWhatsapp) {
+        const priorUse = await db.quote.findFirst({
+          where: { couponCode: coupon.code, customerWhatsapp: cleanWhatsapp },
+        });
+        alreadyUsedByCustomer = !!priorUse;
+      }
     }
 
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
-      return NextResponse.json({ valid: false, error: 'Esse cupom já expirou.' }, { status: 400 });
+    const eligibility = checkCouponEligibility(coupon, alreadyUsedByCustomer);
+    if (!eligibility.ok) {
+      return NextResponse.json({ valid: false, error: eligibility.error }, { status: 400 });
     }
 
     return NextResponse.json({
       valid: true,
-      code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
+      code: coupon!.code,
+      discountType: coupon!.discountType,
+      discountValue: coupon!.discountValue,
     });
   } catch (error) {
     console.error('Error validating coupon:', error);
