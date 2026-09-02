@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock, Package } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBudgetModal: (product?: any) => void;
@@ -52,6 +52,9 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
             <a href="#contato" className="hover:text-[#C27360] transition-colors">
               Contato
             </a>
+            <Link href="/pedido" className="hover:text-[#C27360] transition-colors">
+              Acompanhar Pedido
+            </Link>
             <Link href="/admin/login" className="text-xs text-[#874132] hover:underline opacity-80">
               Área da Confeiteira
             </Link>
@@ -119,6 +122,13 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
             >
               <MapPin className="w-4 h-4 text-[#C27360]" /> Horários e Endereço
             </a>
+            <Link
+              href="/pedido"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
+            >
+              <Package className="w-4 h-4 text-[#C27360]" /> Acompanhar Pedido
+            </Link>
             <Link
               href="/admin/login"
               onClick={() => setMobileMenuOpen(false)}
