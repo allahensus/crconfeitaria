@@ -107,13 +107,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!preferredPaymentMethod) {
-      return NextResponse.json(
-        { error: 'Por favor, escolha a forma de pagamento preferida.' },
-        { status: 400 }
-      );
-    }
-
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
     let customer = await db.customer.findFirst({
@@ -213,7 +206,7 @@ export async function POST(request: Request) {
         customerName,
         customerWhatsapp: cleanWhatsapp,
         eventDate: isValidEventDate ? parseEventDate : null,
-        preferredPaymentMethod,
+        preferredPaymentMethod: preferredPaymentMethod || null,
         themeNotes: themeNotes || null,
         subtotal: parseFloat(subtotal) || price * qty,
         extraTotal: parseFloat(extraTotal) || 0,

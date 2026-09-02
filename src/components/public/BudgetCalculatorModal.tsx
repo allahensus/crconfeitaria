@@ -334,12 +334,6 @@ export function BudgetCalculatorModal({
       return;
     }
 
-    if (!paymentMethod) {
-      setErrorMsg('⚠️ Por favor, escolha a forma de pagamento preferida antes de enviar.');
-      setStep(3);
-      return;
-    }
-
     if (blockedDates.includes(eventDate)) {
       setErrorMsg('⚠️ Essa data já está com a agenda cheia. Por favor, escolha outra data.');
       setStep(3);
@@ -1098,7 +1092,7 @@ export function BudgetCalculatorModal({
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
                   <span>Forma de Pagamento Preferida</span>
-                  <span className="text-[11px] font-semibold text-[#C27360]">Escolha uma opção</span>
+                  <span className="text-[11px] font-semibold text-[#C27360]">Opcional</span>
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1123,7 +1117,7 @@ export function BudgetCalculatorModal({
                       )}
                     </div>
                     <span className="text-xs font-bold text-[#4A231A]">Pix (Sinal {depositPercentage}%)</span>
-                    <span className="text-[10px] text-gray-500">Reserva imediata da data</span>
+                    <span className="text-[10px] text-gray-500">Sinal combinado depois, no WhatsApp</span>
                   </button>
 
                   {/* Credit Card Button */}
