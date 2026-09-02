@@ -199,6 +199,12 @@ export async function POST(request: Request) {
       }
     }
 
+    const depositSetting = await db.setting.findUnique({
+      where: { organizationId_key: { organizationId: organization.id, key: 'deposit_percentage' } },
+    });
+    const depositPercent = parseFloat(depositSetting?.value || '50') || 50;
+    const depositAmount = Math.round(tot * (depositPercent / 100) * 100) / 100;
+
     const quote = await db.quote.create({
       data: {
         organizationId: organization.id,
@@ -214,6 +220,7 @@ export async function POST(request: Request) {
         discount: appliedDiscount,
         couponCode: appliedCouponCode,
         finalTotal: tot,
+        depositAmount,
         status: 'PENDING',
         items: {
           create: [
@@ -257,6 +264,7 @@ export async function POST(request: Request) {
       eventDate: formattedEventDate,
       themeNotes,
       finalTotal: tot,
+      depositAmount,
     });
 
     return NextResponse.json({

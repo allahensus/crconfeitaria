@@ -62,6 +62,7 @@ export function generateWhatsAppLink(
     eventDate?: string;
     themeNotes?: string;
     finalTotal: number;
+    depositAmount?: number;
   }
 ): string {
   const cleanPhone = formatWhatsappForUrl(phone);
@@ -93,6 +94,9 @@ export function generateWhatsAppLink(
 
   text += `\n${divider}\n`;
   text += `💰 *VALOR TOTAL ESTIMADO: ${formatCurrency(quote.finalTotal)}*\n`;
+  if (quote.depositAmount) {
+    text += `✅ *Sinal para reservar a data: ${formatCurrency(quote.depositAmount)}*\n`;
+  }
   text += `${divider}\n\n`;
   text += `_Aguardo sua confirmação para combinarmos os detalhes e a data!_`;
 

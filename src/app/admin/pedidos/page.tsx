@@ -285,6 +285,9 @@ export default function AdminOrdersPage() {
                   {selectedOrder.preferredPaymentMethod && (
                     <p><strong>Forma de Pagamento Preferida:</strong> {selectedOrder.preferredPaymentMethod}</p>
                   )}
+                  {selectedOrder.depositAmount ? (
+                    <p><strong>Sinal Sugerido:</strong> {formatCurrency(selectedOrder.depositAmount)}</p>
+                  ) : null}
                   {selectedOrder.notes && <p><strong>Notas:</strong> {selectedOrder.notes}</p>}
                 </div>
 

@@ -154,6 +154,7 @@ model Quote {
   couponCode       String?
   extraTotal       Float       @default(0.0)
   finalTotal       Float
+  depositAmount    Float? // sinal sugerido (finalTotal x % configurado em Configurações no momento do envio)
   status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -192,6 +193,7 @@ model Order {
   customerName     String
   customerWhatsapp String
   preferredPaymentMethod String? // carried over from the quote, if any
+  depositAmount    Float? // carried over from the quote, if any
   deliveryDate     DateTime
   status           String                 @default("NOVO") // NOVO, AGUARDANDO_CONFIRMACAO, CONFIRMADO, PAGAMENTO_PENDENTE, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO
   totalAmount      Float

@@ -21,6 +21,7 @@ export default function AdminSettingsPage() {
   const [pixKey, setPixKey] = useState('');
   const [pixBeneficiaryName, setPixBeneficiaryName] = useState('');
   const [pixCity, setPixCity] = useState('');
+  const [depositPercentage, setDepositPercentage] = useState('50');
 
   const [heroMain, setHeroMain] = useState<HeroPhotoState>({ image: '/images/hero-bolo-destaque.jpg', zoom: 1, posX: 50, posY: 0 });
   const [heroBiscoitos, setHeroBiscoitos] = useState<HeroPhotoState>({ image: '/images/hero-biscoitos-destaque.jpg', zoom: 1, posX: 50, posY: 50 });
@@ -44,6 +45,7 @@ export default function AdminSettingsPage() {
           setPixKey(data.pix_key || '');
           setPixBeneficiaryName(data.pix_beneficiary_name || '');
           setPixCity(data.pix_city || '');
+          setDepositPercentage(data.deposit_percentage || '50');
           setHeroMain({
             image: data.hero_main_image || '/images/hero-bolo-destaque.jpg',
             zoom: parseFloat(data.hero_main_zoom || '1') || 1,
@@ -88,6 +90,7 @@ export default function AdminSettingsPage() {
           pix_key: pixKey,
           pix_beneficiary_name: pixBeneficiaryName,
           pix_city: pixCity,
+          deposit_percentage: depositPercentage,
           hero_main_image: heroMain.image,
           hero_main_zoom: String(heroMain.zoom),
           hero_main_pos_x: String(heroMain.posX),
@@ -262,6 +265,25 @@ export default function AdminSettingsPage() {
                 Não usamos nenhum banco ou gateway de pagamento — o QR Code é gerado direto com a sua chave Pix, o
                 dinheiro cai direto na sua conta.
               </p>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  Percentual de Sinal
+                </label>
+                <div className="relative w-32">
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={depositPercentage}
+                    onChange={(e) => setDepositPercentage(e.target.value)}
+                    className="w-full p-3 pr-8 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Percentual do valor total que é sugerido como sinal ao gerar um orçamento -- não é obrigatório cobrar o valor cheio.
+                </p>
+              </div>
             </div>
           </div>
 

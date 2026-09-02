@@ -272,6 +272,17 @@ export default function AdminQuotesPage() {
                 </div>
               )}
 
+              {selectedQuote.depositAmount ? (
+                <div className="flex justify-between items-center text-xs bg-amber-50 border border-amber-200 rounded-xl p-2.5">
+                  <span className="font-bold text-amber-800 flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5" /> Sinal sugerido
+                  </span>
+                  <span className="font-bold text-amber-800">
+                    {formatCurrency(selectedQuote.depositAmount)}
+                  </span>
+                </div>
+              ) : null}
+
               <div className="pt-4 border-t border-[#F2D7D0] flex justify-between items-center">
                 <span className="font-extrabold text-lg text-[#C27360] font-serif">
                   {formatCurrency(selectedQuote.finalTotal)}
@@ -306,7 +317,7 @@ export default function AdminQuotesPage() {
         {isPixModalOpen && selectedQuote && (
           <PixChargeModal
             onClose={() => setIsPixModalOpen(false)}
-            defaultAmount={selectedQuote.finalTotal}
+            defaultAmount={selectedQuote.depositAmount || selectedQuote.finalTotal}
             txid={selectedQuote.quoteNumber}
             customerName={selectedQuote.customerName}
           />

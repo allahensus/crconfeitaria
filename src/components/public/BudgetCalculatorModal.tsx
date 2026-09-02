@@ -51,6 +51,7 @@ export function BudgetCalculatorModal({
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'money' | ''>('');
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountType: string; discountValue: number } | null>(null);
+  const [depositPercentage, setDepositPercentage] = useState(50);
   const [couponMsg, setCouponMsg] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
 
@@ -148,6 +149,16 @@ export function BudgetCalculatorModal({
     }
   }, [fillings]);
 
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        const pct = parseFloat(data?.deposit_percentage);
+        if (!isNaN(pct) && pct > 0) setDepositPercentage(pct);
+      })
+      .catch(() => {});
+  }, []);
+
   // Price calculations
   const unitPrice = selectedVariation
     ? selectedVariation.price
@@ -195,6 +206,7 @@ export function BudgetCalculatorModal({
       : Math.min(appliedCoupon.discountValue, subtotal)
     : 0;
   const finalTotal = Math.max(0, subtotal - couponDiscount);
+  const depositAmount = Math.round(finalTotal * (depositPercentage / 100) * 100) / 100;
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -398,7 +410,7 @@ export function BudgetCalculatorModal({
           ? 'Cartão de Crédito / Débito'
           : paymentMethod === 'money'
           ? 'Dinheiro em Espécie'
-          : 'Pix Instantâneo (50% Sinal)';
+          : `Pix Instantâneo (${depositPercentage}% Sinal)`;
 
       const isButtercream = frosting === 'Buttercream';
       const link = data.whatsappUrl || generateWhatsAppLink(whatsappNumber || '5512997594697', {
@@ -425,6 +437,7 @@ export function BudgetCalculatorModal({
         eventDate: eventDate ? new Date(eventDate).toLocaleDateString('pt-BR') : undefined,
         themeNotes: themeNotes || undefined,
         finalTotal,
+        depositAmount,
       });
 
       setWhatsappUrl(link);
@@ -492,6 +505,9 @@ export function BudgetCalculatorModal({
 
     text += `\n${divider}\n`;
     text += `💰 *VALOR TOTAL ESTIMADO: ${formatCurrency(finalTotal)}*\n`;
+    if (paymentMethod === 'pix') {
+      text += `✅ *Sinal para reservar a data: ${formatCurrency(depositAmount)}*\n`;
+    }
     text += `${divider}\n\n`;
     text += `_Aguardo sua confirmação para combinarmos os detalhes e a data!_`;
 
@@ -895,6 +911,11 @@ export function BudgetCalculatorModal({
                 <p className="text-xs text-[#645451] max-w-md mx-auto mt-1">
                   Seu pedido no valor de <strong className="text-[#4A231A]">{formatCurrency(finalTotal)}</strong> foi registrado! Clique abaixo para enviar no WhatsApp e encerrar.
                 </p>
+                {paymentMethod === 'pix' && (
+                  <p className="text-xs text-emerald-700 max-w-md mx-auto mt-1.5 font-semibold">
+                    Sinal sugerido para reservar a data: {formatCurrency(depositAmount)} ({depositPercentage}%)
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -1101,7 +1122,7 @@ export function BudgetCalculatorModal({
                         <span className="text-[10px] bg-[#32BCAD] text-white font-bold px-2 py-0.5 rounded-full">✓ Selecionado</span>
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[#4A231A]">Pix (Sinal 50%)</span>
+                    <span className="text-xs font-bold text-[#4A231A]">Pix (Sinal {depositPercentage}%)</span>
                     <span className="text-[10px] text-gray-500">Reserva imediata da data</span>
                   </button>
 
@@ -1267,6 +1288,16 @@ export function BudgetCalculatorModal({
                 {formatCurrency(finalTotal)}
               </span>
             </div>
+            {paymentMethod === 'pix' && (
+              <div className="px-4 py-2 flex items-center justify-between bg-emerald-50 border-t border-emerald-100">
+                <span className="text-[11px] font-bold text-emerald-800">
+                  Sinal p/ reservar ({depositPercentage}%)
+                </span>
+                <span className="font-bold text-sm text-emerald-800">
+                  {formatCurrency(depositAmount)}
+                </span>
+              </div>
+            )}
           </div>
 
         </div>
