@@ -84,6 +84,7 @@ export async function PUT(
           customerId: quote.customerId,
           customerName: quote.customerName,
           customerWhatsapp: quote.customerWhatsapp,
+          preferredPaymentMethod: quote.preferredPaymentMethod,
           deliveryDate,
           status: 'NOVO',
           totalAmount: quote.finalTotal,

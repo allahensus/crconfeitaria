@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       quantity,
       unitPrice,
       eventDate,
+      preferredPaymentMethod,
       themeNotes,
       subtotal,
       extraTotal,
@@ -102,6 +103,13 @@ export async function POST(request: Request) {
     if (isBlockedDate) {
       return NextResponse.json(
         { error: 'Essa data já está com a agenda cheia. Por favor, escolha outra data.' },
+        { status: 400 }
+      );
+    }
+
+    if (!preferredPaymentMethod) {
+      return NextResponse.json(
+        { error: 'Por favor, escolha a forma de pagamento preferida.' },
         { status: 400 }
       );
     }
@@ -199,6 +207,7 @@ export async function POST(request: Request) {
         customerName,
         customerWhatsapp: cleanWhatsapp,
         eventDate: isValidEventDate ? parseEventDate : null,
+        preferredPaymentMethod,
         themeNotes: themeNotes || null,
         subtotal: parseFloat(subtotal) || price * qty,
         extraTotal: parseFloat(extraTotal) || 0,

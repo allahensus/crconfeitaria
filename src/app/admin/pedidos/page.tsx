@@ -282,6 +282,9 @@ export default function AdminOrdersPage() {
                   <p><strong>Cliente:</strong> {selectedOrder.customerName}</p>
                   <p><strong>WhatsApp:</strong> {selectedOrder.customerWhatsapp}</p>
                   <p><strong>Data Entrega:</strong> {formatDate(selectedOrder.deliveryDate)}</p>
+                  {selectedOrder.preferredPaymentMethod && (
+                    <p><strong>Forma de Pagamento Preferida:</strong> {selectedOrder.preferredPaymentMethod}</p>
+                  )}
                   {selectedOrder.notes && <p><strong>Notas:</strong> {selectedOrder.notes}</p>}
                 </div>
 

@@ -238,6 +238,7 @@ export default function AdminQuotesPage() {
                   <p><strong>Cliente:</strong> {selectedQuote.customerName}</p>
                   <p><strong>WhatsApp:</strong> {selectedQuote.customerWhatsapp}</p>
                   <p><strong>Data Desejada:</strong> {formatDate(selectedQuote.eventDate)}</p>
+                  <p><strong>Forma de Pagamento:</strong> {selectedQuote.preferredPaymentMethod || 'Não informado'}</p>
                   {selectedQuote.themeNotes && <p><strong>Tema/Obs:</strong> {selectedQuote.themeNotes}</p>}
                 </div>
 

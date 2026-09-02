@@ -147,6 +147,7 @@ model Quote {
   customerName     String
   customerWhatsapp String
   eventDate        DateTime?
+  preferredPaymentMethod String? // Pix, Cartão de Crédito, Dinheiro -- how the customer said they'd pay
   themeNotes       String?
   subtotal         Float
   discount         Float       @default(0.0)
@@ -190,6 +191,7 @@ model Order {
   customer         Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName     String
   customerWhatsapp String
+  preferredPaymentMethod String? // carried over from the quote, if any
   deliveryDate     DateTime
   status           String                 @default("NOVO") // NOVO, AGUARDANDO_CONFIRMACAO, CONFIRMADO, PAGAMENTO_PENDENTE, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO
   totalAmount      Float

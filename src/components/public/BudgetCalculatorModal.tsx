@@ -48,7 +48,7 @@ export function BudgetCalculatorModal({
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerBirthDate, setCustomerBirthDate] = useState('');
   const [lgpdConsent, setLgpdConsent] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'money'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'money' | ''>('');
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountType: string; discountValue: number } | null>(null);
   const [couponMsg, setCouponMsg] = useState('');
@@ -322,6 +322,12 @@ export function BudgetCalculatorModal({
       return;
     }
 
+    if (!paymentMethod) {
+      setErrorMsg('⚠️ Por favor, escolha a forma de pagamento preferida antes de enviar.');
+      setStep(3);
+      return;
+    }
+
     if (blockedDates.includes(eventDate)) {
       setErrorMsg('⚠️ Essa data já está com a agenda cheia. Por favor, escolha outra data.');
       setStep(3);
@@ -352,6 +358,14 @@ export function BudgetCalculatorModal({
         quantity: effectiveQuantity,
         unitPrice: unitPrice + extraCostPerUnit,
         eventDate,
+        preferredPaymentMethod:
+          paymentMethod === 'card'
+            ? 'Cartão de Crédito'
+            : paymentMethod === 'money'
+            ? 'Dinheiro'
+            : paymentMethod === 'pix'
+            ? 'Pix'
+            : null,
         themeNotes,
         subtotal,
         extraTotal: extraCostPerUnit * quantity,
