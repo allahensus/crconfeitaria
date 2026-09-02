@@ -1,0 +1,26 @@
+{
+  "name": "Painel Confeiteira - Cinthia Rodrigues",
+  "short_name": "Confeitaria Admin",
+  "description": "Painel de gestão da Confeitaria Cinthia Rodrigues: pedidos, orçamentos, financeiro e clientes.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF6F4",
+  "theme_color": "#C27360",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/images/logo_cinthia.png",
+      "sizes": "600x600",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo_cinthia.png",
+      "sizes": "600x600",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
