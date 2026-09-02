@@ -29,6 +29,7 @@ model Organization {
   testimonials          Testimonial[]
   ingredients           Ingredient[]
   blockedDates          BlockedDate[]
+  coupons               Coupon[]
 }
 
 model User {
@@ -149,6 +150,7 @@ model Quote {
   themeNotes       String?
   subtotal         Float
   discount         Float       @default(0.0)
+  couponCode       String?
   extraTotal       Float       @default(0.0)
   finalTotal       Float
   status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
@@ -289,17 +291,19 @@ model Testimonial {
 }
 
 model Ingredient {
-  id              String       @id @default(uuid())
-  name            String
-  unit            String       @default("g") // g, ml, un, kg
-  packageQuantity Float        // ex: 395 (g) no pacote
-  costPrice       Float        // ex: 7.50 (preço pago no mercado)
-  category        String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+  id                String       @id @default(uuid())
+  name              String
+  unit              String       @default("g") // g, ml, un, kg
+  packageQuantity   Float        // ex: 395 (g) no pacote
+  costPrice         Float        // ex: 7.50 (preço pago no mercado)
+  category          String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+  stockQuantity     Float        @default(0) // quanto tem em estoque hoje, na unidade acima
+  lowStockThreshold Float        @default(0) // abaixo disso, mostra alerta de estoque baixo
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  recipeItems     RecipeItem[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  recipeItems       RecipeItem[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   @@index([organizationId])
 }
@@ -313,6 +317,21 @@ model RecipeItem {
   quantityUsed Float      // ex: 150 (g usados por unidade de produto)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model Coupon {
+  id             String    @id @default(uuid())
+  code           String // ex: "NIVER10" -- stored uppercase, matched case-insensitively
+  discountType   String    @default("PERCENT") // PERCENT or FIXED
+  discountValue  Float // 10 = 10% (PERCENT) or R$10,00 (FIXED)
+  active         Boolean   @default(true)
+  expiresAt      DateTime?
+  usageCount     Int       @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+
+  @@unique([organizationId, code])
 }
 
 model BlockedDate {

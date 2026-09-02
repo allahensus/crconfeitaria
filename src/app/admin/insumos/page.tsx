@@ -18,6 +18,7 @@ import {
   Percent,
   Layers,
   Sparkles,
+  PackageX,
 } from 'lucide-react';
 
 export default function AdminIngredientsPage() {
@@ -35,6 +36,8 @@ export default function AdminIngredientsPage() {
   const [packageQuantity, setPackageQuantity] = useState('');
   const [costPrice, setCostPrice] = useState('');
   const [category, setCategory] = useState('Laticínios');
+  const [stockQuantity, setStockQuantity] = useState('0');
+  const [lowStockThreshold, setLowStockThreshold] = useState('0');
 
   // Pricing Simulator State
   const [markupMargin, setMarkupMargin] = useState(100); // 100% de lucro
@@ -69,6 +72,8 @@ export default function AdminIngredientsPage() {
     setPackageQuantity('1000');
     setCostPrice('10');
     setCategory('Laticínios');
+    setStockQuantity('0');
+    setLowStockThreshold('0');
     setIsModalOpen(true);
   };
 
@@ -79,6 +84,8 @@ export default function AdminIngredientsPage() {
     setPackageQuantity(ing.packageQuantity.toString());
     setCostPrice(ing.costPrice.toString());
     setCategory(ing.category);
+    setStockQuantity((ing.stockQuantity ?? 0).toString());
+    setLowStockThreshold((ing.lowStockThreshold ?? 0).toString());
     setIsModalOpen(true);
   };
 
@@ -91,6 +98,8 @@ export default function AdminIngredientsPage() {
         packageQuantity: parseFloat(packageQuantity),
         costPrice: parseFloat(costPrice),
         category,
+        stockQuantity: parseFloat(stockQuantity) || 0,
+        lowStockThreshold: parseFloat(lowStockThreshold) || 0,
       };
 
       const url = editingId ? `/api/ingredients/${editingId}` : '/api/ingredients';
@@ -125,6 +134,9 @@ export default function AdminIngredientsPage() {
   });
 
   const categoriesList = Array.from(new Set(ingredients.map((i) => i.category)));
+  const lowStockIngredients = ingredients.filter(
+    (i) => (i.lowStockThreshold || 0) > 0 && (i.stockQuantity || 0) <= i.lowStockThreshold
+  );
 
   return (
     <div className="flex min-h-screen bg-[#FAF6F4]">
@@ -155,6 +167,23 @@ export default function AdminIngredientsPage() {
             <Plus className="w-4 h-4" /> Novo Insumo / Ingrediente
           </button>
         </div>
+
+        {/* Low Stock Alert Banner */}
+        {lowStockIngredients.length > 0 && (
+          <div className="bg-amber-50 border border-amber-300 rounded-3xl p-5 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <PackageX className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-serif font-bold text-sm text-amber-900">
+                Estoque baixo em {lowStockIngredients.length} insumo{lowStockIngredients.length > 1 ? 's' : ''}
+              </h3>
+              <p className="text-xs text-amber-800 mt-0.5">
+                {lowStockIngredients.map((i) => `${i.name} (${i.stockQuantity} ${i.unit})`).join(', ')}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Pricing Engine Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -273,12 +302,15 @@ export default function AdminIngredientsPage() {
                     <th className="p-4">Pacote Comprado</th>
                     <th className="p-4">Preço Pago no Mercado</th>
                     <th className="p-4">Custo Unitário</th>
+                    <th className="p-4">Estoque Atual</th>
                     <th className="p-4 text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F2D7D0]/60">
                   {filteredIngredients.map((ing) => {
                     const unitCost = ing.costPrice / (ing.packageQuantity || 1);
+                    const isLowStock =
+                      (ing.lowStockThreshold || 0) > 0 && (ing.stockQuantity || 0) <= ing.lowStockThreshold;
                     return (
                       <tr key={ing.id} className="hover:bg-[#FDF7F6] transition-colors">
                         <td className="p-4 font-bold text-sm text-[#4A231A]">
@@ -297,6 +329,20 @@ export default function AdminIngredientsPage() {
                         </td>
                         <td className="p-4 font-mono text-gray-600">
                           {formatCurrency(unitCost)} / {ing.unit}
+                        </td>
+                        <td className="p-4">
+                          <span
+                            className={`font-mono font-semibold px-2 py-0.5 rounded ${
+                              isLowStock ? 'bg-amber-100 text-amber-800' : 'text-[#4A231A]'
+                            }`}
+                          >
+                            {ing.stockQuantity ?? 0} {ing.unit}
+                          </span>
+                          {isLowStock && (
+                            <span className="block text-[9px] font-bold text-amber-700 uppercase mt-0.5">
+                              ⚠️ Estoque baixo
+                            </span>
+                          )}
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -418,6 +464,37 @@ export default function AdminIngredientsPage() {
                       onChange={(e) => setCostPrice(e.target.value)}
                       className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-[#A75644] mb-1">
+                      Estoque Atual
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Ex: 2000"
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-0.5">Em {unit}, quanto você tem agora</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-[#A75644] mb-1">
+                      Alertar Estoque Baixo
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Ex: 200"
+                      value={lowStockThreshold}
+                      onChange={(e) => setLowStockThreshold(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-0.5">Abaixo disso, mostra alerta (0 = sem alerta)</p>
                   </div>
                 </div>
 

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
-    const { name, unit, packageQuantity, costPrice, category } = body;
+    const { name, unit, packageQuantity, costPrice, category, stockQuantity, lowStockThreshold } = body;
 
     if (!name || !packageQuantity || costPrice === undefined) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
@@ -43,6 +43,8 @@ export async function POST(request: Request) {
         packageQuantity: parseFloat(packageQuantity),
         costPrice: parseFloat(costPrice),
         category: category || 'Ingredientes',
+        stockQuantity: stockQuantity !== undefined ? parseFloat(stockQuantity) : 0,
+        lowStockThreshold: lowStockThreshold !== undefined ? parseFloat(lowStockThreshold) : 0,
         organizationId: session.organizationId,
       },
     });
