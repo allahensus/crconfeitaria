@@ -104,7 +104,7 @@ export default function AdminCouponsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -135,6 +135,7 @@ export default function AdminCouponsPage() {
           </div>
         ) : (
           <div className="bg-white rounded-3xl border border-[#F2D7D0] shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FAF6F4] uppercase text-[10px] tracking-wider text-[#A75644] font-bold border-b border-[#F2D7D0]">
                 <tr>
@@ -191,6 +192,7 @@ export default function AdminCouponsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </main>

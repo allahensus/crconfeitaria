@@ -184,7 +184,7 @@ export default function AdminCustomersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -242,6 +242,7 @@ export default function AdminCustomersPage() {
           <div className="py-8 text-center text-[#645451]">Carregando base de clientes...</div>
         ) : (
           <div className="bg-white rounded-3xl border border-[#F2D7D0] overflow-hidden shadow-card">
+            <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#FDF7F6] border-b border-[#F2D7D0] text-[11px] uppercase tracking-wider font-bold text-[#A75644]">
@@ -327,6 +328,7 @@ export default function AdminCustomersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
