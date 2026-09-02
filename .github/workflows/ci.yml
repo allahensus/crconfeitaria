@@ -6,6 +6,18 @@ on:
   pull_request:
     branches: [main]
 
+# All test runs share one physical Postgres schema (schema=test on the
+# project's Supabase instance -- see TEST_DATABASE_URL below), and
+# resetTestDatabase() drops and recreates that schema at the start of every
+# test file. Two runs executing at once race each other's DROP/CREATE and
+# corrupt each other's data (seen directly: 4 pushes within a minute produced
+# 4 concurrent runs, all failing on unique-constraint collisions and
+# "db push" errors that had nothing to do with the actual code changes).
+# Queuing runs one at a time for the same branch eliminates that.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
