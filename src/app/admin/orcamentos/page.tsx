@@ -250,7 +250,9 @@ export default function AdminQuotesPage() {
                       {item.variation && <p>Tamanho: {item.variation}</p>}
                       {item.cakeBase && <p>Massa: {item.cakeBase}</p>}
                       {item.filling1 && <p>Recheio 1: {item.filling1}</p>}
-                      {item.frosting && <p>Cobertura: {item.frosting}</p>}
+                      {item.frosting && !(item.variation || '').includes(item.frosting) && (
+                        <p>Cobertura: {item.frosting}</p>
+                      )}
                       {item.extras && <p>Adicionais: {item.extras}</p>}
                       <div className="flex justify-between items-center pt-2 border-t border-gray-100 font-bold text-[#C27360]">
                         <span>Qtd: {item.quantity}x</span>

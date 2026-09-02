@@ -79,7 +79,11 @@ export function generateWhatsAppLink(
   if (quote.variation) text += `• ${quote.isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}: ${quote.variation}\n`;
   if (quote.cakeBase) text += `• Massa: ${quote.cakeBase}\n`;
   if (quote.filling1) text += `• Recheio Principal: ${quote.filling1}\n`;
-  if (quote.frosting) text += `• Cobertura: ${quote.frosting}\n`;
+  // Skip this line when the variation name already says it (e.g. "Cobertura em
+  // Buttercream" as a Mini Bolo size option) -- otherwise it repeats itself.
+  if (quote.frosting && !(quote.variation && quote.variation.includes(quote.frosting))) {
+    text += `• Cobertura: ${quote.frosting}\n`;
+  }
   text += `• Quantidade: ${quote.quantity}\n`;
   if (quote.extras) {
     for (const part of quote.extras.split('|').map((p) => p.trim()).filter(Boolean)) {

@@ -501,7 +501,9 @@ export function BudgetCalculatorModal({
     if (!isBiscoito) {
       text += `• Massa: ${cakeBase}\n`;
       text += `• Recheio Principal: ${filling1}\n`;
-      text += `• Cobertura: ${frosting}\n`;
+      if (!(selectedVariation?.name || '').includes(frosting)) {
+        text += `• Cobertura: ${frosting}\n`;
+      }
     } else {
       text += `• Divisão: ${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito\n`;
       if (wantsRibbonTag) text += `• Fita de Cetim + Tag: ${palitoCount} un. com palito (+R$ 1,00/un)\n`;
