@@ -58,6 +58,8 @@ export async function POST(request: Request) {
       subtotal,
       extraTotal,
       finalTotal,
+      discount,
+      couponCode,
     } = body;
 
     const trimmedName = (customerName || '').trim();
@@ -145,6 +147,24 @@ export async function POST(request: Request) {
     const price = parseFloat(unitPrice) || 0;
     const tot = parseFloat(finalTotal) || price * qty;
 
+    // Re-validate the coupon server-side before trusting the client-computed
+    // discount -- don't just take the client's word for it being applied.
+    let appliedDiscount = 0;
+    let appliedCouponCode: string | null = null;
+    if (couponCode) {
+      const cleanCode = String(couponCode).trim().toUpperCase().replace(/\s+/g, '');
+      const coupon = await db.coupon.findUnique({
+        where: { organizationId_code: { organizationId: organization.id, code: cleanCode } },
+      });
+      const isValidCoupon =
+        coupon && coupon.active && (!coupon.expiresAt || new Date(coupon.expiresAt) >= new Date());
+      if (isValidCoupon) {
+        appliedDiscount = parseFloat(discount) || 0;
+        appliedCouponCode = coupon.code;
+        await db.coupon.update({ where: { id: coupon.id }, data: { usageCount: { increment: 1 } } });
+      }
+    }
+
     const quote = await db.quote.create({
       data: {
         organizationId: organization.id,
@@ -156,7 +176,8 @@ export async function POST(request: Request) {
         themeNotes: themeNotes || null,
         subtotal: parseFloat(subtotal) || price * qty,
         extraTotal: parseFloat(extraTotal) || 0,
-        discount: 0,
+        discount: appliedDiscount,
+        couponCode: appliedCouponCode,
         finalTotal: tot,
         status: 'PENDING',
         items: {

@@ -49,6 +49,10 @@ export function BudgetCalculatorModal({
   const [customerBirthDate, setCustomerBirthDate] = useState('');
   const [lgpdConsent, setLgpdConsent] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'money'>('pix');
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountType: string; discountValue: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const [submittedQuote, setSubmittedQuote] = useState<any>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string>('');
@@ -185,7 +189,43 @@ export function BudgetCalculatorModal({
   const subtotal = isBiscoito
     ? (noPalitoBiscoitoCount * unitPrice) + (palitoCount * (unitPrice + (isPalitoAllowed ? 2.0 : 0))) + ribbonTagCost
     : ((unitPrice + extraCostPerUnit) * quantity);
-  const finalTotal = subtotal;
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.discountType === 'PERCENT'
+      ? subtotal * (appliedCoupon.discountValue / 100)
+      : Math.min(appliedCoupon.discountValue, subtotal)
+    : 0;
+  const finalTotal = Math.max(0, subtotal - couponDiscount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponMsg('');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedCoupon({ code: data.code, discountType: data.discountType, discountValue: data.discountValue });
+        setCouponMsg(`✅ Cupom ${data.code} aplicado!`);
+      } else {
+        setAppliedCoupon(null);
+        setCouponMsg(`⚠️ ${data.error || 'Cupom inválido.'}`);
+      }
+    } catch (err) {
+      setCouponMsg('⚠️ Erro ao validar cupom.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponMsg('');
+  };
 
   const availableFillingsForProduct = React.useMemo(() => {
     if (selectedProduct?.slug === 'bento-cake' || selectedProduct?.slug === 'kit-festa-celebrar') {
@@ -310,6 +350,8 @@ export function BudgetCalculatorModal({
         subtotal,
         extraTotal: extraCostPerUnit * quantity,
         finalTotal,
+        discount: couponDiscount,
+        couponCode: appliedCoupon?.code || null,
         customerName,
         customerWhatsapp,
         customerEmail,
@@ -971,6 +1013,46 @@ export function BudgetCalculatorModal({
                 </p>
               </div>
 
+              {/* Coupon Code */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  Cupom de Desconto (opcional)
+                </label>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-300 bg-emerald-50">
+                    <span className="text-sm font-bold text-emerald-800">
+                      🎉 {appliedCoupon.code} aplicado
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-xs font-semibold text-emerald-700 hover:underline"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Ex: NIVER10"
+                      className="flex-1 p-2.5 rounded-xl border border-[#F2D7D0] text-sm font-mono uppercase text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="px-4 rounded-xl bg-[#C27360] hover:bg-[#A75644] text-white text-xs font-bold disabled:opacity-50"
+                    >
+                      {couponLoading ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+                )}
+                {couponMsg && !appliedCoupon && <p className="text-[11px] font-semibold text-red-600 mt-1">{couponMsg}</p>}
+              </div>
+
               {/* Payment Method Choice */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
@@ -1147,6 +1229,12 @@ export function BudgetCalculatorModal({
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#645451]">Adicionais / Cobertura</span>
                   <span className="font-semibold text-[#C27360]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
+                </div>
+              )}
+              {appliedCoupon && couponDiscount > 0 && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-emerald-700 font-semibold">Cupom {appliedCoupon.code}</span>
+                  <span className="font-semibold text-emerald-700">-{formatCurrency(couponDiscount)}</span>
                 </div>
               )}
             </div>
