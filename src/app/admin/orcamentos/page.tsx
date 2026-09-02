@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
-import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag, Tag } from 'lucide-react';
 
 export default function AdminQuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -161,6 +161,11 @@ export default function AdminQuotesPage() {
                       <td className="p-4 font-medium">{formatDate(q.eventDate)}</td>
                       <td className="p-4 font-extrabold text-[#C27360] font-serif">
                         {formatCurrency(q.finalTotal)}
+                        {q.couponCode && (
+                          <span className="block text-[9px] font-bold text-emerald-700 uppercase mt-0.5">
+                            🏷️ {q.couponCode}
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         <span
@@ -252,6 +257,17 @@ export default function AdminQuotesPage() {
                   ))}
                 </div>
               </div>
+
+              {selectedQuote.couponCode && (
+                <div className="flex justify-between items-center text-xs bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                  <span className="font-bold text-emerald-800 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5" /> Cupom {selectedQuote.couponCode}
+                  </span>
+                  <span className="font-bold text-emerald-800">
+                    -{formatCurrency(selectedQuote.discount || 0)}
+                  </span>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-[#F2D7D0] flex justify-between items-center">
                 <span className="font-extrabold text-lg text-[#C27360] font-serif">
