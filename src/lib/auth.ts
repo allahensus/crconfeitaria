@@ -25,6 +25,10 @@ export interface AuthSession {
   organizationId: string;
 }
 
+export function isOwner(session: AuthSession): boolean {
+  return session.role === 'OWNER';
+}
+
 export async function createSession(session: AuthSession) {
   const token = await new SignJWT({ ...session })
     .setProtectedHeader({ alg: 'HS256' })
