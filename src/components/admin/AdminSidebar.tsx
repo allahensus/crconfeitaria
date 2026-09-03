@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   Images,
+  UserCog,
 } from 'lucide-react';
 
 export function AdminSidebar() {
@@ -29,6 +30,14 @@ export function AdminSidebar() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => setRole(data?.user?.role || null))
+      .catch(() => setRole(null));
+  }, []);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -36,21 +45,23 @@ export function AdminSidebar() {
     router.refresh();
   };
 
-  const navItems = [
-    { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { label: 'Pedidos (Kanban)', href: '/admin/pedidos', icon: ShoppingBag },
-    { label: 'Calendário Produção', href: '/admin/calendario', icon: Calendar },
-    { label: 'Orçamentos', href: '/admin/orcamentos', icon: FileText },
-    { label: 'Produtos', href: '/admin/produtos', icon: Cake },
-    { label: 'Insumos & Precificação', href: '/admin/insumos', icon: Sparkles },
-    { label: 'Categorias', href: '/admin/categorias', icon: FolderTree },
-    { label: 'Clientes (CRM)', href: '/admin/clientes', icon: Users },
-    { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign },
-    { label: 'Cupons', href: '/admin/cupons', icon: Tag },
-    { label: 'Depoimentos', href: '/admin/depoimentos', icon: Quote },
-    { label: 'Galeria', href: '/admin/galeria', icon: Images },
-    { label: 'Configurações', href: '/admin/configuracoes', icon: Settings },
+  const allNavItems = [
+    { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, ownerOnly: false },
+    { label: 'Pedidos (Kanban)', href: '/admin/pedidos', icon: ShoppingBag, ownerOnly: false },
+    { label: 'Calendário Produção', href: '/admin/calendario', icon: Calendar, ownerOnly: false },
+    { label: 'Orçamentos', href: '/admin/orcamentos', icon: FileText, ownerOnly: false },
+    { label: 'Produtos', href: '/admin/produtos', icon: Cake, ownerOnly: false },
+    { label: 'Insumos & Precificação', href: '/admin/insumos', icon: Sparkles, ownerOnly: false },
+    { label: 'Categorias', href: '/admin/categorias', icon: FolderTree, ownerOnly: false },
+    { label: 'Clientes (CRM)', href: '/admin/clientes', icon: Users, ownerOnly: false },
+    { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign, ownerOnly: true },
+    { label: 'Cupons', href: '/admin/cupons', icon: Tag, ownerOnly: true },
+    { label: 'Depoimentos', href: '/admin/depoimentos', icon: Quote, ownerOnly: false },
+    { label: 'Galeria', href: '/admin/galeria', icon: Images, ownerOnly: false },
+    { label: 'Equipe', href: '/admin/equipe', icon: UserCog, ownerOnly: true },
+    { label: 'Configurações', href: '/admin/configuracoes', icon: Settings, ownerOnly: false },
   ];
+  const navItems = allNavItems.filter((item) => !item.ownerOnly || role === 'OWNER');
 
   return (
     <>
