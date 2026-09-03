@@ -58,6 +58,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
     }
 
+    const category = await db.category.findUnique({ where: { id: categoryId } });
+    if (!category) {
+      return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 400 });
+    }
+
     let slug = slugify(name);
     const existingSlug = await db.product.findUnique({
       where: { organizationId_slug: { organizationId: session.organizationId, slug } },

@@ -49,6 +49,13 @@ export async function PUT(
 
     const { name, categoryId, description, mainImage, imageFit, imageZoom, imagePosX, imagePosY, basePrice, unit, yieldInfo, featured, active, variations } = body;
 
+    if (categoryId) {
+      const category = await db.category.findUnique({ where: { id: categoryId } });
+      if (!category) {
+        return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 400 });
+      }
+    }
+
     if (Array.isArray(variations)) {
       await db.productVariation.deleteMany({
         where: { productId: id },

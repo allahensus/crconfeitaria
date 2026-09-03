@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
+import { getSession } from '@/lib/auth';
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const contentType = req.headers.get('content-type') || '';
 
     if (!contentType.includes('multipart/form-data')) {
@@ -14,6 +22,10 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'Nenhum arquivo enviado.' }, { status: 400 });
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return NextResponse.json({ error: 'Envie apenas imagens (JPEG, PNG, WEBP ou GIF).' }, { status: 400 });
     }
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
