@@ -18,6 +18,15 @@ export default function AdminFinancePage() {
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Pix');
   const [errorMsg, setErrorMsg] = useState('');
+  const [role, setRole] = useState<string | null>(null);
+  const [roleChecked, setRoleChecked] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => setRole(data?.user?.role || null))
+      .finally(() => setRoleChecked(true));
+  }, []);
 
   const loadFinance = async () => {
     try {
@@ -103,6 +112,20 @@ export default function AdminFinancePage() {
       alert('Erro ao conectar ao servidor.');
     }
   };
+
+  if (roleChecked && role !== 'OWNER') {
+    return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
+        <AdminSidebar />
+        <main className="flex-1 p-6 md:p-10 flex items-center justify-center">
+          <div className="bg-white rounded-3xl border border-[#F2D7D0] shadow-card p-10 text-center max-w-md">
+            <h1 className="font-serif text-xl font-bold text-[#4A231A] mb-2">Acesso restrito</h1>
+            <p className="text-sm text-[#645451]">Esta área é visível apenas para a dona da loja.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
