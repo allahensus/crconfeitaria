@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, isOwner } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const { searchParams } = new URL(request.url);
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();

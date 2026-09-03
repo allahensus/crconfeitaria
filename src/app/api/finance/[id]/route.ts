@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, isOwner } from '@/lib/auth';
 
 // Only manually-registered expenses (type DESPESA, backed by an Expense row)
 // can be edited/deleted here. RECEITA transactions mirror real order payments
@@ -14,6 +14,7 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
@@ -69,6 +70,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
