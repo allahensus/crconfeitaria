@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, isOwner } from '@/lib/auth';
 
 export async function PUT(
   request: Request,
@@ -9,6 +9,7 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
@@ -43,6 +44,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
