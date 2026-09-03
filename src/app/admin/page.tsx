@@ -88,6 +88,14 @@ export default function AdminDashboardPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => setRole(data?.user?.role || null))
+      .catch(() => setRole(null));
+  }, []);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -108,8 +116,8 @@ export default function AdminDashboardPage() {
           custRes.json(),
         ]);
 
-        if (finData && finData.metrics) setMetrics(finData.metrics);
-        if (finAllData && Array.isArray(finAllData.transactions)) setAllTransactions(finAllData.transactions);
+        if (finRes.ok && finData && finData.metrics) setMetrics(finData.metrics);
+        if (finAllRes.ok && finAllData && Array.isArray(finAllData.transactions)) setAllTransactions(finAllData.transactions);
         if (Array.isArray(ordData)) setOrders(ordData);
         if (Array.isArray(qutoData)) setQuotes(qutoData);
         if (Array.isArray(custData)) setCustomers(custData);
@@ -197,7 +205,7 @@ export default function AdminDashboardPage() {
                   Faturamento Mês
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.totalRevenue || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.totalRevenue || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5 mt-1">
                   <TrendingUp className="w-3 h-3" /> Receitas consolidadas
@@ -215,7 +223,7 @@ export default function AdminDashboardPage() {
                   Lucro Estimado Mês
                 </span>
                 <h3 className="text-xl font-bold text-emerald-700 font-serif mt-1">
-                  {formatCurrency(metrics?.netProfit || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.netProfit || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Receita despesada
@@ -287,7 +295,7 @@ export default function AdminDashboardPage() {
                   Contas a Receber
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.accountsReceivable || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.accountsReceivable || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-rose-600 font-semibold mt-1 block">
                   Sinais a quitar na entrega
@@ -305,7 +313,7 @@ export default function AdminDashboardPage() {
                   Despesas Mês
                 </span>
                 <h3 className="text-xl font-bold text-red-600 font-serif mt-1">
-                  {formatCurrency(metrics?.totalExpenses || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.totalExpenses || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Ingredientes & Embalagens
@@ -323,7 +331,7 @@ export default function AdminDashboardPage() {
                   Ticket Médio Pedido
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.averageTicket || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.averageTicket || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Média por venda
@@ -437,18 +445,24 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="h-72 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueVsExpenseData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F2D7D0" />
-                  <XAxis dataKey="name" stroke="#645451" fontSize={12} />
-                  <YAxis stroke="#645451" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#FAF6F4', borderRadius: '12px', border: '1px solid #F2D7D0' }}
-                  />
-                  <Bar dataKey="receita" fill="#C27360" name="Receita (R$)" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="despesa" fill="#D59483" name="Despesa (R$)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {role === 'OWNER' ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueVsExpenseData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F2D7D0" />
+                    <XAxis dataKey="name" stroke="#645451" fontSize={12} />
+                    <YAxis stroke="#645451" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#FAF6F4', borderRadius: '12px', border: '1px solid #F2D7D0' }}
+                    />
+                    <Bar dataKey="receita" fill="#C27360" name="Receita (R$)" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="despesa" fill="#D59483" name="Despesa (R$)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-sm text-[#645451]">
+                  Visível apenas para a dona da loja
+                </div>
+              )}
             </div>
           </div>
 

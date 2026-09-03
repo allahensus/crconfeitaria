@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import { getScopedPrisma } from '@/lib/db';
 import { getSession, isOwner } from '@/lib/auth';
 
+// NOTE: User is not in TENANT_SCOPED_MODELS (src/lib/db.ts) — getScopedPrisma
+// does not auto-scope it. Every query below adds organizationId manually.
+
 const VALID_ROLES = new Set(['OWNER', 'STAFF']);
 const LAST_OWNER_ERROR = 'Não é possível remover a última conta de dona da loja.';
 

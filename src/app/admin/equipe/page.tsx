@@ -140,6 +140,15 @@ export default function AdminTeamPage() {
           </button>
         </div>
 
+        <div className="bg-amber-50 border border-amber-300 rounded-3xl p-5">
+          <p className="text-xs text-amber-900">
+            <span className="font-bold text-amber-800">Atenção: </span>
+            Por segurança, ao remover ou trocar o papel de uma conta, o acesso dela pode continuar ativo por até 7 dias
+            (tempo de validade da sessão). Se precisar bloquear o acesso imediatamente, oriente a pessoa a trocar a
+            senha ou aguarde a expiração da sessão.
+          </p>
+        </div>
+
         {loading ? (
           <div className="py-8 text-center text-[#645451]">Carregando equipe...</div>
         ) : (
