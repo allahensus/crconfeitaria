@@ -21,6 +21,7 @@ import {
   Tag,
   Menu,
   X,
+  Images,
 } from 'lucide-react';
 
 export function AdminSidebar() {
@@ -47,6 +48,7 @@ export function AdminSidebar() {
     { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign },
     { label: 'Cupons', href: '/admin/cupons', icon: Tag },
     { label: 'Depoimentos', href: '/admin/depoimentos', icon: Quote },
+    { label: 'Galeria', href: '/admin/galeria', icon: Images },
     { label: 'Configurações', href: '/admin/configuracoes', icon: Settings },
   ];
 

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock, Package } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock, Package, Images } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBudgetModal: (product?: any) => void;
@@ -49,6 +49,9 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
             <a href="#depoimentos" className="hover:text-[#C27360] transition-colors">
               Avaliações
             </a>
+            <Link href="/galeria" className="hover:text-[#C27360] transition-colors">
+              Galeria
+            </Link>
             <a href="#contato" className="hover:text-[#C27360] transition-colors">
               Contato
             </a>
@@ -115,6 +118,13 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
             >
               <Star className="w-4 h-4 text-[#C27360]" /> Depoimentos
             </a>
+            <Link
+              href="/galeria"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg hover:bg-[#FDF7F6] text-base flex items-center gap-2.5"
+            >
+              <Images className="w-4 h-4 text-[#C27360]" /> Galeria
+            </Link>
             <a
               href="#contato"
               onClick={() => setMobileMenuOpen(false)}
