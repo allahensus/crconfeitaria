@@ -30,6 +30,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
                 href={`https://instagram.com/${instagram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
+                aria-label="Instagram da Confeitaria Cinthia Rodrigues"
                 className="w-9 h-9 rounded-full bg-[#645451] hover:bg-[#C27360] flex items-center justify-center transition-colors text-white"
               >
                 <Instagram className="w-5 h-5" />
@@ -38,6 +39,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noreferrer"
+                aria-label="Falar no WhatsApp"
                 className="w-9 h-9 rounded-full bg-[#645451] hover:bg-emerald-600 flex items-center justify-center transition-colors text-white"
               >
                 <Phone className="w-5 h-5" />

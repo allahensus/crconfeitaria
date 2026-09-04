@@ -102,7 +102,7 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
                     Feito à Mão, Peça por Peça
                   </span>
-                  <h3 className="font-serif text-xl leading-tight font-bold">Bolos Artesanais Personalizados</h3>
+                  <h2 className="font-serif text-xl leading-tight font-bold">Bolos Artesanais Personalizados</h2>
                   <div className="mt-3">
                     <button
                       onClick={onOpenBudgetModal}

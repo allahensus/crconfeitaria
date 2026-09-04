@@ -87,6 +87,7 @@ export default function PublicPage() {
         whatsappNumber={settings.whatsapp_number}
       />
 
+      <main>
       {/* Hero Banner */}
       <Hero onOpenBudgetModal={() => handleOpenModal()} settings={settings} />
       <IcingDivider />
@@ -94,7 +95,7 @@ export default function PublicPage() {
       {/* Catalog Showcase Section */}
       <section id="catalogo" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs uppercase tracking-widest text-[#C27360] font-bold">
+          <span className="text-xs uppercase tracking-widest text-[#A75644] font-bold">
             Delícias Feitas à Mão
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A]">
@@ -140,7 +141,7 @@ export default function PublicPage() {
       <section id="sabores" className="py-16 bg-gradient-to-b from-[#FDF7F6] to-[#FAF6F4] border-y border-[#F2D7D0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs uppercase tracking-widest text-[#C27360] font-bold">
+            <span className="text-xs uppercase tracking-widest text-[#A75644] font-bold">
               Qualidade Incomparável
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A] mt-2">
@@ -161,7 +162,7 @@ export default function PublicPage() {
                   <CheckCircle2 className="w-5 h-5 text-[#C27360]" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-[#4A231A]">{f.name}</h4>
+                  <h3 className="font-bold text-xs text-[#4A231A]">{f.name}</h3>
                   <span className="text-[10px] text-[#A75644] font-medium uppercase">{f.category}</span>
                 </div>
               </div>
@@ -170,9 +171,9 @@ export default function PublicPage() {
 
           {/* Warm & Professional Transparency Note */}
           <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm text-center space-y-1">
-            <h4 className="text-xs uppercase font-bold text-[#A75644] tracking-wider">
+            <h3 className="text-xs uppercase font-bold text-[#A75644] tracking-wider">
               Transparência & Carinho com Nossos Clientes
-            </h4>
+            </h3>
             <p className="text-xs text-[#645451] leading-relaxed">
               Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento.
             </p>
@@ -181,7 +182,7 @@ export default function PublicPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => handleOpenModal()}
-              className="px-8 py-3 rounded-full bg-[#C27360] text-white font-bold text-sm shadow-blush hover:bg-[#A75644] transition-all"
+              className="px-8 py-3 rounded-full bg-[#A75644] text-white font-bold text-sm shadow-blush hover:bg-[#874132] transition-all"
             >
               Montar Bolo com Seu Recheio Favorito
             </button>
@@ -191,6 +192,7 @@ export default function PublicPage() {
 
       {/* Testimonials */}
       <Testimonials testimonials={testimonials} />
+      </main>
 
       {/* Footer */}
       <ContactFooter settings={settings} />

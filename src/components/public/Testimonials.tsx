@@ -16,7 +16,7 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#C27360] font-bold">
+          <span className="text-xs uppercase tracking-widest text-[#A75644] font-bold">
             Amor em Cada Detalhe
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A] mt-2">
@@ -52,8 +52,8 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
                   {t.name.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-[#4A231A]">{t.name}</h4>
-                  <span className="text-xs text-[#C27360] font-medium">{t.eventType}</span>
+                  <h3 className="font-bold text-sm text-[#4A231A]">{t.name}</h3>
+                  <span className="text-xs text-[#A75644] font-medium">{t.eventType}</span>
                 </div>
               </div>
             </div>

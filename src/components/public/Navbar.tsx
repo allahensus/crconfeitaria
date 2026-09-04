@@ -32,7 +32,7 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
               <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#4A231A] leading-none">
                 Cinthia Rodrigues
               </span>
-              <span className="text-[11px] uppercase tracking-widest text-[#C27360] font-semibold mt-1">
+              <span className="text-[11px] uppercase tracking-widest text-[#A75644] font-semibold mt-1">
                 Confeitaria Artesanal
               </span>
             </div>
@@ -78,7 +78,7 @@ export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: 
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => onOpenBudgetModal()}
-              className="px-3.5 py-1.5 rounded-full bg-[#C27360] text-white text-xs font-semibold shadow-sm"
+              className="px-3.5 py-1.5 rounded-full bg-[#A75644] text-white text-xs font-semibold shadow-sm"
             >
               Orçar
             </button>
