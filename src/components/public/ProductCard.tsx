@@ -61,7 +61,7 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
         {/* Product Info */}
         <div className="p-6 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider text-[#C27360] font-bold">
+            <span className="text-xs uppercase tracking-wider text-[#A75644] font-bold">
               {product.category?.name || 'Confeitaria'}
             </span>
           </div>
@@ -89,7 +89,7 @@ export function ProductCard({ product, onOpenBudgetModal }: ProductCardProps) {
                   title={`Clique para orçar no tamanho ${v.name}`}
                 >
                   <span>{v.name}</span>
-                  <span className="text-[10px] opacity-80">({formatCurrency(v.price)})</span>
+                  <span className="text-[10px]">({formatCurrency(v.price)})</span>
                 </button>
               ))}
             </div>
