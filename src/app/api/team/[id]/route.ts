@@ -2,23 +2,12 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getScopedPrisma } from '@/lib/db';
 import { getSession, isOwner } from '@/lib/auth';
+import { LAST_OWNER_ERROR, wouldRemoveLastOwner } from '@/lib/team';
 
 // NOTE: User is not in TENANT_SCOPED_MODELS (src/lib/db.ts) — getScopedPrisma
 // does not auto-scope it. Every query below adds organizationId manually.
 
 const VALID_ROLES = new Set(['OWNER', 'STAFF']);
-const LAST_OWNER_ERROR = 'Não é possível remover a última conta de dona da loja.';
-
-async function wouldRemoveLastOwner(
-  db: ReturnType<typeof getScopedPrisma>,
-  organizationId: string,
-  targetUserId: string
-): Promise<boolean> {
-  const remainingOwners = await db.user.count({
-    where: { organizationId, role: 'OWNER', id: { not: targetUserId } },
-  });
-  return remainingOwners === 0;
-}
 
 export async function PUT(
   request: Request,
