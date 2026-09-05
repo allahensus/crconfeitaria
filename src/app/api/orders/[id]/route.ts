@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { deductStockForOrder, restoreStockForOrder } from '@/lib/stock';
 
 export async function GET(
   request: Request,
@@ -44,13 +45,22 @@ export async function PUT(
 
     const existingOrder = await db.order.findUnique({
       where: { id },
-      include: { payments: true },
+      include: { payments: true, items: true },
     });
 
     if (!existingOrder) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
 
     let updatedPaidAmount = existingOrder.paidAmount;
     let paymentStatus = existingOrder.paymentStatus;
+    let stockDeducted = existingOrder.stockDeducted;
+
+    if (status === 'EM_PRODUCAO' && existingOrder.status !== 'EM_PRODUCAO' && !existingOrder.stockDeducted) {
+      await deductStockForOrder(db, existingOrder);
+      stockDeducted = true;
+    } else if (status === 'CANCELADO' && existingOrder.stockDeducted) {
+      await restoreStockForOrder(db, existingOrder);
+      stockDeducted = false;
+    }
 
     if (addPayment) {
       const paymentAmount = parseFloat(addPayment.amount);
@@ -92,6 +102,7 @@ export async function PUT(
         status: status || existingOrder.status,
         paidAmount: updatedPaidAmount,
         paymentStatus,
+        stockDeducted,
         deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : existingOrder.deliveryDate,
         notes: body.notes !== undefined ? body.notes : existingOrder.notes,
       },
