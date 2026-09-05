@@ -48,7 +48,9 @@ desconto automático — decisão consciente, não um bug (ver "Fora de escopo")
    estoque cada ingrediente da ficha técnica de cada item do pedido que tenha
    produto conhecido, multiplicado pela quantidade do item.
 3. Quando um pedido **já descontado** é marcado como **Cancelado**, devolver
-   exatamente o que foi descontado.
+   ao estoque a quantidade calculada pela ficha técnica *atual* do produto —
+   não necessariamente idêntica ao que foi descontado, se a receita mudou
+   nesse meio-tempo (ver limitação conhecida abaixo).
 4. Nunca descontar ou devolver o mesmo pedido duas vezes, mesmo que o status
    mude várias vezes.
 
@@ -144,6 +146,15 @@ Em `PUT /api/orders/[id]/route.ts`, depois que `existingOrder` é carregado
   continua falso, então `restoreStockForOrder` nem é chamado.
 - **Ingrediente ficaria negativo** — desconta mesmo assim; o alerta de
   estoque baixo (`lowStockThreshold`) já mostra isso na tela de Insumos.
+- **Receita editada ou produto excluído entre a produção e o cancelamento**
+  — a devolução de estoque busca a ficha técnica *no momento do
+  cancelamento*, não uma cópia do que foi descontado. Se a receita mudar
+  nesse meio-tempo, a devolução usa os números novos. Se o produto for
+  excluído (o que apaga sua ficha técnica em cascata), a devolução não
+  encontra nada para devolver e não faz nada, silenciosamente. Limitação
+  conhecida e aceita — uma devolução exata exigiria guardar uma cópia do
+  que foi descontado no momento da produção, o que é um projeto maior,
+  fora deste spec.
 
 ## Teste
 
