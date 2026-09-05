@@ -11,6 +11,7 @@ interface ContactFooterProps {
 export function ContactFooter({ settings }: ContactFooterProps) {
   const whatsappNumber = settings?.whatsapp_number || '5512997594697';
   const instagram = settings?.instagram || '@crconfeitaria__';
+  const bakeryName = settings?.bakery_name || 'Cinthia Rodrigues';
 
   return (
     <footer id="contato" className="bg-[#3D312F] text-white pt-16 pb-12 border-t border-[#645451]">
@@ -20,7 +21,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
           {/* Brand Info */}
           <div className="space-y-4">
             <h3 className="font-serif text-2xl font-bold text-[#F2D7D0]">
-              Cinthia Rodrigues
+              {bakeryName}
             </h3>
             <p className="text-xs text-[#E3E0DE] leading-relaxed">
               Confeitaria artesanal de alta qualidade. Bolos e biscoitos preparados com afeto e sofisticação para celebrar seus momentos especiais.
@@ -30,7 +31,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
                 href={`https://instagram.com/${instagram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Instagram da Confeitaria Cinthia Rodrigues"
+                aria-label={`Instagram da Confeitaria ${bakeryName}`}
                 className="w-9 h-9 rounded-full bg-[#645451] hover:bg-[#C27360] flex items-center justify-center transition-colors text-white"
               >
                 <Instagram className="w-5 h-5" />
@@ -139,7 +140,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
         </div>
 
         <div className="mt-12 pt-8 border-t border-[#645451] text-center text-xs text-[#E3E0DE] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Confeitaria Cinthia Rodrigues. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Confeitaria {bakeryName}. Todos os direitos reservados.</p>
           <p className="flex items-center gap-1 text-gray-400">
             Desenvolvido com <Heart className="w-3.5 h-3.5 text-rose-400 fill-current" /> para impulsionar vendas
           </p>

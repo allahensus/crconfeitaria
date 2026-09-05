@@ -85,6 +85,8 @@ export default function PublicPage() {
       <Navbar
         onOpenBudgetModal={() => handleOpenModal()}
         whatsappNumber={settings.whatsapp_number}
+        brandName={settings.bakery_name}
+        logoUrl={settings.logo_url}
       />
 
       <main>

@@ -13,6 +13,9 @@ interface HeroPhotoState {
 
 export default function AdminSettingsPage() {
   const [bakeryName, setBakeryName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('/images/logo_cinthia.png');
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoUploadMsg, setLogoUploadMsg] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [instagram, setInstagram] = useState('');
   const [address, setAddress] = useState('');
@@ -36,7 +39,8 @@ export default function AdminSettingsPage() {
         const res = await fetch('/api/settings');
         const data = await res.json();
         if (data) {
-          setBakeryName(data.bakery_name || 'Cinthia Rodrigues - Confeitaria Artesanal');
+          setBakeryName(data.bakery_name || 'Cinthia Rodrigues');
+          setLogoUrl(data.logo_url || '/images/logo_cinthia.png');
           setWhatsappNumber(data.whatsapp_number || '5512997594697');
           setInstagram(data.instagram || '@crconfeitaria__');
           setAddress(data.address || 'São Paulo - SP');
@@ -82,6 +86,7 @@ export default function AdminSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bakery_name: bakeryName,
+          logo_url: logoUrl,
           whatsapp_number: whatsappNumber,
           instagram,
           address,
@@ -147,6 +152,60 @@ export default function AdminSettingsPage() {
                   onChange={(e) => setBakeryName(e.target.value)}
                   className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
                 />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Aparece no cabeçalho, no rodapé e no título da aba do navegador.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1 flex items-center gap-1">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#C27360]" /> Logo
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#F2D7D0] bg-[#FAF6F4] shrink-0">
+                    <img key={logoUrl} src={logoUrl} alt="Logo atual" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <label
+                      htmlFor="logo-upload"
+                      className="cursor-pointer inline-flex px-3.5 py-2 rounded-xl bg-[#C27360] hover:bg-[#A75644] text-white font-bold text-xs items-center gap-2 shadow-sm transition-colors"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Trocar Logo
+                    </label>
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={logoUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setLogoUploading(true);
+                        setLogoUploadMsg('Enviando...');
+                        try {
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                          const data = await res.json();
+                          if (res.ok && data.url) {
+                            setLogoUrl(data.url);
+                            setLogoUploadMsg('✅ Enviada!');
+                            setTimeout(() => setLogoUploadMsg(''), 3000);
+                          } else {
+                            setLogoUploadMsg(`⚠️ ${data.error || 'Erro ao enviar'}`);
+                          }
+                        } catch {
+                          setLogoUploadMsg('⚠️ Erro ao conectar ao servidor de imagens.');
+                        } finally {
+                          setLogoUploading(false);
+                        }
+                      }}
+                    />
+                    {logoUploadMsg && <p className="text-xs font-semibold text-[#C27360] mt-1.5">{logoUploadMsg}</p>}
+                  </div>
+                </div>
               </div>
 
               <div>

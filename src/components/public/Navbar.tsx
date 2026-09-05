@@ -8,29 +8,36 @@ import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as 
 interface NavbarProps {
   onOpenBudgetModal: (product?: any) => void;
   whatsappNumber?: string;
+  brandName?: string;
+  logoUrl?: string;
 }
 
-export function Navbar({ onOpenBudgetModal, whatsappNumber = '5512997594697' }: NavbarProps) {
+export function Navbar({
+  onOpenBudgetModal,
+  whatsappNumber = '5512997594697',
+  brandName = 'Cinthia Rodrigues',
+  logoUrl = '/images/logo_cinthia.png',
+}: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full glass-panel shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          
+
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#E6B9AE] p-0.5 shadow-sm group-hover:scale-105 transition-transform bg-white">
               <Image
-                src="/images/logo_cinthia.png"
-                alt="Logo Cinthia Rodrigues Confeitaria"
+                src={logoUrl}
+                alt={`Logo ${brandName}`}
                 fill
                 className="object-cover rounded-full"
               />
             </div>
             <div className="flex flex-col">
               <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#4A231A] leading-none">
-                Cinthia Rodrigues
+                {brandName}
               </span>
               <span className="text-[11px] uppercase tracking-widest text-[#A75644] font-semibold mt-1">
                 Confeitaria Artesanal
