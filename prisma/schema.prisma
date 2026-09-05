@@ -200,6 +200,7 @@ model Order {
   totalAmount      Float
   paidAmount       Float                  @default(0.0)
   paymentStatus    String                 @default("PENDENTE") // PENDENTE, PARCIAL, PAGO
+  stockDeducted    Boolean                @default(false) // true while this order's recipe ingredients are deducted from stock
   notes            String?
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -216,6 +217,7 @@ model OrderItem {
   id            String  @id @default(uuid())
   orderId       String
   order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String? // links to the catalog Product, when known -- see src/lib/stock.ts
   productName   String
   variationName String?
   cakeBase      String?
