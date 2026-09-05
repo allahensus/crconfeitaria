@@ -94,6 +94,7 @@ export async function PUT(
           notes: quote.themeNotes,
           items: {
             create: quote.items.map((item) => ({
+              productId: item.productId && item.productId !== 'custom' ? item.productId : null,
               productName: item.productName,
               variationName: item.variation,
               cakeBase: item.cakeBase,
