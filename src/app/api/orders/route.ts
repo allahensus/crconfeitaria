@@ -106,6 +106,7 @@ export async function POST(request: Request) {
         items: {
           create: Array.isArray(items)
             ? items.map((i: any) => ({
+                productId: i.productId || null,
                 productName: i.productName,
                 variationName: i.variationName || null,
                 cakeBase: i.cakeBase || null,
