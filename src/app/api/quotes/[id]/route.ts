@@ -76,6 +76,10 @@ export async function PUT(
 
       const deliveryDate = quote.eventDate || new Date(Date.now() + 86400000 * 3);
 
+      const orgProductIds = new Set(
+        (await db.product.findMany({ select: { id: true } })).map((p) => p.id)
+      );
+
       const newOrder = await db.order.create({
         data: {
           organizationId: session.organizationId,
@@ -94,7 +98,7 @@ export async function PUT(
           notes: quote.themeNotes,
           items: {
             create: quote.items.map((item) => ({
-              productId: item.productId && item.productId !== 'custom' ? item.productId : null,
+              productId: item.productId && item.productId !== 'custom' && orgProductIds.has(item.productId) ? item.productId : null,
               productName: item.productName,
               variationName: item.variation,
               cakeBase: item.cakeBase,

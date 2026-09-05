@@ -215,7 +215,7 @@ export default function AdminIngredientsPage() {
 
   const categoriesList = Array.from(new Set(ingredients.map((i) => i.category)));
   const lowStockIngredients = ingredients.filter(
-    (i) => (i.lowStockThreshold || 0) > 0 && (i.stockQuantity || 0) <= i.lowStockThreshold
+    (i) => (i.stockQuantity ?? 0) < 0 || ((i.lowStockThreshold || 0) > 0 && (i.stockQuantity || 0) <= i.lowStockThreshold)
   );
 
   return (
@@ -390,7 +390,7 @@ export default function AdminIngredientsPage() {
                   {filteredIngredients.map((ing) => {
                     const unitCost = ing.costPrice / (ing.packageQuantity || 1);
                     const isLowStock =
-                      (ing.lowStockThreshold || 0) > 0 && (ing.stockQuantity || 0) <= ing.lowStockThreshold;
+                      (ing.stockQuantity ?? 0) < 0 || ((ing.lowStockThreshold || 0) > 0 && (ing.stockQuantity || 0) <= ing.lowStockThreshold);
                     return (
                       <tr key={ing.id} className="hover:bg-[#FDF7F6] transition-colors">
                         <td className="p-4 font-bold text-sm text-[#4A231A]">

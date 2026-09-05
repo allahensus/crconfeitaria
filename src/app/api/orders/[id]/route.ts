@@ -54,63 +54,65 @@ export async function PUT(
     let paymentStatus = existingOrder.paymentStatus;
     let stockDeducted = existingOrder.stockDeducted;
 
-    if (status === 'EM_PRODUCAO' && existingOrder.status !== 'EM_PRODUCAO' && !existingOrder.stockDeducted) {
-      await deductStockForOrder(db, existingOrder);
-      stockDeducted = true;
-    } else if (status === 'CANCELADO' && existingOrder.stockDeducted) {
-      await restoreStockForOrder(db, existingOrder);
-      stockDeducted = false;
-    }
-
-    if (addPayment) {
-      const paymentAmount = parseFloat(addPayment.amount);
-      const paymentMethod = addPayment.paymentMethod || 'Pix';
-      const notes = addPayment.notes || null;
-
-      await db.payment.create({
-        data: {
-          orderId: id,
-          amount: paymentAmount,
-          paymentMethod,
-          notes,
-          status: 'CONFIRMADO',
-        },
-      });
-
-      await db.financialTransaction.create({
-        data: {
-          organizationId: session.organizationId,
-          type: 'RECEITA',
-          amount: paymentAmount,
-          category: 'Venda de Pedido',
-          description: `Pagamento ${paymentMethod} do pedido ${existingOrder.orderNumber}`,
-          orderId: id,
-        },
-      });
-
-      updatedPaidAmount += paymentAmount;
-      if (updatedPaidAmount >= existingOrder.totalAmount) {
-        paymentStatus = 'PAGO';
-      } else if (updatedPaidAmount > 0) {
-        paymentStatus = 'PARCIAL';
+    const updatedOrder = await db.$transaction(async (tx) => {
+      if (status === 'EM_PRODUCAO' && existingOrder.status !== 'EM_PRODUCAO' && !existingOrder.stockDeducted) {
+        await deductStockForOrder(tx, existingOrder);
+        stockDeducted = true;
+      } else if (status === 'CANCELADO' && existingOrder.stockDeducted) {
+        await restoreStockForOrder(tx, existingOrder);
+        stockDeducted = false;
       }
-    }
 
-    const updatedOrder = await db.order.update({
-      where: { id },
-      data: {
-        status: status || existingOrder.status,
-        paidAmount: updatedPaidAmount,
-        paymentStatus,
-        stockDeducted,
-        deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : existingOrder.deliveryDate,
-        notes: body.notes !== undefined ? body.notes : existingOrder.notes,
-      },
-      include: {
-        items: true,
-        payments: true,
-        customer: true,
-      },
+      if (addPayment) {
+        const paymentAmount = parseFloat(addPayment.amount);
+        const paymentMethod = addPayment.paymentMethod || 'Pix';
+        const notes = addPayment.notes || null;
+
+        await tx.payment.create({
+          data: {
+            orderId: id,
+            amount: paymentAmount,
+            paymentMethod,
+            notes,
+            status: 'CONFIRMADO',
+          },
+        });
+
+        await tx.financialTransaction.create({
+          data: {
+            organizationId: session.organizationId,
+            type: 'RECEITA',
+            amount: paymentAmount,
+            category: 'Venda de Pedido',
+            description: `Pagamento ${paymentMethod} do pedido ${existingOrder.orderNumber}`,
+            orderId: id,
+          },
+        });
+
+        updatedPaidAmount += paymentAmount;
+        if (updatedPaidAmount >= existingOrder.totalAmount) {
+          paymentStatus = 'PAGO';
+        } else if (updatedPaidAmount > 0) {
+          paymentStatus = 'PARCIAL';
+        }
+      }
+
+      return tx.order.update({
+        where: { id },
+        data: {
+          status: status || existingOrder.status,
+          paidAmount: updatedPaidAmount,
+          paymentStatus,
+          stockDeducted,
+          deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : existingOrder.deliveryDate,
+          notes: body.notes !== undefined ? body.notes : existingOrder.notes,
+        },
+        include: {
+          items: true,
+          payments: true,
+          customer: true,
+        },
+      });
     });
 
     return NextResponse.json(updatedOrder);

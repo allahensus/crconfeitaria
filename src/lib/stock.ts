@@ -4,8 +4,6 @@
 // OrderItem.productId) or a product with no recipe registered is silently
 // skipped: a deliberate degrade documented in the design spec, not a bug.
 
-import type { getScopedPrisma } from '@/lib/db';
-
 interface StockOrderItem {
   productId: string | null;
   quantity: number;
@@ -16,8 +14,17 @@ interface StockOrder {
   items: StockOrderItem[];
 }
 
+interface StockDb {
+  recipeItem: {
+    findMany: (args: { where: { productId: string } }) => Promise<{ ingredientId: string; quantityUsed: number }[]>;
+  };
+  ingredient: {
+    update: (args: { where: { id: string }; data: { stockQuantity: { increment: number } } }) => Promise<unknown>;
+  };
+}
+
 async function applyStockDelta(
-  db: ReturnType<typeof getScopedPrisma>,
+  db: StockDb,
   order: StockOrder,
   sign: 1 | -1
 ): Promise<void> {
@@ -39,14 +46,14 @@ async function applyStockDelta(
 }
 
 export async function deductStockForOrder(
-  db: ReturnType<typeof getScopedPrisma>,
+  db: StockDb,
   order: StockOrder
 ): Promise<void> {
   await applyStockDelta(db, order, -1);
 }
 
 export async function restoreStockForOrder(
-  db: ReturnType<typeof getScopedPrisma>,
+  db: StockDb,
   order: StockOrder
 ): Promise<void> {
   await applyStockDelta(db, order, 1);
