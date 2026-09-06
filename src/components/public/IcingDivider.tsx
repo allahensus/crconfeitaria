@@ -12,8 +12,8 @@ export function IcingDivider() {
       <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="w-full h-7 sm:h-9">
         <defs>
           <linearGradient id="icingGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#A75644" />
-            <stop offset="50%" stopColor="#C27360" />
+            <stop offset="0%" stopColor="var(--color-accent-strong)" />
+            <stop offset="50%" stopColor="var(--color-accent)" />
             <stop offset="100%" stopColor="#D59483" />
           </linearGradient>
         </defs>

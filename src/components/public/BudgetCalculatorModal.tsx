@@ -544,26 +544,26 @@ export function BudgetCalculatorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#F2D7D0] overflow-hidden my-8">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[var(--color-border)] overflow-hidden my-8">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#FDF7F6] via-[#F9ECE9] to-[#F2D7D0] px-6 py-5 border-b border-[#F2D7D0] flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[var(--color-surface-alt)] via-[var(--color-accent-soft)] to-[var(--color-border)] px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C27360] text-white flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center shadow-md">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-serif text-xl font-bold text-[#4A231A]">
+              <h2 className="font-serif text-xl font-bold text-[var(--color-heading)]">
                 Calculadora de Orçamento
               </h2>
-              <p className="text-xs text-[#645451]">
+              <p className="text-xs text-[var(--color-text-soft)]">
                 Passo {step} de 3 — Monte seu pedido sob medida
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/80 hover:bg-white text-[#4A231A] flex items-center justify-center transition-colors border border-[#F2D7D0]"
+            className="w-8 h-8 rounded-full bg-white/80 hover:bg-white text-[var(--color-heading)] flex items-center justify-center transition-colors border border-[var(--color-border)]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -576,7 +576,7 @@ export function BudgetCalculatorModal({
           {step === 1 && (
             <div className="space-y-5 animate-in slide-in-from-right duration-200">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2">
                   1. Escolha o Produto Desejado
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -587,17 +587,17 @@ export function BudgetCalculatorModal({
                       onClick={() => handleProductChange(p.id)}
                       className={`p-3.5 rounded-2xl border text-left flex items-start gap-3 transition-all ${
                         selectedProduct?.id === p.id
-                          ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
-                          : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                          ? 'border-[var(--color-accent)] bg-[var(--color-surface-alt)] ring-2 ring-[#C27360]/30 shadow-sm'
+                          : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                       }`}
                     >
                       <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden relative flex-shrink-0">
                         <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-[#4A231A] truncate">{p.name}</h4>
-                        <p className="text-xs text-[#645451] line-clamp-1">{p.yieldInfo || p.category?.name}</p>
-                        <span className="text-xs font-bold text-[#C27360] block mt-1">
+                        <h4 className="font-bold text-sm text-[var(--color-heading)] truncate">{p.name}</h4>
+                        <p className="text-xs text-[var(--color-text-soft)] line-clamp-1">{p.yieldInfo || p.category?.name}</p>
+                        <span className="text-xs font-bold text-[var(--color-accent)] block mt-1">
                           A partir de {formatCurrency(p.basePrice)}
                         </span>
                       </div>
@@ -610,15 +610,15 @@ export function BudgetCalculatorModal({
                   cobertura was already picked from the catalog card */}
               {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
                 selectedProduct.slug === 'mini-bolo' && variationPreselected ? (
-                  <div className="p-3 rounded-xl bg-[#FDF7F6] border border-[#F2D7D0] flex items-center justify-between">
-                    <span className="text-xs text-[#645451]">Cobertura escolhida</span>
-                    <span className="text-xs font-bold text-[#4A231A]">
+                  <div className="p-3 rounded-xl bg-[var(--color-surface-alt)] border border-[var(--color-border)] flex items-center justify-between">
+                    <span className="text-xs text-[var(--color-text-soft)]">Cobertura escolhida</span>
+                    <span className="text-xs font-bold text-[var(--color-heading)]">
                       {selectedVariation?.name} ({formatCurrency(selectedVariation?.price)})
                     </span>
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2">
                       2. Escolha o Tamanho / Rendimento
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -629,8 +629,8 @@ export function BudgetCalculatorModal({
                           onClick={() => setSelectedVariation(v)}
                           className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
                             selectedVariation?.id === v.id
-                              ? 'border-[#C27360] bg-[#C27360] text-white font-medium shadow-sm'
-                              : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FDF7F6]'
+                              ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-white font-medium shadow-sm'
+                              : 'border-[var(--color-border)] bg-white text-[#4A3531] hover:bg-[var(--color-surface-alt)]'
                           }`}
                         >
                           <span className="text-xs font-semibold">{v.name}</span>
@@ -652,7 +652,7 @@ export function BudgetCalculatorModal({
                 <>
                   {/* Cake Base */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2">
                       Sabor da Massa
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -663,8 +663,8 @@ export function BudgetCalculatorModal({
                           onClick={() => setCakeBase(massa)}
                           className={`p-3 rounded-xl border text-center font-medium text-sm transition-all ${
                             cakeBase === massa
-                              ? 'border-[#C27360] bg-[#FDF7F6] text-[#4A231A] ring-2 ring-[#C27360]/30 font-bold'
-                              : 'border-[#F2D7D0] bg-white text-[#4A3531] hover:bg-[#FAF6F4]'
+                              ? 'border-[var(--color-accent)] bg-[var(--color-surface-alt)] text-[var(--color-heading)] ring-2 ring-[#C27360]/30 font-bold'
+                              : 'border-[var(--color-border)] bg-white text-[#4A3531] hover:bg-[var(--color-bg)]'
                           }`}
                         >
                           Massa de {massa}
@@ -675,7 +675,7 @@ export function BudgetCalculatorModal({
 
                   {/* Primary Filling */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2">
                       {selectedProduct?.slug === 'bento-cake' || selectedProduct?.slug === 'kit-festa-celebrar'
                         ? 'Recheio Exclusivo (1 Camada Generosa)'
                         : selectedProduct?.slug === 'mini-bolo'
@@ -685,7 +685,7 @@ export function BudgetCalculatorModal({
                     <select
                       value={filling1}
                       onChange={(e) => setFilling1(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-[#F2D7D0] bg-white text-sm text-[#4A231A] font-medium focus:ring-2 focus:ring-[#C27360] outline-none"
+                      className="w-full p-3 rounded-xl border border-[var(--color-border)] bg-white text-sm text-[var(--color-heading)] font-medium focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                     >
                       {availableFillingsForProduct.map((f) => (
                         <option key={f.id} value={f.name}>
@@ -695,11 +695,11 @@ export function BudgetCalculatorModal({
                     </select>
                     
                     {/* Warm & Professional Transparency Note */}
-                    <div className="mt-2.5 p-3 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-1">
-                      <div className="font-bold text-[#A75644] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                    <div className="mt-2.5 p-3 bg-[var(--color-surface-alt)] rounded-xl border border-[var(--color-border)] space-y-1">
+                      <div className="font-bold text-[var(--color-accent-strong)] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
                         <span>✨ Transparência & Qualidade Artesanal</span>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-[#645451]">
+                      <p className="text-[11px] leading-relaxed text-[var(--color-text-soft)]">
                         Os valores apresentados são uma estimativa com nossa base clássica. Recheios especiais com <strong>frutas frescas, nozes praliné ou chocolates nobres</strong> passam por uma rápida confirmação no WhatsApp para garantirmos a máxima qualidade da sua comemoração! 💕
                       </p>
                     </div>
@@ -709,12 +709,12 @@ export function BudgetCalculatorModal({
               ) : (
                 /* Biscoitos Extras & Multi-Type Selection */
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0] space-y-4">
+                  <div className="p-4 rounded-2xl bg-[var(--color-surface-alt)] border border-[var(--color-border)] space-y-4">
                     <div>
-                      <h4 className="font-bold text-sm text-[#4A231A] mb-1">
+                      <h4 className="font-bold text-sm text-[var(--color-heading)] mb-1">
                         🍪 Escolha a Quantidade de Biscoitos ({selectedVariation?.name || 'Personalizados'})
                       </h4>
-                      <p className="text-xs text-[#645451]">
+                      <p className="text-xs text-[var(--color-text-soft)]">
                         Escolha uma das faixas abaixo{isPalitoAllowed ? ' — depois, se quiser, escolha quantos desses vêm no palito' : ''}:
                       </p>
                     </div>
@@ -722,7 +722,7 @@ export function BudgetCalculatorModal({
                     {/* Faixas Prontas (Grupos) */}
                     {biscoitoTiers.length > 0 && (
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#A75644] block mb-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-accent-strong)] block mb-2">
                           Faixas Disponíveis ({selectedVariation?.name?.match(/\d+cm/)?.[0] || ''})
                         </span>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -738,13 +738,13 @@ export function BudgetCalculatorModal({
                                 }}
                                 className={`p-2.5 rounded-xl border text-center transition-all ${
                                   isSelected
-                                    ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
-                                    : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                                    ? 'border-[var(--color-accent)] bg-[var(--color-surface-alt)] ring-2 ring-[#C27360]/30 shadow-sm'
+                                    : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                                 }`}
                               >
-                                <span className="block text-xs font-extrabold text-[#4A231A]">{tier.qty} un.</span>
-                                <span className="block text-[10px] text-[#645451]">({tier.desenhos} desenhos)</span>
-                                <span className="block text-[11px] font-bold text-[#C27360] mt-0.5">{formatCurrency(tier.price)}</span>
+                                <span className="block text-xs font-extrabold text-[var(--color-heading)]">{tier.qty} un.</span>
+                                <span className="block text-[10px] text-[var(--color-text-soft)]">({tier.desenhos} desenhos)</span>
+                                <span className="block text-[11px] font-bold text-[var(--color-accent)] mt-0.5">{formatCurrency(tier.price)}</span>
                               </button>
                             );
                           })}
@@ -755,12 +755,12 @@ export function BudgetCalculatorModal({
                     <div className="space-y-3">
                       {/* Divisão Com Palito (dentro do total escolhido) */}
                       {isPalitoAllowed ? (
-                        <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm">
+                        <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-[var(--color-border)] shadow-sm">
                           <div>
-                            <span className="text-xs font-bold text-[#4A231A] block">
+                            <span className="text-xs font-bold text-[var(--color-heading)] block">
                               🍭 Quantos Com Palito? (+ R$ 2,00/un)
                             </span>
-                            <span className="text-[11px] text-[#645451]">
+                            <span className="text-[11px] text-[var(--color-text-soft)]">
                               Dos {biscoitoTotal} escolhidos, quantos vêm no palito
                             </span>
                           </div>
@@ -772,12 +772,12 @@ export function BudgetCalculatorModal({
                               className={`w-9 h-9 rounded-xl font-bold transition-colors ${
                                 palitoCount <= 0
                                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                  : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                                  : 'bg-[var(--color-bg)] text-[var(--color-heading)] hover:bg-[var(--color-border)]'
                               }`}
                             >
                               -
                             </button>
-                            <span className="text-base font-extrabold text-[#4A231A] w-7 text-center">
+                            <span className="text-base font-extrabold text-[var(--color-heading)] w-7 text-center">
                               {palitoCount}
                             </span>
                             <button
@@ -787,7 +787,7 @@ export function BudgetCalculatorModal({
                               className={`w-9 h-9 rounded-xl font-bold transition-colors ${
                                 palitoCount >= biscoitoTotal
                                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                  : 'bg-[#FAF6F4] text-[#4A231A] hover:bg-[#F2D7D0]'
+                                  : 'bg-[var(--color-bg)] text-[var(--color-heading)] hover:bg-[var(--color-border)]'
                               }`}
                             >
                               +
@@ -795,7 +795,7 @@ export function BudgetCalculatorModal({
                           </div>
                         </div>
                       ) : (
-                        <div className="p-3 bg-[#FAF6F4] rounded-xl border border-[#F2D7D0] text-xs text-[#A75644] font-medium">
+                        <div className="p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] text-xs text-[var(--color-accent-strong)] font-medium">
                           ℹ️ Opção no palito disponível apenas para os tamanhos de 6cm e 9cm.
                         </div>
                       )}
@@ -808,17 +808,17 @@ export function BudgetCalculatorModal({
                           disabled={palitoCount === 0}
                           className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
                             palitoCount === 0
-                              ? 'border-[#F2D7D0] bg-gray-50 opacity-60 cursor-not-allowed'
+                              ? 'border-[var(--color-border)] bg-gray-50 opacity-60 cursor-not-allowed'
                               : wantsRibbonTag
-                              ? 'border-[#C27360] bg-[#FDF7F6] ring-2 ring-[#C27360]/30 shadow-sm'
-                              : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                              ? 'border-[var(--color-accent)] bg-[var(--color-surface-alt)] ring-2 ring-[#C27360]/30 shadow-sm'
+                              : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                           }`}
                         >
                           <div>
-                            <span className="text-xs font-bold text-[#4A231A] block">
+                            <span className="text-xs font-bold text-[var(--color-heading)] block">
                               🎀 Fita de Cetim + Tag nos Biscoitos Com Palito
                             </span>
-                            <span className="text-[11px] text-[#C27360] font-semibold">
+                            <span className="text-[11px] text-[var(--color-accent)] font-semibold">
                               {palitoCount === 0
                                 ? 'Escolha ao menos 1 unidade Com Palito acima para habilitar'
                                 : `+ R$ 1,00 por unidade com palito (${palitoCount} un.)`}
@@ -827,8 +827,8 @@ export function BudgetCalculatorModal({
                           <span
                             className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                               wantsRibbonTag && palitoCount > 0
-                                ? 'bg-[#C27360] border-[#C27360] text-white'
-                                : 'border-[#F2D7D0] text-transparent'
+                                ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+                                : 'border-[var(--color-border)] text-transparent'
                             }`}
                           >
                             ✓
@@ -837,28 +837,28 @@ export function BudgetCalculatorModal({
                       )}
 
                       {/* Sobre os Biscoitos — Informações Importantes */}
-                      <div className="p-3.5 bg-[#FDF7F6] rounded-xl border border-[#F2D7D0] space-y-2">
-                        <div className="font-bold text-[#A75644] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                      <div className="p-3.5 bg-[var(--color-surface-alt)] rounded-xl border border-[var(--color-border)] space-y-2">
+                        <div className="font-bold text-[var(--color-accent-strong)] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
                           <span>🍪 Sobre os Nossos Biscoitos</span>
                         </div>
-                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                        <p className="text-[11px] leading-relaxed text-[var(--color-text-soft)]">
                           Amanteigados, sabor baunilha, decorados à mão com glacê real — <strong>100% artesanais</strong>, feitos um a um com muito amor e dedicação.
                         </p>
-                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                        <p className="text-[11px] leading-relaxed text-[var(--color-text-soft)]">
                           📅 <strong>Validade:</strong> 30 dias.
                         </p>
-                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                        <p className="text-[11px] leading-relaxed text-[var(--color-text-soft)]">
                           🌡️ <strong>Como armazenar:</strong> não podem ir à geladeira nem entrar em contato com umidade ou água. Mantenha sempre em temperatura ambiente.
                         </p>
-                        <p className="text-[11px] leading-relaxed text-[#645451]">
+                        <p className="text-[11px] leading-relaxed text-[var(--color-text-soft)]">
                           🌾 <strong>Ingredientes:</strong> ovo, manteiga, derivados de leite, farinha de trigo, açúcar, corante e essência de baunilha. Contém glúten e não é indicado para quem tem alergia ou intolerância a algum desses ingredientes.
                         </p>
                       </div>
 
                       {/* Live Summary Box */}
-                      <div className="p-3 bg-gradient-to-r from-[#FDF7F6] to-[#F9ECE9] rounded-xl border border-[#F2D7D0] text-xs font-bold text-[#4A231A] flex items-center justify-between">
+                      <div className="p-3 bg-gradient-to-r from-[var(--color-surface-alt)] to-[var(--color-accent-soft)] rounded-xl border border-[var(--color-border)] text-xs font-bold text-[var(--color-heading)] flex items-center justify-between">
                         <span>Total de Biscoitos no Pedido:</span>
-                        <span className="text-[#C27360] font-extrabold text-sm">
+                        <span className="text-[var(--color-accent)] font-extrabold text-sm">
                           {biscoitoTotal} unidades ({noPalitoBiscoitoCount} sem palito e {palitoCount} com palito)
                         </span>
                       </div>
@@ -870,22 +870,22 @@ export function BudgetCalculatorModal({
               {/* Quantity selector for Cakes */}
               {!isBiscoito && (
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2">
                     Quantidade
                   </label>
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                      className="w-10 h-10 rounded-xl bg-[var(--color-bg)] text-[var(--color-heading)] font-bold hover:bg-[var(--color-border)]"
                     >
                       -
                     </button>
-                    <span className="text-lg font-bold text-[#4A231A] w-8 text-center">{quantity}</span>
+                    <span className="text-lg font-bold text-[var(--color-heading)] w-8 text-center">{quantity}</span>
                     <button
                       type="button"
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-10 h-10 rounded-xl bg-[#FAF6F4] text-[#4A231A] font-bold hover:bg-[#F2D7D0]"
+                      className="w-10 h-10 rounded-xl bg-[var(--color-bg)] text-[var(--color-heading)] font-bold hover:bg-[var(--color-border)]"
                     >
                       +
                     </button>
@@ -906,11 +906,11 @@ export function BudgetCalculatorModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                   Orçamento Registrado com Sucesso
                 </span>
-                <h3 className="font-serif text-2xl font-bold text-[#4A231A] mt-2">
+                <h3 className="font-serif text-2xl font-bold text-[var(--color-heading)] mt-2">
                   Solicitação #{submittedQuote?.quoteNumber}
                 </h3>
-                <p className="text-xs text-[#645451] max-w-md mx-auto mt-1">
-                  Seu pedido no valor de <strong className="text-[#4A231A]">{formatCurrency(finalTotal)}</strong> foi registrado! Clique abaixo para enviar no WhatsApp e encerrar.
+                <p className="text-xs text-[var(--color-text-soft)] max-w-md mx-auto mt-1">
+                  Seu pedido no valor de <strong className="text-[var(--color-heading)]">{formatCurrency(finalTotal)}</strong> foi registrado! Clique abaixo para enviar no WhatsApp e encerrar.
                 </p>
                 {paymentMethod === 'pix' && (
                   <p className="text-xs text-emerald-700 max-w-md mx-auto mt-1.5 font-semibold">
@@ -936,7 +936,7 @@ export function BudgetCalculatorModal({
                 <button
                   type="button"
                   onClick={handleCopyText}
-                  className="w-full py-3 px-6 rounded-2xl bg-[#FAF6F4] hover:bg-[#F2D7D0] text-[#4A231A] font-bold text-xs border border-[#F2D7D0] transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 px-6 rounded-2xl bg-[var(--color-bg)] hover:bg-[var(--color-border)] text-[var(--color-heading)] font-bold text-xs border border-[var(--color-border)] transition-colors flex items-center justify-center gap-2"
                 >
                   {copied ? '✅ Texto Copiado com Sucesso!' : '📋 Copiar Resumo do Orçamento'}
                 </button>
@@ -944,7 +944,7 @@ export function BudgetCalculatorModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-[#C27360] hover:bg-[#A75644] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-strong)] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <Check className="w-4 h-4" />
                   Encerrar Venda e Fechar
@@ -952,8 +952,8 @@ export function BudgetCalculatorModal({
               </div>
 
               {/* Helpful Tip */}
-              <div className="p-4 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0] text-left text-xs text-[#645451] space-y-1">
-                <p className="font-bold text-[#4A231A]">💡 Importante para a Validação:</p>
+              <div className="p-4 rounded-2xl bg-[var(--color-surface-alt)] border border-[var(--color-border)] text-left text-xs text-[var(--color-text-soft)] space-y-1">
+                <p className="font-bold text-[var(--color-heading)]">💡 Importante para a Validação:</p>
                 <p>
                   Caso a aba do WhatsApp não tenha aberto ou o número da confeitaria esteja em atualização, clique em <strong>"Copiar Resumo do Orçamento"</strong> acima e cole diretamente na conversa do WhatsApp com a confeiteira!
                 </p>
@@ -976,7 +976,7 @@ export function BudgetCalculatorModal({
             <div className="space-y-4 animate-in slide-in-from-right duration-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                     Seu Nome Completo *
                   </label>
                   <input
@@ -987,14 +987,14 @@ export function BudgetCalculatorModal({
                       setCustomerName(e.target.value);
                       if (errorMsg) setErrorMsg('');
                     }}
-                    className={`w-full p-2.5 rounded-xl border text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none ${
-                      errorMsg && !customerName.trim() ? 'border-red-500 bg-red-50/50' : 'border-[#F2D7D0]'
+                    className={`w-full p-2.5 rounded-xl border text-sm text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none ${
+                      errorMsg && !customerName.trim() ? 'border-red-500 bg-red-50/50' : 'border-[var(--color-border)]'
                     }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                     Seu WhatsApp (com DDD) *
                   </label>
                   <input
@@ -1005,8 +1005,8 @@ export function BudgetCalculatorModal({
                       setCustomerWhatsapp(e.target.value);
                       if (errorMsg) setErrorMsg('');
                     }}
-                    className={`w-full p-2.5 rounded-xl border text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none ${
-                      errorMsg && customerWhatsapp.replace(/\D/g, '').length < 10 ? 'border-red-500 bg-red-50/50' : 'border-[#F2D7D0]'
+                    className={`w-full p-2.5 rounded-xl border text-sm text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none ${
+                      errorMsg && customerWhatsapp.replace(/\D/g, '').length < 10 ? 'border-red-500 bg-red-50/50' : 'border-[var(--color-border)]'
                     }`}
                   />
                 </div>
@@ -1014,7 +1014,7 @@ export function BudgetCalculatorModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                     Seu E-mail (Opcional)
                   </label>
                   <input
@@ -1022,26 +1022,26 @@ export function BudgetCalculatorModal({
                     placeholder="Ex: maria@gmail.com"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    className="w-full p-2.5 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1 flex items-center justify-between">
                     <span>Data de Nascimento</span>
-                    <span className="text-[10px] text-[#C27360] font-normal">🎂 P/ Presentes</span>
+                    <span className="text-[10px] text-[var(--color-accent)] font-normal">🎂 P/ Presentes</span>
                   </label>
                   <input
                     type="date"
                     value={customerBirthDate}
                     onChange={(e) => setCustomerBirthDate(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    className="w-full p-2.5 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                   Data Desejada da Entrega / Festa *
                 </label>
                 <AvailabilityDatePicker
@@ -1050,14 +1050,14 @@ export function BudgetCalculatorModal({
                   blockedDates={blockedDates}
                   minDaysFromNow={minLeadDays}
                 />
-                <p className="text-[10px] text-[#645451] mt-1.5">
+                <p className="text-[10px] text-[var(--color-text-soft)] mt-1.5">
                   Dias em cinza já estão com a agenda cheia. Pedimos no mínimo {minLeadDays} dia{minLeadDays !== 1 ? 's' : ''} de antecedência.
                 </p>
               </div>
 
               {/* Coupon Code */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                   Cupom de Desconto (opcional)
                 </label>
                 {appliedCoupon ? (
@@ -1080,13 +1080,13 @@ export function BudgetCalculatorModal({
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                       placeholder="Ex: NIVER10"
-                      className="flex-1 p-2.5 rounded-xl border border-[#F2D7D0] text-sm font-mono uppercase text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                      className="flex-1 p-2.5 rounded-xl border border-[var(--color-border)] text-sm font-mono uppercase text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 rounded-xl bg-[#C27360] hover:bg-[#A75644] text-white text-xs font-bold disabled:opacity-50"
+                      className="px-4 rounded-xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-strong)] text-white text-xs font-bold disabled:opacity-50"
                     >
                       {couponLoading ? '...' : 'Aplicar'}
                     </button>
@@ -1097,11 +1097,11 @@ export function BudgetCalculatorModal({
 
               {/* Payment Method Choice */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-2 flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-2 flex items-center justify-between">
                   <span>Forma de Pagamento Preferida</span>
-                  <span className="text-[11px] font-semibold text-[#C27360]">Escolha uma opção</span>
+                  <span className="text-[11px] font-semibold text-[var(--color-accent)]">Escolha uma opção</span>
                 </label>
-                <p className="text-[11px] text-[#645451] mb-2 -mt-1">
+                <p className="text-[11px] text-[var(--color-text-soft)] mb-2 -mt-1">
                   💌 É só uma preferência por agora! Depois que a Cinthia aprovar seu orçamento, ela mesma vai te chamar no WhatsApp para combinar o sinal.
                 </p>
 
@@ -1113,7 +1113,7 @@ export function BudgetCalculatorModal({
                     className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                       paymentMethod === 'pix'
                         ? 'border-[#32BCAD] bg-emerald-50/60 ring-2 ring-[#32BCAD]/30 shadow-sm'
-                        : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                        : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -1126,7 +1126,7 @@ export function BudgetCalculatorModal({
                         <span className="text-[10px] bg-[#32BCAD] text-white font-bold px-2 py-0.5 rounded-full">✓ Selecionado</span>
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[#4A231A]">Pix (Sinal {depositPercentage}%)</span>
+                    <span className="text-xs font-bold text-[var(--color-heading)]">Pix (Sinal {depositPercentage}%)</span>
                     <span className="text-[10px] text-gray-500">Sinal combinado depois, no WhatsApp</span>
                   </button>
 
@@ -1137,7 +1137,7 @@ export function BudgetCalculatorModal({
                     className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                       paymentMethod === 'card'
                         ? 'border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-500/30 shadow-sm'
-                        : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                        : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -1152,7 +1152,7 @@ export function BudgetCalculatorModal({
                         <span className="text-[10px] bg-indigo-600 text-white font-bold px-2 py-0.5 rounded-full">✓ Selecionado</span>
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[#4A231A]">Cartão de Crédito</span>
+                    <span className="text-xs font-bold text-[var(--color-heading)]">Cartão de Crédito</span>
                     <span className="text-[10px] text-gray-500">Visa, Master, Elo em até 12x</span>
                   </button>
 
@@ -1163,7 +1163,7 @@ export function BudgetCalculatorModal({
                     className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                       paymentMethod === 'money'
                         ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600/30 shadow-sm'
-                        : 'border-[#F2D7D0] bg-white hover:bg-[#FAF6F4]'
+                        : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -1178,14 +1178,14 @@ export function BudgetCalculatorModal({
                         <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">✓ Selecionado</span>
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[#4A231A]">Dinheiro em Espécie</span>
+                    <span className="text-xs font-bold text-[var(--color-heading)]">Dinheiro em Espécie</span>
                     <span className="text-[10px] text-gray-500">Pagamento na entrega/retirada</span>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent-strong)] mb-1">
                   Tema da Festa / Observações Especiais
                 </label>
                 <textarea
@@ -1193,20 +1193,20 @@ export function BudgetCalculatorModal({
                   placeholder="Ex: Tema Princesa, frase no bentô cake: 'Parabéns Maria 30 anos', etc."
                   value={themeNotes}
                   onChange={(e) => setThemeNotes(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none resize-none"
+                  className="w-full p-2.5 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-heading)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none resize-none"
                 />
               </div>
 
               {/* LGPD Consent Checkbox */}
-              <div className="p-3.5 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
+              <div className="p-3.5 rounded-2xl bg-[var(--color-surface-alt)] border border-[var(--color-border)]">
                 <label className="flex items-start gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={lgpdConsent}
                     onChange={(e) => setLgpdConsent(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-[#C27360] text-[#C27360] focus:ring-[#C27360]"
+                    className="mt-0.5 w-4 h-4 rounded border-[var(--color-accent)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                   />
-                  <span className="text-[11px] text-[#645451] leading-tight">
+                  <span className="text-[11px] text-[var(--color-text-soft)] leading-tight">
                     🔒 <strong>Proteção de Dados (LGPD):</strong> Concordo com o uso dos meus dados cadastrais exclusivamente pela <strong>Confeitaria Cinthia Rodrigues</strong> para elaboração do orçamento, confirmação de pedido e envio de mimos de aniversário. Garantimos sigilo absoluto.
                   </span>
                 </label>
@@ -1221,17 +1221,17 @@ export function BudgetCalculatorModal({
           )}
 
           {/* Live Summary Calculation Card — estilo "recibo" */}
-          <div className="rounded-2xl border border-[#F2D7D0] bg-white shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-[#C27360] to-[#A75644] px-4 py-2.5 flex items-center gap-2">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-white shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-strong)] px-4 py-2.5 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-white" />
               <span className="text-white text-xs font-bold uppercase tracking-wider">Resumo do Pedido</span>
             </div>
 
             <div className="px-4 pt-3.5 pb-1">
-              <p className="font-serif font-bold text-base text-[#4A231A] leading-snug">
+              <p className="font-serif font-bold text-base text-[var(--color-heading)] leading-snug">
                 {selectedProduct?.name}
               </p>
-              <p className="text-xs text-[#A75644] font-semibold">
+              <p className="text-xs text-[var(--color-accent-strong)] font-semibold">
                 {selectedVariation?.name || 'Padrão'}
               </p>
             </div>
@@ -1239,8 +1239,8 @@ export function BudgetCalculatorModal({
             <div className="px-4 py-2 space-y-2">
               {frosting && selectedProduct?.slug !== 'biscoitos-amanteigados' && selectedProduct?.slug !== 'mini-bolo' && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#645451]">Cobertura</span>
-                  <span className="font-semibold text-[#4A231A]">
+                  <span className="text-[var(--color-text-soft)]">Cobertura</span>
+                  <span className="font-semibold text-[var(--color-heading)]">
                     {frosting}{' '}
                     {frosting === 'Buttercream'
                       ? selectedProduct?.slug === 'kit-festa-celebrar'
@@ -1251,8 +1251,8 @@ export function BudgetCalculatorModal({
                 </div>
               )}
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#645451]">Quantidade</span>
-                <span className="font-semibold text-[#4A231A]">
+                <span className="text-[var(--color-text-soft)]">Quantidade</span>
+                <span className="font-semibold text-[var(--color-heading)]">
                   {isBiscoito
                     ? `${noPalitoBiscoitoCount} sem palito + ${palitoCount} com palito (${effectiveQuantity}x)`
                     : `${quantity}x`}
@@ -1260,20 +1260,20 @@ export function BudgetCalculatorModal({
               </div>
               {isBiscoito && palitoCount > 0 && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#645451]">Adicional Suporte no Palito</span>
-                  <span className="font-semibold text-[#C27360]">+{formatCurrency(palitoTotalCost)}</span>
+                  <span className="text-[var(--color-text-soft)]">Adicional Suporte no Palito</span>
+                  <span className="font-semibold text-[var(--color-accent)]">+{formatCurrency(palitoTotalCost)}</span>
                 </div>
               )}
               {isBiscoito && wantsRibbonTag && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#645451]">Fita de Cetim + Tag</span>
-                  <span className="font-semibold text-[#C27360]">+{formatCurrency(ribbonTagCost)}</span>
+                  <span className="text-[var(--color-text-soft)]">Fita de Cetim + Tag</span>
+                  <span className="font-semibold text-[var(--color-accent)]">+{formatCurrency(ribbonTagCost)}</span>
                 </div>
               )}
               {!isBiscoito && extraCostPerUnit > 0 && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#645451]">Adicionais / Cobertura</span>
-                  <span className="font-semibold text-[#C27360]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
+                  <span className="text-[var(--color-text-soft)]">Adicionais / Cobertura</span>
+                  <span className="font-semibold text-[var(--color-accent)]">+{formatCurrency(extraCostPerUnit * quantity)}</span>
                 </div>
               )}
               {appliedCoupon && couponDiscount > 0 && (
@@ -1286,9 +1286,9 @@ export function BudgetCalculatorModal({
 
             <div className="mx-4 border-t border-dashed border-[#E5B9AC]" />
 
-            <div className="px-4 py-3 flex items-center justify-between bg-[#FDF7F6]">
-              <span className="font-bold text-xs uppercase tracking-wider text-[#4A231A]">Total Estimado</span>
-              <span className="font-serif font-extrabold text-2xl text-[#C27360]">
+            <div className="px-4 py-3 flex items-center justify-between bg-[var(--color-surface-alt)]">
+              <span className="font-bold text-xs uppercase tracking-wider text-[var(--color-heading)]">Total Estimado</span>
+              <span className="font-serif font-extrabold text-2xl text-[var(--color-accent)]">
                 {formatCurrency(finalTotal)}
               </span>
             </div>
@@ -1308,12 +1308,12 @@ export function BudgetCalculatorModal({
 
         {/* Footer Navigation Controls */}
         {step < 4 && (
-          <div className="bg-gray-50 px-6 py-4 border-t border-[#F2D7D0] flex items-center justify-between">
+          <div className="bg-gray-50 px-6 py-4 border-t border-[var(--color-border)] flex items-center justify-between">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={() => setStep(step - 1)}
-                className="px-4 py-2.5 rounded-full border border-[#F2D7D0] bg-white text-[#4A231A] text-xs font-semibold hover:bg-gray-100 flex items-center gap-1"
+                className="px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-white text-[var(--color-heading)] text-xs font-semibold hover:bg-gray-100 flex items-center gap-1"
               >
                 <ChevronLeft className="w-4 h-4" /> Voltar
               </button>
@@ -1325,7 +1325,7 @@ export function BudgetCalculatorModal({
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="px-6 py-2.5 rounded-full bg-[#C27360] text-white text-xs font-bold hover:bg-[#A75644] transition-colors flex items-center gap-1 shadow-sm"
+                className="px-6 py-2.5 rounded-full bg-[var(--color-accent)] text-white text-xs font-bold hover:bg-[var(--color-accent-strong)] transition-colors flex items-center gap-1 shadow-sm"
               >
                 Próximo Passo <ChevronRight className="w-4 h-4" />
               </button>

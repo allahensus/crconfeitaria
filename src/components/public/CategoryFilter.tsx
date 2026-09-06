@@ -26,8 +26,8 @@ export function CategoryFilter({
         onClick={() => onSelectCategory('all')}
         className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
           selectedCategory === 'all'
-            ? 'bg-[#A75644] text-white shadow-blush font-semibold'
-            : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
+            ? 'bg-[var(--color-accent-strong)] text-white shadow-blush font-semibold'
+            : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
         }`}
       >
         <LayoutGrid className="w-3.5 h-3.5" />
@@ -42,8 +42,8 @@ export function CategoryFilter({
             onClick={() => onSelectCategory(cat.slug)}
             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
               selectedCategory === cat.slug
-                ? 'bg-[#A75644] text-white shadow-blush font-semibold'
-                : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
+                ? 'bg-[var(--color-accent-strong)] text-white shadow-blush font-semibold'
+                : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
             }`}
           >
             <Icon className="w-3.5 h-3.5" />

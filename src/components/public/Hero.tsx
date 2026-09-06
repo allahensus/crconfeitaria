@@ -31,17 +31,17 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
           
           {/* Left Text & CTA */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-[#F2D7D0] text-[#A75644] text-xs sm:text-sm font-semibold shadow-sm backdrop-blur-md">
-              <Sparkles className="w-4 h-4 text-[#C27360]" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-[var(--color-border)] text-[var(--color-accent-strong)] text-xs sm:text-sm font-semibold shadow-sm backdrop-blur-md">
+              <Sparkles className="w-4 h-4 text-[var(--color-accent)]" />
               <span>Confeitaria Artesanal Personalizada</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#4A231A] tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[var(--color-heading)] tracking-tight leading-tight">
               Transforme seus momentos em lembranças{' '}
               <span className="text-gradient-rose italic font-normal">irresistíveis</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[#645451] max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+            <p className="text-base sm:text-lg text-[var(--color-text-soft)] max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
               Bolos altos super recheados, Bentô Cakes personalizados e biscoitos amanteigados feitos artesanalmente com ingredientes nobres para adoçar a sua festa.
             </p>
 
@@ -49,7 +49,7 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <button
                 onClick={onOpenBudgetModal}
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[#C27360] via-[#A75644] to-[#874132] text-white font-semibold text-base shadow-blush hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-strong)] to-[var(--color-accent-deep)] text-white font-semibold text-base shadow-blush hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group"
               >
                 <span>Montar Orçamento Instantâneo</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -57,7 +57,7 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
 
               <a
                 href="#catalogo"
-                className="w-full sm:w-auto px-7 py-4 rounded-full bg-white/90 text-[#4A3531] font-semibold text-base border border-[#F2D7D0] hover:bg-[#FDF7F6] transition-colors shadow-sm text-center"
+                className="w-full sm:w-auto px-7 py-4 rounded-full bg-white/90 text-[#4A3531] font-semibold text-base border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)] transition-colors shadow-sm text-center"
               >
                 Ver Catálogo
               </a>
@@ -66,16 +66,16 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
             {/* Badges / Social Proof */}
             <div className="pt-8 border-t border-[#F2D7D0]/60 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0 text-center">
               <div className="flex flex-col items-center lg:items-start">
-                <span className="text-2xl sm:text-3xl font-bold text-[#A75644] font-serif">+500</span>
-                <span className="text-xs text-[#645451] font-medium">Festas Adoçadas</span>
+                <span className="text-2xl sm:text-3xl font-bold text-[var(--color-accent-strong)] font-serif">+500</span>
+                <span className="text-xs text-[var(--color-text-soft)] font-medium">Festas Adoçadas</span>
               </div>
               <div className="flex flex-col items-center lg:items-start">
-                <span className="text-2xl sm:text-3xl font-bold text-[#A75644] font-serif">100%</span>
-                <span className="text-xs text-[#645451] font-medium">Artesanal & Nobre</span>
+                <span className="text-2xl sm:text-3xl font-bold text-[var(--color-accent-strong)] font-serif">100%</span>
+                <span className="text-xs text-[var(--color-text-soft)] font-medium">Artesanal & Nobre</span>
               </div>
               <div className="flex flex-col items-center lg:items-start">
-                <span className="text-2xl sm:text-3xl font-bold text-[#A75644] font-serif">20+</span>
-                <span className="text-xs text-[#645451] font-medium">Sabores Especiais</span>
+                <span className="text-2xl sm:text-3xl font-bold text-[var(--color-accent-strong)] font-serif">20+</span>
+                <span className="text-xs text-[var(--color-text-soft)] font-medium">Sabores Especiais</span>
               </div>
             </div>
           </div>
@@ -99,14 +99,14 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-[#2A1712]/80 via-[#2A1712]/10 to-transparent group-hover:from-[#2A1712]/85 transition-colors duration-500 flex flex-col justify-end p-5 text-white">
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-[#F2D7D0] font-semibold mb-1.5">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-border)] font-semibold mb-1.5">
                     Feito à Mão, Peça por Peça
                   </span>
                   <h2 className="font-serif text-xl leading-tight font-bold">Bolos Artesanais Personalizados</h2>
                   <div className="mt-3">
                     <button
                       onClick={onOpenBudgetModal}
-                      className="px-4 py-2 bg-white text-[#4A231A] text-xs font-bold rounded-full shadow hover:bg-[#FDF7F6] transition-colors"
+                      className="px-4 py-2 bg-white text-[var(--color-heading)] text-xs font-bold rounded-full shadow hover:bg-[var(--color-surface-alt)] transition-colors"
                     >
                       Montar o Meu
                     </button>
@@ -163,9 +163,9 @@ export function Hero({ onOpenBudgetModal, settings }: HeroProps) {
 
             {/* Quiet supporting detail — handmade credibility, not decoration */}
             <div className="mt-4 flex items-center gap-2.5 px-1 max-w-md mx-auto lg:mx-0 lg:max-w-none">
-              <Heart className="w-4 h-4 text-[#C27360] fill-current shrink-0" />
-              <p className="text-xs text-[#645451]">
-                <span className="font-bold text-[#4A231A]">Feito à mão</span> — massa fofinha e recheios caseiros, do jeito que uma festa de verdade merece.
+              <Heart className="w-4 h-4 text-[var(--color-accent)] fill-current shrink-0" />
+              <p className="text-xs text-[var(--color-text-soft)]">
+                <span className="font-bold text-[var(--color-heading)]">Feito à mão</span> — massa fofinha e recheios caseiros, do jeito que uma festa de verdade merece.
               </p>
             </div>
           </div>

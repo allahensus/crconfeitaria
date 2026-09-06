@@ -47,22 +47,22 @@ export function AvailabilityDatePicker({ value, onChange, blockedDates, minDaysF
   };
 
   return (
-    <div className="rounded-xl border border-[#F2D7D0] bg-white p-3">
+    <div className="rounded-xl border border-[var(--color-border)] bg-white p-3">
       <div className="flex items-center justify-between mb-2">
         <button
           type="button"
           onClick={goPrevMonth}
-          className="p-1.5 rounded-lg hover:bg-[#FAF6F4] text-[#4A231A]"
+          className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-heading)]"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <span className="text-xs font-bold text-[#4A231A]">
+        <span className="text-xs font-bold text-[var(--color-heading)]">
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
         <button
           type="button"
           onClick={goNextMonth}
-          className="p-1.5 rounded-lg hover:bg-[#FAF6F4] text-[#4A231A]"
+          className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-heading)]"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -70,7 +70,7 @@ export function AvailabilityDatePicker({ value, onChange, blockedDates, minDaysF
 
       <div className="grid grid-cols-7 gap-1 text-center mb-1">
         {WEEKDAY_LABELS.map((w, i) => (
-          <span key={i} className="text-[9px] font-bold text-[#A75644] uppercase">
+          <span key={i} className="text-[9px] font-bold text-[var(--color-accent-strong)] uppercase">
             {w}
           </span>
         ))}
@@ -98,10 +98,10 @@ export function AvailabilityDatePicker({ value, onChange, blockedDates, minDaysF
               title={isBlocked ? 'Data indisponível' : undefined}
               className={`aspect-square rounded-lg text-[11px] font-semibold flex items-center justify-center transition-colors ${
                 isSelected
-                  ? 'bg-[#C27360] text-white shadow-sm'
+                  ? 'bg-[var(--color-accent)] text-white shadow-sm'
                   : isDisabled
                   ? 'text-gray-300 line-through cursor-not-allowed'
-                  : 'text-[#4A231A] hover:bg-[#FDF7F6]'
+                  : 'text-[var(--color-heading)] hover:bg-[var(--color-surface-alt)]'
               }`}
             >
               {dayNum}
@@ -110,9 +110,9 @@ export function AvailabilityDatePicker({ value, onChange, blockedDates, minDaysF
         })}
       </div>
 
-      <div className="flex items-center gap-3 mt-2.5 pt-2 border-t border-[#F2D7D0] text-[9px] text-[#645451]">
+      <div className="flex items-center gap-3 mt-2.5 pt-2 border-t border-[var(--color-border)] text-[9px] text-[var(--color-text-soft)]">
         <span className="flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded bg-[#C27360] inline-block" /> Selecionada
+          <span className="w-2.5 h-2.5 rounded bg-[var(--color-accent)] inline-block" /> Selecionada
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded bg-gray-200 inline-block" /> Indisponível

@@ -80,7 +80,7 @@ export default function PublicPage() {
       );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF6F4]">
+    <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
       {/* Navbar */}
       <Navbar
         onOpenBudgetModal={() => handleOpenModal()}
@@ -97,13 +97,13 @@ export default function PublicPage() {
       {/* Catalog Showcase Section */}
       <section id="catalogo" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs uppercase tracking-widest text-[#A75644] font-bold">
+          <span className="text-xs uppercase tracking-widest text-[var(--color-accent-strong)] font-bold">
             Delícias Feitas à Mão
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A]">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-heading)]">
             Nosso Catálogo Especial
           </h2>
-          <p className="text-sm text-[#645451]">
+          <p className="text-sm text-[var(--color-text-soft)]">
             Selecione uma categoria abaixo e monte seu orçamento personalizado em poucos cliques.
           </p>
         </div>
@@ -133,23 +133,23 @@ export default function PublicPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-3xl border border-[#F2D7D0] p-8">
-            <p className="text-[#645451] font-medium">Nenhum produto encontrado nesta categoria.</p>
+          <div className="text-center py-12 bg-white rounded-3xl border border-[var(--color-border)] p-8">
+            <p className="text-[var(--color-text-soft)] font-medium">Nenhum produto encontrado nesta categoria.</p>
           </div>
         )}
       </section>
 
       {/* 20 Fillings Menu Section */}
-      <section id="sabores" className="py-16 bg-gradient-to-b from-[#FDF7F6] to-[#FAF6F4] border-y border-[#F2D7D0]">
+      <section id="sabores" className="py-16 bg-gradient-to-b from-[var(--color-surface-alt)] to-[var(--color-bg)] border-y border-[var(--color-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs uppercase tracking-widest text-[#A75644] font-bold">
+            <span className="text-xs uppercase tracking-widest text-[var(--color-accent-strong)] font-bold">
               Qualidade Incomparável
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A] mt-2">
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-heading)] mt-2">
               Cardápio de Recheios Especiais
             </h2>
-            <p className="text-sm text-[#645451] mt-2">
+            <p className="text-sm text-[var(--color-text-soft)] mt-2">
               Trabalhamos com os melhores recheios artesanais cremosos e nobres para o seu bolo.
             </p>
           </div>
@@ -158,25 +158,25 @@ export default function PublicPage() {
             {fillings.map((f) => (
               <div
                 key={f.id}
-                className="bg-white p-4 rounded-2xl border border-[#F2D7D0] shadow-sm hover:border-[#C27360] hover:shadow-md transition-all flex items-center gap-3"
+                className="bg-white p-4 rounded-2xl border border-[var(--color-border)] shadow-sm hover:border-[var(--color-accent)] hover:shadow-md transition-all flex items-center gap-3"
               >
-                <div className="w-8 h-8 rounded-full bg-[#F9ECE9] text-[#C27360] flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-[#C27360]" />
+                <div className="w-8 h-8 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-accent)]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xs text-[#4A231A]">{f.name}</h3>
-                  <span className="text-[10px] text-[#A75644] font-medium uppercase">{f.category}</span>
+                  <h3 className="font-bold text-xs text-[var(--color-heading)]">{f.name}</h3>
+                  <span className="text-[10px] text-[var(--color-accent-strong)] font-medium uppercase">{f.category}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Warm & Professional Transparency Note */}
-          <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[#F2D7D0] shadow-sm text-center space-y-1">
-            <h3 className="text-xs uppercase font-bold text-[#A75644] tracking-wider">
+          <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[var(--color-border)] shadow-sm text-center space-y-1">
+            <h3 className="text-xs uppercase font-bold text-[var(--color-accent-strong)] tracking-wider">
               Transparência & Carinho com Nossos Clientes
             </h3>
-            <p className="text-xs text-[#645451] leading-relaxed">
+            <p className="text-xs text-[var(--color-text-soft)] leading-relaxed">
               Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento.
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function PublicPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => handleOpenModal()}
-              className="px-8 py-3 rounded-full bg-[#A75644] text-white font-bold text-sm shadow-blush hover:bg-[#874132] transition-all"
+              className="px-8 py-3 rounded-full bg-[var(--color-accent-strong)] text-white font-bold text-sm shadow-blush hover:bg-[var(--color-accent-deep)] transition-all"
             >
               Montar Bolo com Seu Recheio Favorito
             </button>

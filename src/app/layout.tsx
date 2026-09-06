@@ -66,7 +66,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`scroll-smooth ${fraunces.variable} ${inter.variable}`}>
-      <body className="min-h-screen bg-[#FAF6F4] text-[#332220] antialiased selection:bg-[#F2D7D0] selection:text-[#4A231A]">
+      <body className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] antialiased selection:bg-[var(--color-border)] selection:text-[var(--color-heading)]">
         {children}
       </body>
     </html>

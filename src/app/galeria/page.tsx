@@ -30,20 +30,20 @@ export default function GalleryPage() {
     selectedType === 'all' ? items : items.filter((i) => i.eventType === selectedType);
 
   return (
-    <div className="min-h-screen bg-[#FAF6F4] py-10 px-4">
+    <div className="min-h-screen bg-[var(--color-bg)] py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#874132] hover:underline mb-6">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-accent-deep)] hover:underline mb-6">
           <ArrowLeft className="w-3.5 h-3.5" /> Voltar para a loja
         </Link>
 
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs uppercase tracking-widest text-[#C27360] font-bold">
+          <span className="text-xs uppercase tracking-widest text-[var(--color-accent)] font-bold">
             Nossos Trabalhos
           </span>
-          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A] mt-2">
+          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-heading)] mt-2">
             Galeria
           </h1>
-          <p className="text-sm text-[#645451] mt-2">
+          <p className="text-sm text-[var(--color-text-soft)] mt-2">
             Fotos de bolos e doces já entregues para clientes de verdade.
           </p>
         </div>
@@ -54,8 +54,8 @@ export default function GalleryPage() {
               onClick={() => setSelectedType('all')}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                 selectedType === 'all'
-                  ? 'bg-[#C27360] text-white shadow-blush font-semibold'
-                  : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
+                  ? 'bg-[var(--color-accent)] text-white shadow-blush font-semibold'
+                  : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -67,8 +67,8 @@ export default function GalleryPage() {
                 onClick={() => setSelectedType(type)}
                 className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedType === type
-                    ? 'bg-[#C27360] text-white shadow-blush font-semibold'
-                    : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
+                    ? 'bg-[var(--color-accent)] text-white shadow-blush font-semibold'
+                    : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
                 }`}
               >
                 {type}
@@ -78,11 +78,11 @@ export default function GalleryPage() {
         )}
 
         {loading ? (
-          <div className="py-16 text-center text-[#645451]">Carregando galeria...</div>
+          <div className="py-16 text-center text-[var(--color-text-soft)]">Carregando galeria...</div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-[#F2D7D0] p-10 text-center shadow-card max-w-lg mx-auto">
-            <Images className="w-8 h-8 text-[#F2D7D0] mx-auto mb-3" />
-            <p className="text-sm text-[#645451]">
+          <div className="bg-white rounded-3xl border border-[var(--color-border)] p-10 text-center shadow-card max-w-lg mx-auto">
+            <Images className="w-8 h-8 text-[var(--color-border)] mx-auto mb-3" />
+            <p className="text-sm text-[var(--color-text-soft)]">
               Em breve mais fotos dos nossos trabalhos por aqui.
             </p>
           </div>
@@ -92,7 +92,7 @@ export default function GalleryPage() {
               <button
                 key={item.id}
                 onClick={() => setLightboxItem(item)}
-                className="block w-full break-inside-avoid rounded-2xl overflow-hidden border border-[#F2D7D0] shadow-card bg-white group"
+                className="block w-full break-inside-avoid rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-card bg-white group"
               >
                 <div className="relative w-full">
                   <Image
@@ -133,7 +133,7 @@ export default function GalleryPage() {
             {(lightboxItem.caption || lightboxItem.eventType) && (
               <div className="bg-white rounded-b-2xl p-4">
                 {lightboxItem.eventType && (
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#874132]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-deep)]">
                     {lightboxItem.eventType}
                   </span>
                 )}
