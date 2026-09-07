@@ -29,6 +29,26 @@ export function isOwner(session: AuthSession): boolean {
   return session.role === 'OWNER';
 }
 
+interface UserRoleLookup {
+  user: {
+    findUnique: (args: { where: { id: string }; select: { role: true } }) => Promise<{ role: string } | null>;
+  };
+}
+
+/**
+ * Same check as isOwner, but re-reads the role from the database instead of
+ * trusting the JWT's role claim. The token is stateless and can be up to 7
+ * days old -- isOwner(session) alone would let an OWNER who was just
+ * demoted to STAFF (or removed) keep OWNER-level access to Financeiro,
+ * Cupons and Equipe until their old token expires. Use this for every
+ * OWNER-only gate; isOwner() stays for callers that only need the claim as
+ * a UI hint, not an authorization decision.
+ */
+export async function isOwnerFresh(session: AuthSession, db: UserRoleLookup): Promise<boolean> {
+  const user = await db.user.findUnique({ where: { id: session.userId }, select: { role: true } });
+  return user?.role === 'OWNER';
+}
+
 export async function createSession(session: AuthSession) {
   const token = await new SignJWT({ ...session })
     .setProtectedHeader({ alg: 'HS256' })

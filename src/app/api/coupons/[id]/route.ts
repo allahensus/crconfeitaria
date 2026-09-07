@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession, isOwner } from '@/lib/auth';
+import { getSession, isOwnerFresh } from '@/lib/auth';
 
 export async function PUT(
   request: Request,
@@ -9,8 +9,8 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const { id } = await params;
     const { code, discountType, discountValue, active, expiresAt, maxUses, oncePerCustomer } = await request.json();
@@ -44,8 +44,8 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const { id } = await params;
     await db.coupon.delete({ where: { id } });

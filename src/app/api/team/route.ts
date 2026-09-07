@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession, isOwner } from '@/lib/auth';
+import { getSession, isOwnerFresh } from '@/lib/auth';
 
 // NOTE: User is not in TENANT_SCOPED_MODELS (src/lib/db.ts) — getScopedPrisma
 // does not auto-scope it. Every query below adds organizationId manually.
@@ -12,8 +12,8 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const users = await db.user.findMany({
       where: { organizationId: session.organizationId },
@@ -32,8 +32,8 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    if (!isOwner(session)) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const { name, email, password, role } = await request.json();
 
