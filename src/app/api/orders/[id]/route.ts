@@ -43,23 +43,36 @@ export async function PUT(
     const body = await request.json();
     const { status, addPayment } = body;
 
-    const existingOrder = await db.order.findUnique({
-      where: { id },
-      include: { payments: true, items: true },
-    });
-
-    if (!existingOrder) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
-
-    let updatedPaidAmount = existingOrder.paidAmount;
-    let paymentStatus = existingOrder.paymentStatus;
-    let stockDeducted = existingOrder.stockDeducted;
+    // Tenant/existence check up front, via the scoped client, before opening
+    // a transaction at all -- a bad or cross-tenant id should 404 fast.
+    const orderExists = await db.order.findUnique({ where: { id }, select: { id: true } });
+    if (!orderExists) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
 
     const updatedOrder = await db.$transaction(async (tx) => {
-      if (status === 'EM_PRODUCAO' && existingOrder.status !== 'EM_PRODUCAO' && !existingOrder.stockDeducted) {
-        await deductStockForOrder(tx, existingOrder);
+      // Row lock: blocks a second concurrent PUT on this same order until this
+      // transaction commits, so the read right after is guaranteed fresh --
+      // not a snapshot taken before either request's transaction began. Without
+      // this, two simultaneous status changes to EM_PRODUCAO both see
+      // stockDeducted=false and both deduct, and two simultaneous addPayment
+      // calls both compute paidAmount from the same stale base and one
+      // overwrites the other's payment.
+      await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
+
+      const current = await tx.order.findUnique({
+        where: { id },
+        include: { payments: true, items: true },
+      });
+      if (!current) throw new Error('ORDER_NOT_FOUND');
+
+      let paidAmount = current.paidAmount;
+      let paymentStatus = current.paymentStatus;
+      let stockDeducted = current.stockDeducted;
+
+      if (status === 'EM_PRODUCAO' && current.status !== 'EM_PRODUCAO' && !current.stockDeducted) {
+        await deductStockForOrder(tx, current);
         stockDeducted = true;
-      } else if (status === 'CANCELADO' && existingOrder.stockDeducted) {
-        await restoreStockForOrder(tx, existingOrder);
+      } else if (status === 'CANCELADO' && current.stockDeducted) {
+        await restoreStockForOrder(tx, current);
         stockDeducted = false;
       }
 
@@ -84,15 +97,23 @@ export async function PUT(
             type: 'RECEITA',
             amount: paymentAmount,
             category: 'Venda de Pedido',
-            description: `Pagamento ${paymentMethod} do pedido ${existingOrder.orderNumber}`,
+            description: `Pagamento ${paymentMethod} do pedido ${current.orderNumber}`,
             orderId: id,
           },
         });
 
-        updatedPaidAmount += paymentAmount;
-        if (updatedPaidAmount >= existingOrder.totalAmount) {
+        // Recompute from the authoritative sum of confirmed payments, taken
+        // under the same lock, instead of incrementing an in-memory value --
+        // that's what makes two concurrent payments both land instead of one
+        // clobbering the other.
+        const paymentSum = await tx.payment.aggregate({
+          where: { orderId: id, status: 'CONFIRMADO' },
+          _sum: { amount: true },
+        });
+        paidAmount = paymentSum._sum.amount ?? 0;
+        if (paidAmount >= current.totalAmount) {
           paymentStatus = 'PAGO';
-        } else if (updatedPaidAmount > 0) {
+        } else if (paidAmount > 0) {
           paymentStatus = 'PARCIAL';
         }
       }
@@ -100,12 +121,12 @@ export async function PUT(
       return tx.order.update({
         where: { id },
         data: {
-          status: status || existingOrder.status,
-          paidAmount: updatedPaidAmount,
+          status: status || current.status,
+          paidAmount,
           paymentStatus,
           stockDeducted,
-          deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : existingOrder.deliveryDate,
-          notes: body.notes !== undefined ? body.notes : existingOrder.notes,
+          deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : current.deliveryDate,
+          notes: body.notes !== undefined ? body.notes : current.notes,
         },
         include: {
           items: true,

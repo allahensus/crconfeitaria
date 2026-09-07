@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
+import { withNumberRetry } from '@/lib/sequence';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const organization = await getCurrentOrganization();
-    if (!organization) {
-      return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
-    }
-    const db = getScopedPrisma(organization.id);
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const db = getScopedPrisma(session.organizationId);
 
     const { id } = await params;
     const quote = await db.quote.findUnique({
@@ -50,29 +48,22 @@ export async function PUT(
     if (convertToOrder) {
       const year = new Date().getFullYear();
       const prefix = `PED-${year}-`;
-      const lastOrder = await db.order.findFirst({
-        where: { orderNumber: { startsWith: prefix } },
-        orderBy: { orderNumber: 'desc' },
-      });
 
-      let nextSeq = 1;
-      if (lastOrder?.orderNumber) {
-        const parts = lastOrder.orderNumber.split('-');
-        const lastSeq = parseInt(parts[parts.length - 1], 10);
-        if (!isNaN(lastSeq)) {
-          nextSeq = lastSeq + 1;
+      const generateOrderNumberCandidate = async () => {
+        const lastOrder = await db.order.findFirst({
+          where: { orderNumber: { startsWith: prefix } },
+          orderBy: { orderNumber: 'desc' },
+        });
+        let nextSeq = 1;
+        if (lastOrder?.orderNumber) {
+          const parts = lastOrder.orderNumber.split('-');
+          const lastSeq = parseInt(parts[parts.length - 1], 10);
+          if (!isNaN(lastSeq)) {
+            nextSeq = lastSeq + 1;
+          }
         }
-      }
-
-      let orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-      while (
-        await db.order.findUnique({
-          where: { organizationId_orderNumber: { organizationId: session.organizationId, orderNumber } },
-        })
-      ) {
-        nextSeq++;
-        orderNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-      }
+        return `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+      };
 
       const deliveryDate = quote.eventDate || new Date(Date.now() + 86400000 * 3);
 
@@ -80,36 +71,42 @@ export async function PUT(
         (await db.product.findMany({ select: { id: true } })).map((p) => p.id)
       );
 
-      const newOrder = await db.order.create({
-        data: {
-          organizationId: session.organizationId,
-          orderNumber,
-          quoteId: quote.id,
-          customerId: quote.customerId,
-          customerName: quote.customerName,
-          customerWhatsapp: quote.customerWhatsapp,
-          preferredPaymentMethod: quote.preferredPaymentMethod,
-          depositAmount: quote.depositAmount,
-          deliveryDate,
-          status: 'NOVO',
-          totalAmount: quote.finalTotal,
-          paidAmount: 0.0,
-          paymentStatus: 'PENDENTE',
-          notes: quote.themeNotes,
-          items: {
-            create: quote.items.map((item) => ({
-              productId: item.productId && item.productId !== 'custom' && orgProductIds.has(item.productId) ? item.productId : null,
-              productName: item.productName,
-              variationName: item.variation,
-              cakeBase: item.cakeBase,
-              filling1: item.filling1,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.totalPrice,
-            })),
-          },
-        },
-      });
+      const newOrder = await withNumberRetry(
+        generateOrderNumberCandidate,
+        (orderNumber) =>
+          db.order.create({
+            data: {
+              organizationId: session.organizationId,
+              orderNumber,
+              quoteId: quote.id,
+              customerId: quote.customerId,
+              customerName: quote.customerName,
+              customerWhatsapp: quote.customerWhatsapp,
+              preferredPaymentMethod: quote.preferredPaymentMethod,
+              depositAmount: quote.depositAmount,
+              deliveryDate,
+              status: 'NOVO',
+              totalAmount: quote.finalTotal,
+              paidAmount: 0.0,
+              paymentStatus: 'PENDENTE',
+              notes: quote.themeNotes,
+              items: {
+                create: quote.items.map((item) => ({
+                  productId: item.productId && item.productId !== 'custom' && orgProductIds.has(item.productId) ? item.productId : null,
+                  productName: item.productName,
+                  variationName: item.variation,
+                  cakeBase: item.cakeBase,
+                  filling1: item.filling1,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  totalPrice: item.totalPrice,
+                })),
+              },
+            },
+          }),
+        5,
+        'orderNumber'
+      );
 
       if (quote.customerId) {
         await db.customer.update({

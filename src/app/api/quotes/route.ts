@@ -4,6 +4,7 @@ import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 import { generateWhatsAppLink } from '@/lib/utils';
 import { checkCouponEligibility } from '@/lib/coupons';
+import { withNumberRetry } from '@/lib/sequence';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,58 +117,48 @@ export async function POST(request: Request) {
 
     const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
-    let customer = await db.customer.findFirst({
-      where: { whatsapp: cleanWhatsapp },
+    // upsert (not find-then-create) so two near-simultaneous submissions from
+    // the same new customer can't both miss the "already exists" check and
+    // both insert -- the database resolves the race via the
+    // (organizationId, whatsapp) unique constraint, not application logic.
+    // upsert is deliberately outside getScopedPrisma's auto-scoping (its
+    // where must reference a real unique constraint), so it's built by hand.
+    const customer = await db.customer.upsert({
+      where: { organizationId_whatsapp: { organizationId: organization.id, whatsapp: cleanWhatsapp } },
+      create: {
+        organizationId: organization.id,
+        name: customerName,
+        whatsapp: cleanWhatsapp,
+        email: customerEmail || null,
+        birthDate: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : null,
+        lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : true,
+      },
+      update: {
+        name: customerName,
+        email: customerEmail || undefined,
+        birthDate: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : undefined,
+        lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : undefined,
+      },
     });
-
-    if (!customer) {
-      customer = await db.customer.create({
-        data: {
-          organizationId: organization.id,
-          name: customerName,
-          whatsapp: cleanWhatsapp,
-          email: customerEmail || null,
-          birthDate: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : null,
-          lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : true,
-        },
-      });
-    } else {
-      await db.customer.update({
-        where: { id: customer.id },
-        data: {
-          name: customerName,
-          email: customerEmail || customer.email,
-          birthDate: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : customer.birthDate,
-          lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : customer.lgpdAccepted,
-        },
-      });
-    }
 
     const year = new Date().getFullYear();
     const prefix = `ORC-${year}-`;
-    const lastQuote = await db.quote.findFirst({
-      where: { quoteNumber: { startsWith: prefix } },
-      orderBy: { quoteNumber: 'desc' },
-    });
 
-    let nextSeq = 1;
-    if (lastQuote?.quoteNumber) {
-      const parts = lastQuote.quoteNumber.split('-');
-      const lastSeq = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(lastSeq)) {
-        nextSeq = lastSeq + 1;
+    const generateQuoteNumberCandidate = async () => {
+      const lastQuote = await db.quote.findFirst({
+        where: { quoteNumber: { startsWith: prefix } },
+        orderBy: { quoteNumber: 'desc' },
+      });
+      let nextSeq = 1;
+      if (lastQuote?.quoteNumber) {
+        const parts = lastQuote.quoteNumber.split('-');
+        const lastSeq = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastSeq)) {
+          nextSeq = lastSeq + 1;
+        }
       }
-    }
-
-    let quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-    while (
-      await db.quote.findUnique({
-        where: { organizationId_quoteNumber: { organizationId: organization.id, quoteNumber } },
-      })
-    ) {
-      nextSeq++;
-      quoteNumber = `${prefix}${nextSeq.toString().padStart(4, '0')}`;
-    }
+      return `${prefix}${nextSeq.toString().padStart(4, '0')}`;
+    };
 
     const parseEventDate = eventDate ? new Date(eventDate) : null;
     const isValidEventDate = parseEventDate && !isNaN(parseEventDate.getTime());
@@ -193,9 +184,21 @@ export async function POST(request: Request) {
       }
       const eligibility = checkCouponEligibility(coupon, alreadyUsedByCustomer);
       if (eligibility.ok) {
-        appliedDiscount = parseFloat(discount) || 0;
-        appliedCouponCode = coupon!.code;
-        await db.coupon.update({ where: { id: coupon!.id }, data: { usageCount: { increment: 1 } } });
+        // Atomic claim: the WHERE and the increment run as one statement in
+        // Postgres, so concurrent submissions racing the same near-exhausted
+        // coupon can't all read "still eligible" and all apply the discount --
+        // only as many as maxUses actually allows get count > 0 back.
+        const claimed = await db.coupon.updateMany({
+          where: {
+            id: coupon!.id,
+            ...(coupon!.maxUses !== null ? { usageCount: { lt: coupon!.maxUses } } : {}),
+          },
+          data: { usageCount: { increment: 1 } },
+        });
+        if (claimed.count > 0) {
+          appliedDiscount = parseFloat(discount) || 0;
+          appliedCouponCode = coupon!.code;
+        }
       }
     }
 
@@ -205,44 +208,46 @@ export async function POST(request: Request) {
     const depositPercent = parseFloat(depositSetting?.value || '50') || 50;
     const depositAmount = Math.round(tot * (depositPercent / 100) * 100) / 100;
 
-    const quote = await db.quote.create({
-      data: {
-        organizationId: organization.id,
-        quoteNumber,
-        customerId: customer.id,
-        customerName,
-        customerWhatsapp: cleanWhatsapp,
-        eventDate: isValidEventDate ? parseEventDate : null,
-        preferredPaymentMethod: preferredPaymentMethod || null,
-        themeNotes: themeNotes || null,
-        subtotal: parseFloat(subtotal) || price * qty,
-        extraTotal: parseFloat(extraTotal) || 0,
-        discount: appliedDiscount,
-        couponCode: appliedCouponCode,
-        finalTotal: tot,
-        depositAmount,
-        status: 'PENDING',
-        items: {
-          create: [
-            {
-              productId: body.productId || 'custom',
-              productName,
-              variation: variation || null,
-              cakeBase: cakeBase || null,
-              filling1: filling1 || null,
-              frosting: frosting || null,
-              extras: extras || null,
-              quantity: qty,
-              unitPrice: price,
-              totalPrice: tot,
-            },
-          ],
+    const quote = await withNumberRetry(generateQuoteNumberCandidate, (quoteNumber) =>
+      db.quote.create({
+        data: {
+          organizationId: organization.id,
+          quoteNumber,
+          customerId: customer.id,
+          customerName,
+          customerWhatsapp: cleanWhatsapp,
+          eventDate: isValidEventDate ? parseEventDate : null,
+          preferredPaymentMethod: preferredPaymentMethod || null,
+          themeNotes: themeNotes || null,
+          subtotal: parseFloat(subtotal) || price * qty,
+          extraTotal: parseFloat(extraTotal) || 0,
+          discount: appliedDiscount,
+          couponCode: appliedCouponCode,
+          finalTotal: tot,
+          depositAmount,
+          status: 'PENDING',
+          items: {
+            create: [
+              {
+                productId: body.productId || 'custom',
+                productName,
+                variation: variation || null,
+                cakeBase: cakeBase || null,
+                filling1: filling1 || null,
+                frosting: frosting || null,
+                extras: extras || null,
+                quantity: qty,
+                unitPrice: price,
+                totalPrice: tot,
+              },
+            ],
+          },
         },
-      },
-      include: {
-        items: true,
-      },
-    });
+        include: {
+          items: true,
+        },
+      })
+    );
 
     const waSetting = await db.setting.findUnique({
       where: { organizationId_key: { organizationId: organization.id, key: 'whatsapp_number' } },
