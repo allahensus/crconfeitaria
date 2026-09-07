@@ -1,11 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractSubdomain } from '@/lib/tenant-subdomain';
+import { RATE_LIMITED_ROUTES, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const ROOT_DOMAIN = (process.env.ROOT_DOMAIN || 'localhost').split(':')[0];
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
+
+  // Best-effort rate limiting on a short list of public, abuse-prone routes.
+  // See src/lib/rate-limit.ts for exactly what this does and doesn't defend
+  // against -- it's a free, partial mitigation, not a substitute for a real
+  // shared rate limiter.
+  const routeKey = `${request.method} ${request.nextUrl.pathname}`;
+  const limitConfig = RATE_LIMITED_ROUTES[routeKey];
+  if (limitConfig) {
+    const ip = getClientIp(request.headers);
+    if (!checkRateLimit(`${routeKey}:${ip}`, limitConfig)) {
+      return NextResponse.json(
+        { error: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' },
+        { status: 429 }
+      );
+    }
+  }
 
   // Defense-in-depth against CSRF: the cookie is SameSite=lax, which already
   // blocks the classic cross-site <form> POST in modern browsers, but adds

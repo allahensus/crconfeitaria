@@ -61,7 +61,6 @@ export async function POST(request: Request) {
       subtotal,
       extraTotal,
       finalTotal,
-      discount,
       couponCode,
     } = body;
 
@@ -165,6 +164,11 @@ export async function POST(request: Request) {
     const qty = parseInt(quantity) || 1;
     const price = parseFloat(unitPrice) || 0;
     const tot = parseFloat(finalTotal) || price * qty;
+    const sub = parseFloat(subtotal) || price * qty;
+
+    if (!Number.isFinite(qty) || qty < 1 || !Number.isFinite(price) || price < 0 || !Number.isFinite(tot) || tot < 0 || !Number.isFinite(sub) || sub < 0) {
+      return NextResponse.json({ error: 'Valores de preço ou quantidade inválidos.' }, { status: 400 });
+    }
 
     // Re-validate the coupon server-side before trusting the client-computed
     // discount -- don't just take the client's word for it being applied.
@@ -196,8 +200,14 @@ export async function POST(request: Request) {
           data: { usageCount: { increment: 1 } },
         });
         if (claimed.count > 0) {
-          appliedDiscount = parseFloat(discount) || 0;
           appliedCouponCode = coupon!.code;
+          // Computed from the coupon's own stored value against the
+          // server-validated subtotal -- the client's `discount` field is
+          // never trusted, or a customer could claim any coupon and submit
+          // an arbitrary discount amount alongside it.
+          appliedDiscount = coupon!.discountType === 'PERCENT'
+            ? Math.round(sub * (coupon!.discountValue / 100) * 100) / 100
+            : Math.min(coupon!.discountValue, sub);
         }
       }
     }

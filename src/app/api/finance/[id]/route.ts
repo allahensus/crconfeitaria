@@ -37,6 +37,9 @@ export async function PUT(
     }
 
     const parsedAmount = parseFloat(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json({ error: 'O valor deve ser maior que zero.' }, { status: 400 });
+    }
     const parsedDate = date ? new Date(date) : transaction.date;
 
     await db.expense.update({

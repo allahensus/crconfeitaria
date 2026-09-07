@@ -13,6 +13,23 @@ interface CouponLike {
   oncePerCustomer: boolean;
 }
 
+// Bounds-check a coupon's own definition, not a specific redemption --
+// used when an OWNER creates or edits a coupon. Only the app enforces this
+// today (no DB-level CHECK constraint), so it's the one place standing
+// between a typo and a coupon that pays customers to order.
+export function validateDiscountValue(
+  discountType: string,
+  discountValue: number
+): { ok: true } | { ok: false; error: string } {
+  if (!Number.isFinite(discountValue) || discountValue <= 0) {
+    return { ok: false, error: 'O valor do desconto deve ser maior que zero.' };
+  }
+  if (discountType === 'PERCENT' && discountValue > 100) {
+    return { ok: false, error: 'O desconto percentual não pode passar de 100%.' };
+  }
+  return { ok: true };
+}
+
 export function checkCouponEligibility(
   coupon: CouponLike | null,
   alreadyUsedByCustomer: boolean

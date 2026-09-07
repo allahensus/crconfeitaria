@@ -43,6 +43,13 @@ export async function PUT(
     const body = await request.json();
     const { status, addPayment } = body;
 
+    if (addPayment) {
+      const parsedPaymentAmount = parseFloat(addPayment.amount);
+      if (!Number.isFinite(parsedPaymentAmount) || parsedPaymentAmount <= 0) {
+        return NextResponse.json({ error: 'O valor do pagamento deve ser maior que zero.' }, { status: 400 });
+      }
+    }
+
     // Tenant/existence check up front, via the scoped client, before opening
     // a transaction at all -- a bad or cross-tenant id should 404 fast.
     const orderExists = await db.order.findUnique({ where: { id }, select: { id: true } });

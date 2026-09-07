@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getSession, isOwnerFresh } from '@/lib/auth';
+import { validateDiscountValue } from '@/lib/coupons';
 
 export async function GET() {
   try {
@@ -31,13 +32,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Código e valor do desconto são obrigatórios' }, { status: 400 });
     }
 
+    const resolvedDiscountType = discountType === 'FIXED' ? 'FIXED' : 'PERCENT';
+    const parsedDiscountValue = parseFloat(discountValue);
+    const eligibility = validateDiscountValue(resolvedDiscountType, parsedDiscountValue);
+    if (!eligibility.ok) {
+      return NextResponse.json({ error: eligibility.error }, { status: 400 });
+    }
+
     const cleanCode = code.trim().toUpperCase().replace(/\s+/g, '');
 
     const coupon = await db.coupon.create({
       data: {
         code: cleanCode,
-        discountType: discountType === 'FIXED' ? 'FIXED' : 'PERCENT',
-        discountValue: parseFloat(discountValue),
+        discountType: resolvedDiscountType,
+        discountValue: parsedDiscountValue,
         active: active !== undefined ? Boolean(active) : true,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         maxUses: maxUses !== null && maxUses !== undefined && maxUses !== '' ? parseInt(maxUses) : null,

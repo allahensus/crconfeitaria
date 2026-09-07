@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getSession, isOwnerFresh } from '@/lib/auth';
+import { validateDiscountValue } from '@/lib/coupons';
 
 export async function PUT(
   request: Request,
@@ -14,6 +15,19 @@ export async function PUT(
 
     const { id } = await params;
     const { code, discountType, discountValue, active, expiresAt, maxUses, oncePerCustomer } = await request.json();
+
+    if (discountType !== undefined || discountValue !== undefined) {
+      const existing = await db.coupon.findUnique({ where: { id } });
+      if (!existing) {
+        return NextResponse.json({ error: 'Cupom não encontrado' }, { status: 404 });
+      }
+      const resolvedType = discountType !== undefined ? (discountType === 'FIXED' ? 'FIXED' : 'PERCENT') : existing.discountType;
+      const resolvedValue = discountValue !== undefined ? parseFloat(discountValue) : existing.discountValue;
+      const eligibility = validateDiscountValue(resolvedType, resolvedValue);
+      if (!eligibility.ok) {
+        return NextResponse.json({ error: eligibility.error }, { status: 400 });
+      }
+    }
 
     const coupon = await db.coupon.update({
       where: { id },
