@@ -48,6 +48,8 @@ export async function PUT(
     const orderExists = await db.order.findUnique({ where: { id }, select: { id: true } });
     if (!orderExists) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
 
+    let stockWarning: string | null = null;
+
     const updatedOrder = await db.$transaction(async (tx) => {
       // Row lock: blocks a second concurrent PUT on this same order until this
       // transaction commits, so the read right after is guaranteed fresh --
@@ -69,8 +71,12 @@ export async function PUT(
       let stockDeducted = current.stockDeducted;
 
       if (status === 'EM_PRODUCAO' && current.status !== 'EM_PRODUCAO' && !current.stockDeducted) {
-        await deductStockForOrder(tx, current);
+        const result = await deductStockForOrder(tx, current);
         stockDeducted = true;
+        if (result.skippedItems.length > 0) {
+          stockWarning = `Baixa de estoque incompleta: ${result.skippedItems.length} ite${result.skippedItems.length > 1 ? 'ns' : 'm'} do pedido ${current.orderNumber} não têm produto vinculado ou ficha técnica cadastrada, então nenhum insumo foi descontado para ele(s).`;
+          console.warn(`[stock] Incomplete deduction for order ${current.orderNumber}:`, result.skippedItems);
+        }
       } else if (status === 'CANCELADO' && current.stockDeducted) {
         await restoreStockForOrder(tx, current);
         stockDeducted = false;
@@ -136,7 +142,7 @@ export async function PUT(
       });
     });
 
-    return NextResponse.json(updatedOrder);
+    return NextResponse.json(stockWarning ? { ...updatedOrder, stockWarning } : updatedOrder);
   } catch (error) {
     console.error('Error updating order:', error);
     return NextResponse.json({ error: 'Erro ao atualizar pedido' }, { status: 500 });

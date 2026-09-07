@@ -63,7 +63,14 @@ export default function AdminOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (res.ok) loadOrders();
+      if (res.ok) {
+        const data = await res.json();
+        loadOrders();
+        // Surfaces a real gap, not a false alarm: an item with no product
+        // linked or no Ficha Técnica registered has its stock silently
+        // skipped otherwise -- see src/lib/stock.ts.
+        if (data?.stockWarning) alert(data.stockWarning);
+      }
     } catch (err) {
       console.error(err);
     }
