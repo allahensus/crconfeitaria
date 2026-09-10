@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { PixChargeModal } from '@/components/admin/PixChargeModal';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, generateReviewRequestLink } from '@/lib/utils';
 import {
   ShoppingBag,
   Kanban,
@@ -17,6 +17,7 @@ import {
   X,
   CreditCard,
   MessageCircle,
+  Star,
 } from 'lucide-react';
 
 const STATUS_COLUMNS = [
@@ -33,6 +34,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [settings, setSettings] = useState<Record<string, string>>({});
 
   // Payment Modal state
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -54,7 +56,20 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     loadOrders();
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === 'object') setSettings(data);
+      })
+      .catch((err) => console.error(err));
   }, []);
+
+  const handleRequestReview = (order: any) => {
+    const bakeryName = settings.bakery_name || 'nossa confeitaria';
+    const reviewUrl = `${window.location.origin}/avaliar`;
+    const link = generateReviewRequestLink(order.customerWhatsapp, order.customerName, bakeryName, reviewUrl);
+    window.open(link, '_blank');
+  };
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
@@ -319,6 +334,15 @@ export default function AdminOrdersPage() {
                     ))}
                   </div>
                 </div>
+
+                {selectedOrder.status === 'ENTREGUE' && (
+                  <button
+                    onClick={() => handleRequestReview(selectedOrder)}
+                    className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Star className="w-4 h-4" /> Pedir Avaliação no WhatsApp
+                  </button>
+                )}
 
                 {/* Financial Payment Summary */}
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">

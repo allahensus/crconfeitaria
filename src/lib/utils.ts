@@ -46,6 +46,26 @@ export function formatWhatsappForUrl(phone: string): string {
   return digits;
 }
 
+// Semi-automatic, not automatic: the confeiteira clicks this after marking
+// an order ENTREGUE, WhatsApp opens with the message already written, she
+// reviews and sends. Building real automatic sending needs the WhatsApp
+// Business API (cost + Meta approval), deliberately out of scope for now.
+export function generateReviewRequestLink(
+  phone: string,
+  customerName: string,
+  bakeryName: string,
+  reviewUrl: string
+): string {
+  const cleanPhone = formatWhatsappForUrl(phone);
+  const firstName = (customerName || '').trim().split(' ')[0] || 'você';
+
+  let text = `😍 Oi, ${firstName}! Esperamos que tenha amado seu pedido da *${bakeryName}*!\n\n`;
+  text += `Você poderia deixar uma avaliação rapidinha pra gente? Ajuda muito outras pessoas a conhecerem nosso trabalho! 🙏\n\n`;
+  text += `${reviewUrl}`;
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+}
+
 export function generateWhatsAppLink(
   phone: string,
   quote: {

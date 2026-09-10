@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
+import { daysUntilNextBirthday, isBirthdayWithinDays } from '@/lib/birthdays';
 import { Users, Search, MessageCircle, Cake, Mail, ShieldCheck, Gift, Tag, X, Send, Sparkles, Edit2, Trash2, Check } from 'lucide-react';
 
 export default function AdminCustomersPage() {
@@ -125,25 +126,33 @@ export default function AdminCustomersPage() {
     }
   };
 
-  const currentMonth = new Date().getMonth();
+  const BIRTHDAY_WINDOW_DAYS = 30;
 
-  const isBirthdayThisMonth = (birthDateStr?: string) => {
+  // "Coming up in the next 30 days", not "same calendar month" -- a same-month
+  // check misses a birthday landing right after the month rolls over, and
+  // keeps flagging one from days ago as if it still needed action.
+  const isBirthdayUpcoming = (birthDateStr?: string) => {
     if (!birthDateStr) return false;
     const d = new Date(birthDateStr);
-    return !isNaN(d.getTime()) && d.getMonth() === currentMonth;
+    return !isNaN(d.getTime()) && isBirthdayWithinDays(d, BIRTHDAY_WINDOW_DAYS);
   };
 
-  const filtered = customers.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.whatsapp.includes(searchTerm) ||
-      (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = customers
+    .filter((c) => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.whatsapp.includes(searchTerm) ||
+        (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    if (filterType === 'birthdays') {
-      return matchesSearch && isBirthdayThisMonth(c.birthDate);
-    }
-    return matchesSearch;
-  });
+      if (filterType === 'birthdays') {
+        return matchesSearch && isBirthdayUpcoming(c.birthDate);
+      }
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (filterType !== 'birthdays') return 0;
+      return daysUntilNextBirthday(new Date(a.birthDate)) - daysUntilNextBirthday(new Date(b.birthDate));
+    });
 
   const generatePromoTemplate = (type: 'birthday' | 'catalog' | 'discount' | 'custom', customerName: string) => {
     const firstName = customerName ? customerName.split(' ')[0] : 'Cliente';
@@ -231,8 +240,8 @@ export default function AdminCustomersPage() {
                   : 'bg-white text-rose-700 border border-rose-200'
               }`}
             >
-              <Cake className="w-4 h-4" /> Aniversariantes do Mês (
-              {customers.filter((c) => isBirthdayThisMonth(c.birthDate)).length})
+              <Cake className="w-4 h-4" /> Aniversariantes (30 dias) (
+              {customers.filter((c) => isBirthdayUpcoming(c.birthDate)).length})
             </button>
           </div>
         </div>
@@ -280,12 +289,24 @@ export default function AdminCustomersPage() {
                       {c.birthDate ? (
                         <span
                           className={`font-semibold px-2.5 py-1 rounded-full text-[11px] inline-flex items-center gap-1 ${
-                            isBirthdayThisMonth(c.birthDate)
+                            isBirthdayUpcoming(c.birthDate)
                               ? 'bg-rose-100 text-rose-800 font-bold border border-rose-300'
                               : 'bg-gray-100 text-gray-700'
                           }`}
+                          title={
+                            isBirthdayUpcoming(c.birthDate)
+                              ? `Faltam ${daysUntilNextBirthday(new Date(c.birthDate))} dia(s)`
+                              : undefined
+                          }
                         >
                           <Cake className="w-3 h-3" /> {formatDate(c.birthDate).slice(0, 5)}
+                          {isBirthdayUpcoming(c.birthDate) && (
+                            <span className="ml-0.5">
+                              · {daysUntilNextBirthday(new Date(c.birthDate)) === 0
+                                ? 'Hoje!'
+                                : `${daysUntilNextBirthday(new Date(c.birthDate))}d`}
+                            </span>
+                          )}
                         </span>
                       ) : (
                         <span className="text-gray-400 italic">Não informado</span>
@@ -303,7 +324,7 @@ export default function AdminCustomersPage() {
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-1.5">
-                      {isBirthdayThisMonth(c.birthDate) && (
+                      {isBirthdayUpcoming(c.birthDate) && (
                         <button
                           onClick={() => handleOpenPromoModal(c, 'birthday')}
                           className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-sm inline-flex items-center gap-1"

@@ -32,6 +32,7 @@ export const RATE_LIMITED_ROUTES: Record<string, RateLimitConfig> = {
   'POST /api/quotes': { windowMs: 10 * 60 * 1000, max: 10 },
   'POST /api/coupons/validate': { windowMs: 5 * 60 * 1000, max: 15 },
   'GET /api/track': { windowMs: 5 * 60 * 1000, max: 20 },
+  'POST /api/reviews': { windowMs: 10 * 60 * 1000, max: 10 },
 };
 
 const LARGEST_WINDOW_MS = Math.max(...Object.values(RATE_LIMITED_ROUTES).map((c) => c.windowMs));
