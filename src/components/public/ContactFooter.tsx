@@ -74,7 +74,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[var(--color-accent)]" />
-                <span>São Paulo - SP (Sob Encomenda)</span>
+                <span>{settings?.address || 'São Paulo - SP'} (Sob Encomenda)</span>
               </li>
               <li className="flex items-center gap-2">
                 <Instagram className="w-4 h-4 text-[var(--color-accent)]" />

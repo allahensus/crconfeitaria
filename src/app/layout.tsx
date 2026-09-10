@@ -23,19 +23,25 @@ const inter = Inter({
 const siteUrl = 'https://crconfeitaria.vercel.app';
 const DEFAULT_BAKERY_NAME = 'Cinthia Rodrigues';
 
+const DEFAULT_ADDRESS = 'São Paulo - SP';
+
 export async function generateMetadata(): Promise<Metadata> {
   const organization = await getCurrentOrganization();
 
   let bakeryName = DEFAULT_BAKERY_NAME;
+  let address = DEFAULT_ADDRESS;
   if (organization) {
     const db = getScopedPrisma(organization.id);
-    const setting = await db.setting.findUnique({
-      where: { organizationId_key: { organizationId: organization.id, key: 'bakery_name' } },
+    const settings = await db.setting.findMany({
+      where: { key: { in: ['bakery_name', 'address'] } },
     });
-    bakeryName = setting?.value || DEFAULT_BAKERY_NAME;
+    const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+    bakeryName = settingsMap.bakery_name || DEFAULT_BAKERY_NAME;
+    address = settingsMap.address || DEFAULT_ADDRESS;
   }
 
   const shortTitle = `${bakeryName} - Confeitaria Artesanal`;
+  const socialDescription = `Bolos e biscoitos personalizados sob encomenda em ${address}.`;
 
   return {
     metadataBase: new URL(siteUrl),
@@ -44,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords: ['confeitaria artesanal', 'bento cake', 'bolos personalizados', 'biscoitos amanteigados', bakeryName],
     openGraph: {
       title: shortTitle,
-      description: 'Bolos e biscoitos personalizados sob encomenda em São Paulo.',
+      description: socialDescription,
       images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
       url: siteUrl,
       locale: 'pt_BR',
@@ -53,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: shortTitle,
-      description: 'Bolos e biscoitos personalizados sob encomenda em São Paulo.',
+      description: socialDescription,
       images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
     },
   };
