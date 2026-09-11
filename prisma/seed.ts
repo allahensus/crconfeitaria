@@ -19,7 +19,7 @@ async function main() {
   console.log('Organization ready:', organization.subdomain);
 
   // 1. Create Admin User
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash('admin@@123', 10);
   const admin = await prisma.user.upsert({
     where: { organizationId_email: { organizationId: organization.id, email: 'admin@cinthia.com' } },
     update: {
