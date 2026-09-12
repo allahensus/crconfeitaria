@@ -58,6 +58,38 @@ Projeto real, construído para a confeitaria da Cinthia Rodrigues e arquitetado 
 | Testes | Vitest |
 | Deploy | Vercel |
 
+## Estrutura do projeto
+
+```
+├── prisma/
+│   ├── schema.prisma        # Modelo de dados (multi-tenant: tudo escopado por organizationId)
+│   └── seed.ts               # Popula uma organização de exemplo com dados de demonstração
+├── scripts/
+│   └── with-env.js           # Roda um comando (push/seed/studio) contra um .env específico (ex: produção)
+├── src/
+│   ├── app/
+│   │   ├── page.tsx           # Loja pública (catálogo + calculadora de orçamento)
+│   │   ├── pedido/            # Acompanhamento de pedido pelo cliente
+│   │   ├── avaliar/           # Página de avaliação pós-entrega
+│   │   ├── galeria/           # Galeria pública de fotos
+│   │   ├── admin/             # Painel administrativo (pedidos, clientes, financeiro, estoque, equipe...)
+│   │   └── api/                # Rotas de API (auth, orders, products, finance, team, ...)
+│   ├── components/
+│   │   ├── public/             # Componentes da loja pública
+│   │   └── admin/               # Componentes do painel administrativo
+│   ├── lib/
+│   │   ├── auth.ts              # Sessão JWT (cookie httpOnly) e checagem de papel (OWNER/STAFF)
+│   │   ├── db.ts                 # Prisma client com escopo automático por organizationId
+│   │   ├── tenant.ts             # Resolução da organização a partir do subdomínio
+│   │   ├── stock.ts               # Baixa de estoque de insumos a partir da receita do produto
+│   │   ├── coupons.ts             # Validação e aplicação de cupons de desconto
+│   │   └── pix.ts                  # Geração de cobrança Pix
+│   └── middleware.ts           # Rate limiting, defesa CSRF e roteamento por subdomínio
+└── docs/
+    ├── PRD.md                 # Documento de requisitos do produto
+    └── superpowers/plans/      # Planos técnicos de features já entregues
+```
+
 ## Rodando localmente
 
 ```bash

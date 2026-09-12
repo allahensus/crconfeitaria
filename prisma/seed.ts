@@ -3,6 +3,15 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// Never hardcode the real admin password here -- this file is committed to
+// git. Set SEED_ADMIN_PASSWORD in the env file passed to the seed command
+// (see scripts/with-env.js) to seed a real password; otherwise this falls
+// back to an insecure placeholder meant only for local dev databases.
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+if (!SEED_ADMIN_PASSWORD) {
+  console.warn('SEED_ADMIN_PASSWORD not set -- seeding the admin user with an insecure placeholder password. Set SEED_ADMIN_PASSWORD before seeding a real/production database.');
+}
+
 async function main() {
   console.log('Seeding Confeitaria Cinthia Database...');
 
@@ -19,7 +28,7 @@ async function main() {
   console.log('Organization ready:', organization.subdomain);
 
   // 1. Create Admin User
-  const hashedPassword = await bcrypt.hash('admin@@123', 10);
+  const hashedPassword = await bcrypt.hash(SEED_ADMIN_PASSWORD || 'TrocarEssaSenha123!', 10);
   const admin = await prisma.user.upsert({
     where: { organizationId_email: { organizationId: organization.id, email: 'admin@cinthia.com' } },
     update: {
