@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Images, Plus, Edit2, Trash2, X, Check, Upload } from 'lucide-react';
+import { Images, Plus, Edit2, Trash2, X, Check, Upload, GripVertical } from 'lucide-react';
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -22,6 +22,11 @@ export default function AdminGalleryPage() {
   const [imageZoom, setImageZoom] = useState(1);
   const [imagePosX, setImagePosX] = useState(50);
   const [imagePosY, setImagePosY] = useState(50);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [reordering, setReordering] = useState(false);
 
   const eventTypeOptions = useMemo(
     () => Array.from(new Set(items.map((i) => i.eventType).filter(Boolean))).sort(),
@@ -171,6 +176,64 @@ export default function AdminGalleryPage() {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Tem certeza que deseja excluir ${selectedIds.size} foto(s) selecionada(s)?`)) return;
+
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) => fetch(`/api/gallery/${id}`, { method: 'DELETE' }))
+      );
+      setSelectedIds(new Set());
+      await loadData();
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const persistOrder = async (orderedItems: any[]) => {
+    setReordering(true);
+    try {
+      await Promise.all(
+        orderedItems.map((item, index) =>
+          item.order === index
+            ? null
+            : fetch(`/api/gallery/${item.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: index }),
+              })
+        )
+      );
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const handleDrop = (dropIndex: number) => {
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      return;
+    }
+    const reordered = [...items];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+    const withUpdatedOrder = reordered.map((item, index) => ({ ...item, order: index }));
+    setItems(withUpdatedOrder);
+    setDragIndex(null);
+    persistOrder(withUpdatedOrder);
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
@@ -182,7 +245,9 @@ export default function AdminGalleryPage() {
               Galeria de Trabalhos
             </h1>
             <p className="text-xs md:text-sm text-[#645451]">
-              Fotos de bolos e doces já entregues, exibidas na vitrine pública em /galeria
+              Fotos de bolos e doces já entregues, exibidas na vitrine pública em /galeria.
+              Arraste pelo <GripVertical className="w-3 h-3 inline -mt-0.5" /> para reordenar.
+              {reordering && ' Salvando nova ordem...'}
             </p>
           </div>
           <button
@@ -192,6 +257,30 @@ export default function AdminGalleryPage() {
             <Plus className="w-4 h-4" /> Nova Foto
           </button>
         </div>
+
+        {selectedIds.size > 0 && (
+          <div className="flex items-center justify-between gap-4 bg-[#4A231A] text-white rounded-2xl px-5 py-3 flex-wrap">
+            <span className="text-sm font-semibold">
+              {selectedIds.size} foto(s) selecionada(s)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20"
+              >
+                Cancelar seleção
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {bulkDeleting ? 'Excluindo...' : 'Excluir selecionadas'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="py-8 text-center text-[#645451]">Carregando galeria...</div>
@@ -205,10 +294,14 @@ export default function AdminGalleryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl border border-[#F2D7D0] shadow-card overflow-hidden flex flex-col"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(index)}
+                className={`bg-white rounded-3xl border shadow-card overflow-hidden flex flex-col transition-opacity ${
+                  selectedIds.has(item.id) ? 'border-[#C27360] ring-2 ring-[#C27360]/40' : 'border-[#F2D7D0]'
+                } ${dragIndex === index ? 'opacity-40' : ''}`}
               >
                 <div className="relative w-full aspect-square bg-[#FDF7F6]">
                   <Image
@@ -221,6 +314,23 @@ export default function AdminGalleryPage() {
                       transform: `scale(${item.imageZoom ?? 1})`,
                     }}
                   />
+                  <label className="absolute top-2 left-2 w-6 h-6 rounded-md bg-white/90 shadow flex items-center justify-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="w-4 h-4 accent-[#C27360]"
+                    />
+                  </label>
+                  <div
+                    draggable
+                    onDragStart={() => setDragIndex(index)}
+                    onDragEnd={() => setDragIndex(null)}
+                    className="absolute bottom-2 left-2 p-1.5 rounded-md bg-white/90 shadow cursor-grab active:cursor-grabbing text-[#874132]"
+                    title="Arraste para reordenar"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
                   <span
                     className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       item.active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
