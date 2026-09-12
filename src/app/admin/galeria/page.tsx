@@ -57,29 +57,59 @@ export default function AdminGalleryPage() {
     setIsModalOpen(true);
   };
 
+  const uploadOneFile = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    return res.ok && data.url ? data.url : null;
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    // Batch mode: only when adding new photos (not editing an existing one)
+    // and more than one file was picked. Each file becomes its own gallery
+    // item, sharing whatever caption/tipo/ordem/visibilidade is already
+    // filled in on the form -- fine to edit any of them individually after.
+    if (!editingId && files.length > 1) {
+      setUploading(true);
+      let successCount = 0;
+      for (let i = 0; i < files.length; i++) {
+        setUploadMsg(`Enviando foto ${i + 1} de ${files.length}...`);
+        const url = await uploadOneFile(files[i]);
+        if (url) {
+          const res = await fetch('/api/gallery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: url, caption, eventType, order, active }),
+          });
+          if (res.ok) successCount++;
+        }
+      }
+      setUploading(false);
+      setUploadMsg(
+        successCount === files.length
+          ? `✅ ${successCount} fotos enviadas!`
+          : `⚠️ ${successCount} de ${files.length} fotos enviadas.`
+      );
+      await loadData();
+      setTimeout(() => setIsModalOpen(false), 1200);
+      return;
+    }
 
     setUploading(true);
     setUploadMsg('Enviando foto...');
-
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setImageUrl(data.url);
+      const url = await uploadOneFile(files[0]);
+      if (url) {
+        setImageUrl(url);
         setUploadMsg('✅ Foto enviada com sucesso!');
         setTimeout(() => setUploadMsg(''), 4000);
       } else {
-        setUploadMsg(`⚠️ ${data.error || 'Erro ao enviar foto'}`);
+        setUploadMsg('⚠️ Erro ao enviar foto');
       }
     } catch (err) {
       setUploadMsg('⚠️ Erro ao conectar ao servidor de imagens.');
@@ -227,15 +257,27 @@ export default function AdminGalleryPage() {
                 )}
                 <label className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-dashed border-[#F2D7D0] text-sm text-[#874132] cursor-pointer hover:bg-[#FDF7F6] transition-colors">
                   <Upload className="w-4 h-4" />
-                  {uploading ? 'Enviando...' : imageUrl ? 'Trocar foto' : 'Enviar foto do computador'}
+                  {uploading
+                    ? 'Enviando...'
+                    : imageUrl
+                      ? 'Trocar foto'
+                      : editingId
+                        ? 'Enviar foto do computador'
+                        : 'Enviar fotos do computador (pode selecionar várias)'}
                   <input
                     type="file"
                     accept="image/*"
+                    multiple={!editingId}
                     onChange={handleFileUpload}
                     disabled={uploading}
                     className="hidden"
                   />
                 </label>
+                {!editingId && (
+                  <p className="text-[11px] text-[#645451] mt-1">
+                    Selecionando mais de uma foto, cada uma vira um item da galeria com a legenda e tipo de evento preenchidos abaixo.
+                  </p>
+                )}
                 {uploadMsg && <p className="text-xs mt-1 text-[#874132]">{uploadMsg}</p>}
               </div>
 
