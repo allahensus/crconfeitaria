@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const db = getScopedPrisma(session.organizationId);
 
     const body = await request.json();
-    const { imageUrl, caption, eventType, order, active } = body;
+    const { imageUrl, caption, eventType, order, active, imageZoom, imagePosX, imagePosY } = body;
 
     if (!imageUrl) {
       return NextResponse.json({ error: 'A foto é obrigatória' }, { status: 400 });
@@ -45,6 +45,9 @@ export async function POST(request: Request) {
         eventType: eventType || 'Geral',
         order: order !== undefined ? parseInt(order) : 0,
         active: active !== undefined ? Boolean(active) : true,
+        imageZoom: imageZoom !== undefined ? parseFloat(imageZoom) : 1,
+        imagePosX: imagePosX !== undefined ? parseFloat(imagePosX) : 50,
+        imagePosY: imagePosY !== undefined ? parseFloat(imagePosY) : 50,
       },
     });
 

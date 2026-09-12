@@ -19,6 +19,9 @@ export default function AdminGalleryPage() {
   const [creatingNewEventType, setCreatingNewEventType] = useState(false);
   const [order, setOrder] = useState(0);
   const [active, setActive] = useState(true);
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePosX, setImagePosX] = useState(50);
+  const [imagePosY, setImagePosY] = useState(50);
 
   const eventTypeOptions = useMemo(
     () => Array.from(new Set(items.map((i) => i.eventType).filter(Boolean))).sort(),
@@ -49,6 +52,9 @@ export default function AdminGalleryPage() {
     setCreatingNewEventType(false);
     setOrder(0);
     setActive(true);
+    setImageZoom(1);
+    setImagePosX(50);
+    setImagePosY(50);
     setUploadMsg('');
     setIsModalOpen(true);
   };
@@ -61,6 +67,9 @@ export default function AdminGalleryPage() {
     setCreatingNewEventType(false);
     setOrder(item.order);
     setActive(item.active);
+    setImageZoom(item.imageZoom ?? 1);
+    setImagePosX(item.imagePosX ?? 50);
+    setImagePosY(item.imagePosY ?? 50);
     setUploadMsg('');
     setIsModalOpen(true);
   };
@@ -114,6 +123,9 @@ export default function AdminGalleryPage() {
       const url = await uploadOneFile(files[0]);
       if (url) {
         setImageUrl(url);
+        setImageZoom(1);
+        setImagePosX(50);
+        setImagePosY(50);
         setUploadMsg('✅ Foto enviada com sucesso!');
         setTimeout(() => setUploadMsg(''), 4000);
       } else {
@@ -133,7 +145,7 @@ export default function AdminGalleryPage() {
       return;
     }
     try {
-      const payload = { imageUrl, caption, eventType, order, active };
+      const payload = { imageUrl, caption, eventType, order, active, imageZoom, imagePosX, imagePosY };
       const url = editingId ? `/api/gallery/${editingId}` : '/api/gallery';
       const method = editingId ? 'PUT' : 'POST';
 
@@ -199,7 +211,16 @@ export default function AdminGalleryPage() {
                 className="bg-white rounded-3xl border border-[#F2D7D0] shadow-card overflow-hidden flex flex-col"
               >
                 <div className="relative w-full aspect-square bg-[#FDF7F6]">
-                  <Image src={item.imageUrl} alt={item.caption || item.eventType} fill className="object-cover" />
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.caption || item.eventType}
+                    fill
+                    className="object-cover"
+                    style={{
+                      objectPosition: `${item.imagePosX ?? 50}% ${item.imagePosY ?? 50}%`,
+                      transform: `scale(${item.imageZoom ?? 1})`,
+                    }}
+                  />
                   <span
                     className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       item.active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
@@ -259,8 +280,81 @@ export default function AdminGalleryPage() {
                   Foto *
                 </label>
                 {imageUrl && (
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-2 bg-[#FDF7F6]">
-                    <Image src={imageUrl} alt="Pré-visualização" fill className="object-cover" />
+                  <div className="relative w-full max-w-[220px] mx-auto aspect-square rounded-xl overflow-hidden mb-2 bg-[#FDF7F6] border border-[#F2D7D0]">
+                    <Image
+                      key={imageUrl}
+                      src={imageUrl}
+                      alt="Pré-visualização"
+                      fill
+                      className="object-cover"
+                      style={{
+                        objectPosition: `${imagePosX}% ${imagePosY}%`,
+                        transform: `scale(${imageZoom})`,
+                      }}
+                    />
+                  </div>
+                )}
+                {imageUrl && (
+                  <div className="space-y-3 bg-[#FAF6F4] p-3 rounded-xl border border-[#F2D7D0] mb-2">
+                    <p className="text-[11px] font-bold text-[#4A231A]">Ajustar enquadramento</p>
+                    <div>
+                      <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                        <span>Zoom</span>
+                        <span>{Math.round(imageZoom * 100)}%</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="2.5"
+                        step="0.05"
+                        value={imageZoom}
+                        onChange={(e) => setImageZoom(parseFloat(e.target.value))}
+                        className="w-full accent-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                        <span>Posição Horizontal</span>
+                        <span>{Math.round(imagePosX)}%</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={imagePosX}
+                        onChange={(e) => setImagePosX(parseFloat(e.target.value))}
+                        className="w-full accent-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex justify-between text-[10px] font-bold text-[#A75644] uppercase mb-1">
+                        <span>Posição Vertical</span>
+                        <span>{Math.round(imagePosY)}%</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={imagePosY}
+                        onChange={(e) => setImagePosY(parseFloat(e.target.value))}
+                        className="w-full accent-[#C27360]"
+                      />
+                    </div>
+                    {(imageZoom !== 1 || imagePosX !== 50 || imagePosY !== 50) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageZoom(1);
+                          setImagePosX(50);
+                          setImagePosY(50);
+                        }}
+                        className="text-[11px] font-semibold text-[#874132] hover:underline"
+                      >
+                        Restaurar enquadramento padrão
+                      </button>
+                    )}
                   </div>
                 )}
                 <label className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-dashed border-[#F2D7D0] text-sm text-[#874132] cursor-pointer hover:bg-[#FDF7F6] transition-colors">

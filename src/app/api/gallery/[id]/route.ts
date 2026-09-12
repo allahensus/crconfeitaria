@@ -13,7 +13,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { imageUrl, caption, eventType, order, active } = body;
+    const { imageUrl, caption, eventType, order, active, imageZoom, imagePosX, imagePosY } = body;
 
     const galleryItem = await db.galleryItem.update({
       where: { id },
@@ -23,6 +23,9 @@ export async function PUT(
         eventType,
         order: order !== undefined ? parseInt(order) : undefined,
         active: active !== undefined ? Boolean(active) : undefined,
+        imageZoom: imageZoom !== undefined ? parseFloat(imageZoom) : undefined,
+        imagePosX: imagePosX !== undefined ? parseFloat(imagePosX) : undefined,
+        imagePosY: imagePosY !== undefined ? parseFloat(imagePosY) : undefined,
       },
     });
 

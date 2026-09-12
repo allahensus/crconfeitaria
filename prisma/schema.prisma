@@ -302,6 +302,9 @@ model GalleryItem {
   imageUrl    String
   caption     String?
   eventType   String
+  imageZoom   Float    @default(1) // 1-2.5, scale applied on top of the cover crop
+  imagePosX   Float    @default(50) // 0-100, object-position X for the cover crop
+  imagePosY   Float    @default(50) // 0-100, object-position Y for the cover crop
   order       Int      @default(0)
   active      Boolean  @default(true)
   organizationId String

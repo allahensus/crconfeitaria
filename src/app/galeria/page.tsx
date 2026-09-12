@@ -94,14 +94,20 @@ export default function GalleryPage() {
                 onClick={() => setLightboxItem(item)}
                 className="block w-full break-inside-avoid rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-card bg-white group"
               >
-                <div className="relative w-full">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.caption || item.eventType}
-                    width={600}
-                    height={600}
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                <div className="relative w-full overflow-hidden">
+                  <div className="group-hover:scale-105 transition-transform duration-300">
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.caption || item.eventType}
+                      width={600}
+                      height={600}
+                      className="w-full h-auto object-cover"
+                      style={{
+                        objectPosition: `${item.imagePosX ?? 50}% ${item.imagePosY ?? 50}%`,
+                        transform: `scale(${item.imageZoom ?? 1})`,
+                      }}
+                    />
+                  </div>
                 </div>
               </button>
             ))}
