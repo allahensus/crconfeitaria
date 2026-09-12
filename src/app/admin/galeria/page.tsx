@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Images, Plus, Edit2, Trash2, X, Check, Upload, GripVertical } from 'lucide-react';
+import { Images, Plus, Edit2, Trash2, X, Check, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -234,6 +234,18 @@ export default function AdminGalleryPage() {
     persistOrder(withUpdatedOrder);
   };
 
+  // Arrastar (drag-and-drop) só funciona com mouse -- HTML5 DnD não dispara em
+  // toque na maioria dos navegadores mobile. Estes botões cobrem celular.
+  const moveItem = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const reordered = [...items];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    const withUpdatedOrder = reordered.map((item, idx) => ({ ...item, order: idx }));
+    setItems(withUpdatedOrder);
+    persistOrder(withUpdatedOrder);
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
@@ -246,7 +258,8 @@ export default function AdminGalleryPage() {
             </h1>
             <p className="text-xs md:text-sm text-[#645451]">
               Fotos de bolos e doces já entregues, exibidas na vitrine pública em /galeria.
-              Arraste pelo <GripVertical className="w-3 h-3 inline -mt-0.5" /> para reordenar.
+              Reordene arrastando pelo <GripVertical className="w-3 h-3 inline -mt-0.5" /> (computador)
+              ou pelas setas <ChevronUp className="w-3 h-3 inline -mt-0.5" />/<ChevronDown className="w-3 h-3 inline -mt-0.5" /> (celular).
               {reordering && ' Salvando nova ordem...'}
             </p>
           </div>
@@ -349,6 +362,24 @@ export default function AdminGalleryPage() {
                   )}
 
                   <div className="flex items-center gap-2 pt-2 border-t border-[#F2D7D0]/60 mt-auto">
+                    <div className="flex flex-col rounded-lg border border-[#F2D7D0] overflow-hidden">
+                      <button
+                        onClick={() => moveItem(index, -1)}
+                        disabled={index === 0}
+                        title="Mover para cima"
+                        className="p-1 hover:bg-[#FDF7F6] text-[#4A231A] disabled:opacity-30 disabled:hover:bg-white"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => moveItem(index, 1)}
+                        disabled={index === items.length - 1}
+                        title="Mover para baixo"
+                        className="p-1 hover:bg-[#FDF7F6] text-[#4A231A] disabled:opacity-30 disabled:hover:bg-white border-t border-[#F2D7D0]"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <button
                       onClick={() => handleOpenEdit(item)}
                       className="flex-1 p-2 rounded-lg bg-white border border-[#F2D7D0] text-[#4A231A] hover:bg-[#FDF7F6] flex items-center justify-center gap-1.5 text-xs font-semibold"
