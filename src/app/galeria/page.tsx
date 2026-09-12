@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Images, X, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, Images, X, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function GalleryPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('all');
-  const [lightboxItem, setLightboxItem] = useState<any>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/gallery')
@@ -28,6 +28,29 @@ export default function GalleryPage() {
 
   const filteredItems =
     selectedType === 'all' ? items : items.filter((i) => i.eventType === selectedType);
+
+  const lightboxItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
+
+  const showPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex - 1 + filteredItems.length) % filteredItems.length);
+  };
+  const showNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex + 1) % filteredItems.length);
+  };
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') showPrev();
+      if (e.key === 'ArrowRight') showNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightboxIndex, filteredItems.length]);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] py-10 px-4">
@@ -88,10 +111,10 @@ export default function GalleryPage() {
           </div>
         ) : (
           <div className="columns-2 sm:columns-3 gap-4 space-y-4">
-            {filteredItems.map((item) => (
+            {filteredItems.map((item, index) => (
               <button
                 key={item.id}
-                onClick={() => setLightboxItem(item)}
+                onClick={() => setLightboxIndex(index)}
                 className="block w-full break-inside-avoid rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-card bg-white group"
               >
                 <div className="relative w-full overflow-hidden">
@@ -115,27 +138,61 @@ export default function GalleryPage() {
         )}
       </div>
 
-      {lightboxItem && (
+      {lightboxItem && lightboxIndex !== null && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
-          onClick={() => setLightboxItem(null)}
+          onClick={() => setLightboxIndex(null)}
         >
           <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={() => setLightboxItem(null)}
+              onClick={() => setLightboxIndex(null)}
               className="absolute -top-10 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
               aria-label="Fechar"
             >
               <X className="w-5 h-5" />
             </button>
+
+            {filteredItems.length > 1 && (
+              <span className="absolute -top-10 left-0 text-xs font-semibold text-white/80">
+                {lightboxIndex + 1} / {filteredItems.length}
+              </span>
+            )}
+
             <div className="relative w-full aspect-square sm:aspect-video rounded-2xl overflow-hidden">
               <Image
+                key={lightboxItem.id}
                 src={lightboxItem.imageUrl}
                 alt={lightboxItem.caption || lightboxItem.eventType}
                 fill
                 className="object-contain bg-black"
               />
+
+              {filteredItems.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showPrev();
+                    }}
+                    aria-label="Foto anterior"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showNext();
+                    }}
+                    aria-label="Próxima foto"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </>
+              )}
             </div>
+
             {(lightboxItem.caption || lightboxItem.eventType) && (
               <div className="bg-white rounded-b-2xl p-4">
                 {lightboxItem.eventType && (
