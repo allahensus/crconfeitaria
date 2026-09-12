@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Images, Plus, Edit2, Trash2, X, Check, Upload } from 'lucide-react';
@@ -18,6 +18,11 @@ export default function AdminGalleryPage() {
   const [eventType, setEventType] = useState('');
   const [order, setOrder] = useState(0);
   const [active, setActive] = useState(true);
+
+  const eventTypeOptions = useMemo(
+    () => Array.from(new Set(items.map((i) => i.eventType).filter(Boolean))).sort(),
+    [items]
+  );
 
   const loadData = async () => {
     try {
@@ -287,11 +292,35 @@ export default function AdminGalleryPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Aniversário, Casamento, Chá de Bebê..."
+                  list="gallery-event-type-options"
+                  placeholder="Ex: Bolo, Biscoitos, Aniversário..."
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
                   className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
                 />
+                <datalist id="gallery-event-type-options">
+                  {eventTypeOptions.map((type) => (
+                    <option key={type} value={type} />
+                  ))}
+                </datalist>
+                {eventTypeOptions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {eventTypeOptions.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setEventType(type)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                          eventType === type
+                            ? 'bg-[#C27360] border-[#C27360] text-white'
+                            : 'bg-white border-[#F2D7D0] text-[#874132] hover:bg-[#FDF7F6]'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
