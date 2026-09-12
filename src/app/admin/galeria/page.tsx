@@ -16,6 +16,7 @@ export default function AdminGalleryPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [caption, setCaption] = useState('');
   const [eventType, setEventType] = useState('');
+  const [creatingNewEventType, setCreatingNewEventType] = useState(false);
   const [order, setOrder] = useState(0);
   const [active, setActive] = useState(true);
 
@@ -45,6 +46,7 @@ export default function AdminGalleryPage() {
     setImageUrl('');
     setCaption('');
     setEventType('');
+    setCreatingNewEventType(false);
     setOrder(0);
     setActive(true);
     setUploadMsg('');
@@ -56,6 +58,7 @@ export default function AdminGalleryPage() {
     setImageUrl(item.imageUrl);
     setCaption(item.caption || '');
     setEventType(item.eventType);
+    setCreatingNewEventType(false);
     setOrder(item.order);
     setActive(item.active);
     setUploadMsg('');
@@ -290,36 +293,52 @@ export default function AdminGalleryPage() {
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
                   Tipo de Evento
                 </label>
-                <input
-                  type="text"
-                  list="gallery-event-type-options"
-                  placeholder="Ex: Bolo, Biscoitos, Aniversário..."
-                  value={eventType}
-                  onChange={(e) => setEventType(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
-                />
-                <datalist id="gallery-event-type-options">
-                  {eventTypeOptions.map((type) => (
-                    <option key={type} value={type} />
-                  ))}
-                </datalist>
-                {eventTypeOptions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {eventTypeOptions.map((type) => (
+                {creatingNewEventType ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Nome da nova categoria (ex: Cupcakes)"
+                      value={eventType}
+                      onChange={(e) => setEventType(e.target.value)}
+                      className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                    />
+                    {eventTypeOptions.length > 0 && (
                       <button
-                        key={type}
                         type="button"
-                        onClick={() => setEventType(type)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                          eventType === type
-                            ? 'bg-[#C27360] border-[#C27360] text-white'
-                            : 'bg-white border-[#F2D7D0] text-[#874132] hover:bg-[#FDF7F6]'
-                        }`}
+                        onClick={() => {
+                          setCreatingNewEventType(false);
+                          setEventType('');
+                        }}
+                        className="px-3 rounded-xl border border-[#F2D7D0] text-xs font-semibold text-[#874132] hover:bg-[#FDF7F6] whitespace-nowrap"
                       >
-                        {type}
+                        Escolher existente
                       </button>
-                    ))}
+                    )}
                   </div>
+                ) : (
+                  <select
+                    value={eventType}
+                    onChange={(e) => {
+                      if (e.target.value === '__new__') {
+                        setCreatingNewEventType(true);
+                        setEventType('');
+                      } else {
+                        setEventType(e.target.value);
+                      }
+                    }}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none bg-white"
+                  >
+                    <option value="" disabled>
+                      Selecione uma categoria...
+                    </option>
+                    {eventTypeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                    <option value="__new__">+ Criar nova categoria...</option>
+                  </select>
                 )}
               </div>
 
