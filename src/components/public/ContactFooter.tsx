@@ -55,7 +55,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
             </h4>
             <ul className="space-y-2.5 text-xs text-[#E3E0DE]">
               <li><a href="#catalogo" className="hover:text-[var(--color-border)] transition-colors">Catálogo de Bolos</a></li>
-              <li><a href="#sabores" className="hover:text-[var(--color-border)] transition-colors">Cardápio de Recheios</a></li>
+              <li><a href="#historia" className="hover:text-[var(--color-border)] transition-colors">Nossa História</a></li>
               <li><a href="#depoimentos" className="hover:text-[var(--color-border)] transition-colors">Avaliações de Clientes</a></li>
               <li><Link href="/avaliar" className="hover:text-[var(--color-border)] transition-colors">Deixar uma Avaliação</Link></li>
               <li><a href="#contato" className="hover:text-[var(--color-border)] transition-colors">Contato & Localização</a></li>

@@ -7,10 +7,10 @@ import { IcingDivider } from '@/components/public/IcingDivider';
 import { CategoryFilter } from '@/components/public/CategoryFilter';
 import { ProductCard } from '@/components/public/ProductCard';
 import { BudgetCalculatorModal } from '@/components/public/BudgetCalculatorModal';
+import { OurStory } from '@/components/public/OurStory';
 import { Testimonials } from '@/components/public/Testimonials';
 import { ContactFooter } from '@/components/public/ContactFooter';
 import { WhatsAppFloatingButton } from '@/components/public/WhatsAppFloatingButton';
-import { Sparkles, Cake, Star, Heart, CheckCircle2 } from 'lucide-react';
 
 export default function PublicPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -139,58 +139,8 @@ export default function PublicPage() {
         )}
       </section>
 
-      {/* 20 Fillings Menu Section */}
-      <section id="sabores" className="py-16 bg-gradient-to-b from-[var(--color-surface-alt)] to-[var(--color-bg)] border-y border-[var(--color-border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs uppercase tracking-widest text-[var(--color-accent-strong)] font-bold">
-              Qualidade Incomparável
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-heading)] mt-2">
-              Cardápio de Recheios Especiais
-            </h2>
-            <p className="text-sm text-[var(--color-text-soft)] mt-2">
-              Trabalhamos com os melhores recheios artesanais cremosos e nobres para o seu bolo.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {fillings.map((f) => (
-              <div
-                key={f.id}
-                className="bg-white p-4 rounded-2xl border border-[var(--color-border)] shadow-sm hover:border-[var(--color-accent)] hover:shadow-md transition-all flex items-center gap-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-[var(--color-accent)]" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xs text-[var(--color-heading)]">{f.name}</h3>
-                  <span className="text-[10px] text-[var(--color-accent-strong)] font-medium uppercase">{f.category}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Warm & Professional Transparency Note */}
-          <div className="mt-8 max-w-2xl mx-auto p-4 bg-white rounded-2xl border border-[var(--color-border)] shadow-sm text-center space-y-1">
-            <h3 className="text-xs uppercase font-bold text-[var(--color-accent-strong)] tracking-wider">
-              Transparência & Carinho com Nossos Clientes
-            </h3>
-            <p className="text-xs text-[var(--color-text-soft)] leading-relaxed">
-              Os preços apresentados no catálogo referem-se à nossa base artesanal clássica. Recheios especiais que levam <strong>frutas frescas (morango, abacaxi), nozes praliné, bombons finos ou Nutella pura</strong> passam por um pequeno ajuste de valor para garantirmos ingredientes frescos e a máxima qualidade no seu evento.
-            </p>
-          </div>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => handleOpenModal()}
-              className="px-8 py-3 rounded-full bg-[var(--color-accent-strong)] text-white font-bold text-sm shadow-blush hover:bg-[var(--color-accent-deep)] transition-all"
-            >
-              Montar Bolo com Seu Recheio Favorito
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* Our Story */}
+      <OurStory onOpenBudgetModal={() => handleOpenModal()} settings={settings} />
 
       {/* Testimonials */}
       <Testimonials testimonials={testimonials} />

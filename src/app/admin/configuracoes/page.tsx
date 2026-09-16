@@ -30,6 +30,14 @@ export default function AdminSettingsPage() {
   const [heroBiscoitos, setHeroBiscoitos] = useState<HeroPhotoState>({ image: '/images/hero-biscoitos-destaque.jpg', zoom: 1, posX: 50, posY: 50 });
   const [heroBentocake, setHeroBentocake] = useState<HeroPhotoState>({ image: '/images/hero-bentocake-destaque.jpg', zoom: 1, posX: 50, posY: 50 });
 
+  const [aboutPhoto, setAboutPhoto] = useState<HeroPhotoState>({ image: '/images/logo_cinthia.png', zoom: 1, posX: 50, posY: 20 });
+  const [aboutRoleTitle, setAboutRoleTitle] = useState('Pâtisserie');
+  const [aboutRoleSubtitle, setAboutRoleSubtitle] = useState('Técnica e ingredientes nobres');
+  const [aboutHeading, setAboutHeading] = useState('Feito com afeto para celebrar a');
+  const [aboutHeadingAccent, setAboutHeadingAccent] = useState('doçura da vida');
+  const [aboutParagraph1, setAboutParagraph1] = useState('');
+  const [aboutParagraph2, setAboutParagraph2] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [savedMsg, setSavedMsg] = useState(false);
 
@@ -68,6 +76,26 @@ export default function AdminSettingsPage() {
             posX: data.hero_bentocake_pos_x !== undefined ? parseFloat(data.hero_bentocake_pos_x) : 50,
             posY: data.hero_bentocake_pos_y !== undefined ? parseFloat(data.hero_bentocake_pos_y) : 50,
           });
+
+          const resolvedBakeryName = data.bakery_name || 'Cinthia Rodrigues';
+          setAboutPhoto({
+            image: data.about_photo_image || '/images/logo_cinthia.png',
+            zoom: parseFloat(data.about_photo_zoom || '1') || 1,
+            posX: data.about_photo_pos_x !== undefined ? parseFloat(data.about_photo_pos_x) : 50,
+            posY: data.about_photo_pos_y !== undefined ? parseFloat(data.about_photo_pos_y) : 20,
+          });
+          setAboutRoleTitle(data.about_role_title || 'Pâtisserie');
+          setAboutRoleSubtitle(data.about_role_subtitle || 'Técnica e ingredientes nobres');
+          setAboutHeading(data.about_heading || 'Feito com afeto para celebrar a');
+          setAboutHeadingAccent(data.about_heading_accent || 'doçura da vida');
+          setAboutParagraph1(
+            data.about_paragraph_1 ||
+              `Na ${resolvedBakeryName} Confeitaria Artesanal, cada receita nasce da crença de que uma festa de verdade merece sabor de lembrança boa de infância, somado à sofisticação da alta pâtisserie.`
+          );
+          setAboutParagraph2(
+            data.about_paragraph_2 ||
+              'Não usamos misturas prontas, estabilizantes industriais ou gordura vegetal. Nossas massas amanteigadas são assadas lentamente para obter textura macia e fofa, combinadas com reduções caseiras de frutas naturais, brigadeiros de panela gourmet e chocolates nobres.'
+          );
         }
       } catch (err) {
         console.error(err);
@@ -108,6 +136,16 @@ export default function AdminSettingsPage() {
           hero_bentocake_zoom: String(heroBentocake.zoom),
           hero_bentocake_pos_x: String(heroBentocake.posX),
           hero_bentocake_pos_y: String(heroBentocake.posY),
+          about_photo_image: aboutPhoto.image,
+          about_photo_zoom: String(aboutPhoto.zoom),
+          about_photo_pos_x: String(aboutPhoto.posX),
+          about_photo_pos_y: String(aboutPhoto.posY),
+          about_role_title: aboutRoleTitle,
+          about_role_subtitle: aboutRoleSubtitle,
+          about_heading: aboutHeading,
+          about_heading_accent: aboutHeadingAccent,
+          about_paragraph_1: aboutParagraph1,
+          about_paragraph_2: aboutParagraph2,
         }),
       });
 
@@ -372,6 +410,96 @@ export default function AdminSettingsPage() {
                 photo={heroBentocake}
                 onChange={setHeroBentocake}
               />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-[#F2D7D0] p-6 md:p-8 shadow-card">
+            <div className="mb-5">
+              <h2 className="font-serif text-lg font-bold text-[#4A231A]">Nossa História</h2>
+              <p className="text-xs text-[#645451]">
+                Seção "Nossa História & Propósito" da página inicial. Envie a foto da confeiteira e ajuste o texto se quiser — já vem preenchido com um texto padrão.
+              </p>
+            </div>
+            <div className="space-y-6">
+              <HeroPhotoEditor
+                label="Foto da Confeiteira"
+                aspectClass="aspect-[4/5]"
+                photo={aboutPhoto}
+                onChange={setAboutPhoto}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Selo — Especialidade
+                  </label>
+                  <input
+                    type="text"
+                    value={aboutRoleTitle}
+                    onChange={(e) => setAboutRoleTitle(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Selo — Descrição Curta
+                  </label>
+                  <input
+                    type="text"
+                    value={aboutRoleSubtitle}
+                    onChange={(e) => setAboutRoleSubtitle(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Título — Linha Principal
+                  </label>
+                  <input
+                    type="text"
+                    value={aboutHeading}
+                    onChange={(e) => setAboutHeading(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                    Título — Destaque (itálico)
+                  </label>
+                  <input
+                    type="text"
+                    value={aboutHeadingAccent}
+                    onChange={(e) => setAboutHeadingAccent(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  Primeiro Parágrafo
+                </label>
+                <textarea
+                  rows={3}
+                  value={aboutParagraph1}
+                  onChange={(e) => setAboutParagraph1(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none resize-y"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A75644] mb-1">
+                  Segundo Parágrafo
+                </label>
+                <textarea
+                  rows={3}
+                  value={aboutParagraph2}
+                  onChange={(e) => setAboutParagraph2(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[#F2D7D0] text-sm text-[#4A231A] focus:ring-2 focus:ring-[#C27360] outline-none resize-y"
+                />
+              </div>
             </div>
           </div>
 

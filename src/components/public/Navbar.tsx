@@ -50,8 +50,8 @@ export function Navbar({
             <a href="#catalogo" className="hover:text-[var(--color-accent)] transition-colors">
               Catálogo
             </a>
-            <a href="#sabores" className="hover:text-[var(--color-accent)] transition-colors">
-              Cardápio de Recheios
+            <a href="#historia" className="hover:text-[var(--color-accent)] transition-colors">
+              Nossa História
             </a>
             <a href="#depoimentos" className="hover:text-[var(--color-accent)] transition-colors">
               Avaliações
@@ -112,11 +112,11 @@ export function Navbar({
               <Cake className="w-4 h-4 text-[var(--color-accent)]" /> Nosso Catálogo
             </a>
             <a
-              href="#sabores"
+              href="#historia"
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 rounded-lg hover:bg-[var(--color-surface-alt)] text-base flex items-center gap-2.5"
             >
-              <HeartIcon className="w-4 h-4 text-[var(--color-accent)]" /> Cardápio de Recheios
+              <HeartIcon className="w-4 h-4 text-[var(--color-accent)]" /> Nossa História
             </a>
             <a
               href="#depoimentos"
