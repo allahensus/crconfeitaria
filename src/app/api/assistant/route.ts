@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       // generation, which should carry a materially higher free quota than
       // the newest/most-contended "flash" model.
       model: google('gemini-3.5-flash-lite'),
-      instructions: buildAssistantInstructions(bakeryName, depositPercentage),
+      instructions: buildAssistantInstructions(bakeryName, depositPercentage, minLeadDays),
       messages: await convertToModelMessages(recentMessages),
       stopWhen: isStepCount(3),
       maxOutputTokens: 1000,

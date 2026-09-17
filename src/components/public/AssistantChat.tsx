@@ -170,14 +170,14 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
               <ChevronUp className={`w-3.5 h-3.5 transition-transform ${showSuggestions ? '' : 'rotate-180'}`} />
             </button>
             {showSuggestions && (
-              <div className="flex gap-2 overflow-x-auto px-4 pb-3 -mt-1">
+              <div className="flex flex-wrap gap-2 px-4 pb-3 -mt-1 max-h-32 overflow-y-auto">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => send(s)}
                     disabled={isBusy}
-                    className="shrink-0 whitespace-nowrap text-left text-xs px-3 py-2 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors disabled:opacity-50"
+                    className="text-left text-xs px-3 py-2 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors disabled:opacity-50"
                   >
                     {s}
                   </button>
