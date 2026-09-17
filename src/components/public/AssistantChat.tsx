@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type InferUITools, type UIMessage } from 'ai';
-import { Sparkles, X, Send } from 'lucide-react';
+import { MessageCircleQuestion, X, Send } from 'lucide-react';
 import { formatWhatsappForUrl } from '@/lib/utils';
 import type { AssistantToolSet } from '@/lib/assistant-tools';
 
@@ -20,6 +20,9 @@ const SUGGESTIONS = [
   'Quais sabores vocês têm?',
   'Qual o prazo mínimo para encomendar?',
   'Quanto custa um bolo para 20 pessoas?',
+  'Vocês fazem entrega?',
+  'Como funciona o pagamento/sinal?',
+  'Quais sabores têm acréscimo no preço?',
 ];
 
 export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantChatProps) {
@@ -51,14 +54,14 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
         aria-label="Falar com a assistente virtual"
         className="fixed bottom-24 right-6 z-40 p-4 rounded-full bg-[var(--color-accent-strong)] hover:bg-[var(--color-accent-deep)] text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center"
       >
-        {open ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+        {open ? <X className="w-6 h-6" /> : <MessageCircleQuestion className="w-6 h-6" />}
       </button>
 
       {open && (
         <div className="fixed z-40 bottom-0 right-0 left-0 sm:left-auto sm:bottom-40 sm:right-6 w-full sm:w-96 h-[80vh] sm:h-[min(520px,calc(100vh-11rem))] bg-white sm:rounded-3xl shadow-2xl border border-[var(--color-border)] flex flex-col overflow-hidden">
           <div className="px-4 py-3 bg-[var(--color-accent-strong)] text-white flex items-center justify-between">
             <span className="font-serif font-bold text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> Assistente Virtual
+              <MessageCircleQuestion className="w-4 h-4" /> Assistente Virtual
             </span>
             <button type="button" onClick={() => setOpen(false)} aria-label="Fechar chat">
               <X className="w-5 h-5" />

@@ -49,12 +49,13 @@ export async function POST(req: Request) {
     const bakeryName = settingsMap.bakery_name || 'Cinthia Rodrigues';
     const whatsappNumber = settingsMap.whatsapp_number || '5512997594697';
     const minLeadDays = settingsMap.min_lead_days ? parseInt(settingsMap.min_lead_days) : 3;
+    const depositPercentage = settingsMap.deposit_percentage ? parseInt(settingsMap.deposit_percentage) : 50;
 
     const tools = createAssistantTools(db, { whatsappNumber, minLeadDays });
 
     const result = streamText({
       model: google('gemini-3.8-flash'),
-      instructions: buildAssistantInstructions(bakeryName),
+      instructions: buildAssistantInstructions(bakeryName, depositPercentage),
       messages: await convertToModelMessages(recentMessages),
       stopWhen: isStepCount(3),
       maxOutputTokens: 1000,
