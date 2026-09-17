@@ -56,9 +56,13 @@ export async function POST(req: Request) {
     const result = streamText({
       // gemini-3.8-flash's free tier is capped at 5 requests/minute in
       // practice (confirmed via production AI_APICallError logs) -- far too
-      // low for even light real traffic. gemini-2.5-flash-lite is an
-      // established (non-preview) model with a much more usable free quota.
-      model: google('gemini-2.5-flash-lite'),
+      // low for even light real traffic. gemini-2.5-flash-lite turned out to
+      // be discontinued for new API keys (404 "no longer available to new
+      // users", also confirmed via production logs) -- Google's own error
+      // message pointed at this replacement, the "lite" tier of the current
+      // generation, which should carry a materially higher free quota than
+      // the newest/most-contended "flash" model.
+      model: google('gemini-3.5-flash-lite'),
       instructions: buildAssistantInstructions(bakeryName, depositPercentage),
       messages: await convertToModelMessages(recentMessages),
       stopWhen: isStepCount(3),
