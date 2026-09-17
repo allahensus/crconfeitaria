@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type InferUITools, type UIMessage } from 'ai';
-import { MessageCircleQuestion, X, Send } from 'lucide-react';
+import { MessageCircleQuestion, X, Send, ChevronUp } from 'lucide-react';
 import { formatWhatsappForUrl } from '@/lib/utils';
 import type { AssistantToolSet } from '@/lib/assistant-tools';
 
@@ -28,6 +28,7 @@ const SUGGESTIONS = [
 export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantChatProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
   const { messages, sendMessage, status, error } = useChat<AssistantUIMessage>({
     transport: new DefaultChatTransport({ api: '/api/assistant' }),
@@ -70,24 +71,10 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[var(--color-bg)]">
             {messages.length === 0 && (
-              <div className="space-y-3">
-                <p className="text-xs text-[var(--color-text-soft)]">
-                  Oi! Eu sou a assistente virtual da confeitaria. Posso te contar sobre sabores, preços e prazos.
-                  Não sou a confeiteira, mas te ajudo a chegar até ela com tudo pronto 🍰
-                </p>
-                <div className="flex flex-col gap-2">
-                  {SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => sendMessage({ text: s })}
-                      className="text-left text-xs px-3 py-2 rounded-xl bg-white border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs text-[var(--color-text-soft)]">
+                Oi! Eu sou a assistente virtual da confeitaria. Posso te contar sobre sabores, preços e prazos.
+                Não sou a confeiteira, mas te ajudo a chegar até ela com tudo pronto 🍰
+              </p>
             )}
 
             {messages.map((message) => (
@@ -140,6 +127,32 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
                 >
                   Falar no WhatsApp
                 </a>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[var(--color-border)] bg-white">
+            <button
+              type="button"
+              onClick={() => setShowSuggestions((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-[var(--color-accent-strong)]"
+            >
+              <span>Perguntas frequentes</span>
+              <ChevronUp className={`w-3.5 h-3.5 transition-transform ${showSuggestions ? '' : 'rotate-180'}`} />
+            </button>
+            {showSuggestions && (
+              <div className="flex gap-2 overflow-x-auto px-4 pb-3 -mt-1">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => sendMessage({ text: s })}
+                    disabled={isBusy}
+                    className="shrink-0 whitespace-nowrap text-left text-xs px-3 py-2 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors disabled:opacity-50"
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             )}
           </div>
