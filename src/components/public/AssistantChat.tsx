@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type InferUITools, type UIMessage } from 'ai';
 import { MessageCircleQuestion, X, Send, ChevronUp } from 'lucide-react';
@@ -30,20 +30,49 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(true);
 
-  const { messages, sendMessage, status, error } = useChat<AssistantUIMessage>({
+  const { messages, sendMessage, status, error, stop } = useChat<AssistantUIMessage>({
     transport: new DefaultChatTransport({ api: '/api/assistant' }),
   });
+
+  // Gemini's free tier occasionally fails mid-stream (quota, transient 503)
+  // in a way that never reaches useChat's `error` state, leaving `status`
+  // stuck at "streaming" forever -- the chat just shows "digitando..."
+  // indefinitely. This watchdog forces a terminal state after 20s so the
+  // fallback (below) always has a way to show up.
+  const [stalled, setStalled] = useState(false);
+  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (status === 'submitted' || status === 'streaming') {
+      stallTimerRef.current = setTimeout(() => {
+        setStalled(true);
+        stop();
+      }, 20000);
+    } else if (stallTimerRef.current) {
+      clearTimeout(stallTimerRef.current);
+      stallTimerRef.current = null;
+    }
+    return () => {
+      if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
+    };
+  }, [status, stop]);
 
   const fallbackWhatsappUrl = `https://wa.me/${formatWhatsappForUrl(whatsappNumber)}?text=${encodeURIComponent(
     'Olá! Gostaria de tirar dúvidas sobre os bolos e encomendar um orçamento!'
   )}`;
 
   const isBusy = status === 'submitted' || status === 'streaming';
+  const showFallback = Boolean(error) || stalled;
+
+  const send = (text: string) => {
+    setStalled(false);
+    sendMessage({ text });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isBusy) return;
-    sendMessage({ text: input });
+    send(input);
     setInput('');
   };
 
@@ -110,13 +139,13 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
               </div>
             ))}
 
-            {isBusy && (
+            {isBusy && !showFallback && (
               <div className="max-w-[60%] rounded-2xl px-3 py-2 text-xs bg-white border border-[var(--color-border)] text-[var(--color-text-soft)]">
                 digitando...
               </div>
             )}
 
-            {error && (
+            {showFallback && (
               <div className="rounded-2xl px-3 py-2 text-xs bg-white border border-[var(--color-border)] text-[var(--color-heading)] space-y-2">
                 <p>Não consegui responder agora. Fala direto com a gente no WhatsApp:</p>
                 <a
@@ -146,7 +175,7 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
                   <button
                     key={s}
                     type="button"
-                    onClick={() => sendMessage({ text: s })}
+                    onClick={() => send(s)}
                     disabled={isBusy}
                     className="shrink-0 whitespace-nowrap text-left text-xs px-3 py-2 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors disabled:opacity-50"
                   >
