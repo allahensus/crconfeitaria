@@ -11,6 +11,7 @@ import { OurStory } from '@/components/public/OurStory';
 import { Testimonials } from '@/components/public/Testimonials';
 import { ContactFooter } from '@/components/public/ContactFooter';
 import { WhatsAppFloatingButton } from '@/components/public/WhatsAppFloatingButton';
+import { AssistantChat } from '@/components/public/AssistantChat';
 
 export default function PublicPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -151,6 +152,9 @@ export default function PublicPage() {
 
       {/* Floating WhatsApp Button */}
       <WhatsAppFloatingButton whatsappNumber={settings.whatsapp_number} />
+
+      {/* Floating AI Assistant */}
+      <AssistantChat whatsappNumber={settings.whatsapp_number} />
 
       {/* Interactive Budget Calculator Modal */}
       <BudgetCalculatorModal
