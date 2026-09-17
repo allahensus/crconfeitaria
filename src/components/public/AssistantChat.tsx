@@ -55,7 +55,7 @@ export function AssistantChat({ whatsappNumber = '5512997594697' }: AssistantCha
       </button>
 
       {open && (
-        <div className="fixed z-40 bottom-0 right-0 left-0 sm:left-auto sm:bottom-40 sm:right-6 w-full sm:w-96 h-[80vh] sm:h-[520px] bg-white sm:rounded-3xl shadow-2xl border border-[var(--color-border)] flex flex-col overflow-hidden">
+        <div className="fixed z-40 bottom-0 right-0 left-0 sm:left-auto sm:bottom-40 sm:right-6 w-full sm:w-96 h-[80vh] sm:h-[min(520px,calc(100vh-11rem))] bg-white sm:rounded-3xl shadow-2xl border border-[var(--color-border)] flex flex-col overflow-hidden">
           <div className="px-4 py-3 bg-[var(--color-accent-strong)] text-white flex items-center justify-between">
             <span className="font-serif font-bold text-sm flex items-center gap-2">
               <Sparkles className="w-4 h-4" /> Assistente Virtual

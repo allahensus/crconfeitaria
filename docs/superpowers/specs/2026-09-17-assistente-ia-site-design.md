@@ -159,3 +159,12 @@ de `settings.whatsapp_number`.
   Gateway é a evolução natural. Decisão já tomada pelo usuário: começar
   pelo Gemini free tier e revisitar isso só se o custo/tráfego real
   exigir.
+- A rota `/api/assistant` confia no array `messages` enviado pelo
+  cliente como se fosse o histórico real da conversa, sem
+  reverificação — um cliente pode forjar um turno anterior de
+  "assistant" ou o resultado de uma tool call, e o modelo vai tratar
+  isso como sua própria saída anterior. O impacto fica limitado à
+  própria conversa de quem faz a requisição (nada é persistido, nenhum
+  outro visitante é afetado); consertar isso de verdade custaria a
+  memória conversacional multi-turno, o que não vale a pena para esse
+  nível de risco. Aceito como está.

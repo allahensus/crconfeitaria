@@ -36,28 +36,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 });
   }
 
-  const db = getScopedPrisma(organization.id);
-  const settingsRows = await db.setting.findMany();
-  const settingsMap = Object.fromEntries(settingsRows.map((s) => [s.key, s.value]));
+  try {
+    // Cap history sent to the model -- DefaultChatTransport resends the
+    // full conversation every turn, so an unbounded history makes each
+    // request arbitrarily expensive.
+    const recentMessages = messages.slice(-20);
 
-  const bakeryName = settingsMap.bakery_name || 'Cinthia Rodrigues';
-  const whatsappNumber = settingsMap.whatsapp_number || '5512997594697';
-  const minLeadDays = settingsMap.min_lead_days ? parseInt(settingsMap.min_lead_days) : 3;
+    const db = getScopedPrisma(organization.id);
+    const settingsRows = await db.setting.findMany();
+    const settingsMap = Object.fromEntries(settingsRows.map((s) => [s.key, s.value]));
 
-  const tools = createAssistantTools(db, { whatsappNumber, minLeadDays });
+    const bakeryName = settingsMap.bakery_name || 'Cinthia Rodrigues';
+    const whatsappNumber = settingsMap.whatsapp_number || '5512997594697';
+    const minLeadDays = settingsMap.min_lead_days ? parseInt(settingsMap.min_lead_days) : 3;
 
-  const result = streamText({
-    model: google('gemini-3.8-flash'),
-    instructions: buildAssistantInstructions(bakeryName),
-    messages: await convertToModelMessages(messages),
-    stopWhen: isStepCount(5),
-    tools,
-  });
+    const tools = createAssistantTools(db, { whatsappNumber, minLeadDays });
 
-  return createUIMessageStreamResponse({
-    stream: toUIMessageStream({
-      stream: result.stream,
-      onError: () => 'Não consegui responder agora. Tente de novo em alguns instantes ou fale direto no WhatsApp.',
-    }),
-  });
+    const result = streamText({
+      model: google('gemini-3.8-flash'),
+      instructions: buildAssistantInstructions(bakeryName),
+      messages: await convertToModelMessages(recentMessages),
+      stopWhen: isStepCount(3),
+      maxOutputTokens: 1000,
+      tools,
+    });
+
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({
+        stream: result.stream,
+        onError: () => 'Não consegui responder agora. Tente de novo em alguns instantes ou fale direto no WhatsApp.',
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: 'Erro ao processar a mensagem.' }, { status: 500 });
+  }
 }

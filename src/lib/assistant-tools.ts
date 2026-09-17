@@ -25,6 +25,15 @@ export interface AssistantToolsConfig {
   minLeadDays: number;
 }
 
+// Brazil abolished DST nationally in 2019, so UTC-3 is a safe fixed offset --
+// no need for a timezone library just for this. Keeps this tool's notion of
+// "today" aligned with the visitor's browser (AvailabilityDatePicker.tsx),
+// since this route runs on Vercel in UTC.
+function nowInBrazil(): Date {
+  const utcNow = new Date();
+  return new Date(utcNow.getTime() - 3 * 60 * 60 * 1000);
+}
+
 export function buildAssistantInstructions(bakeryName: string): string {
   return `Você é o assistente virtual da confeitaria ${bakeryName}. Seu único objetivo é ajudar quem visita o site a entender o cardápio, os sabores disponíveis e os prazos de encomenda, usando APENAS os dados que as ferramentas te devolverem -- nunca invente preço, sabor ou disponibilidade de data.
 
@@ -92,7 +101,7 @@ export function createAssistantTools(db: AssistantDb, config: AssistantToolsConf
       execute: async ({ data }: { data: string }) => {
         const blockedRows = await db.blockedDate.findMany();
         const blockedDates = blockedRows.map((b) => b.date.toISOString().slice(0, 10));
-        const result = checkDateAvailability(data, blockedDates, config.minLeadDays);
+        const result = checkDateAvailability(data, blockedDates, config.minLeadDays, nowInBrazil());
         return {
           data,
           prazoMinimoDias: config.minLeadDays,
