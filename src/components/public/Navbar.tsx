@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock, Package, Images } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sparkles, PhoneCall, ShieldCheck, Cake, Heart as HeartIcon, Star, MapPin, Lock, Package, Images, MessageCircleQuestion } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBudgetModal: (product?: any) => void;
+  onOpenAssistant?: () => void;
   whatsappNumber?: string;
   brandName?: string;
   logoUrl?: string;
@@ -14,6 +15,7 @@ interface NavbarProps {
 
 export function Navbar({
   onOpenBudgetModal,
+  onOpenAssistant,
   whatsappNumber = '5512997594697',
   brandName = 'Cinthia Rodrigues',
   logoUrl = '/images/logo_cinthia.png',
@@ -72,6 +74,16 @@ export function Navbar({
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            {onOpenAssistant && (
+              <button
+                onClick={onOpenAssistant}
+                aria-label="Tirar dúvidas com a assistente virtual"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border)] text-[var(--color-accent-strong)] font-medium hover:bg-[var(--color-accent-soft)] transition-colors duration-200 text-sm"
+              >
+                <MessageCircleQuestion className="w-4 h-4" />
+                Tirar Dúvidas
+              </button>
+            )}
             <button
               onClick={() => onOpenBudgetModal()}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-strong)] text-white font-medium shadow-blush hover:shadow-lg hover:scale-105 transition-all duration-200 text-sm"
@@ -83,6 +95,15 @@ export function Navbar({
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
+            {onOpenAssistant && (
+              <button
+                onClick={onOpenAssistant}
+                aria-label="Tirar dúvidas com a assistente virtual"
+                className="p-2 rounded-full border border-[var(--color-border)] text-[var(--color-accent-strong)]"
+              >
+                <MessageCircleQuestion className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={() => onOpenBudgetModal()}
               className="px-3.5 py-1.5 rounded-full bg-[var(--color-accent-strong)] text-white text-xs font-semibold shadow-sm"
@@ -104,6 +125,18 @@ export function Navbar({
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-[var(--color-border)] px-4 pt-3 pb-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
           <nav className="flex flex-col gap-3 font-medium text-[#4A3531]">
+            {onOpenAssistant && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAssistant();
+                }}
+                className="px-3 py-2 rounded-lg hover:bg-[var(--color-surface-alt)] text-base flex items-center gap-2.5 text-left"
+              >
+                <MessageCircleQuestion className="w-4 h-4 text-[var(--color-accent)]" /> Tirar Dúvidas com a Assistente
+              </button>
+            )}
             <a
               href="#catalogo"
               onClick={() => setMobileMenuOpen(false)}

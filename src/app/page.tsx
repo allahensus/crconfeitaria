@@ -23,6 +23,7 @@ export default function PublicPage() {
   
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<any>(null);
   const [selectedVariationForModal, setSelectedVariationForModal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +86,7 @@ export default function PublicPage() {
       {/* Navbar */}
       <Navbar
         onOpenBudgetModal={() => handleOpenModal()}
+        onOpenAssistant={() => setIsAssistantOpen(true)}
         whatsappNumber={settings.whatsapp_number}
         brandName={settings.bakery_name}
         logoUrl={settings.logo_url}
@@ -153,8 +155,12 @@ export default function PublicPage() {
       {/* Floating WhatsApp Button */}
       <WhatsAppFloatingButton whatsappNumber={settings.whatsapp_number} />
 
-      {/* Floating AI Assistant */}
-      <AssistantChat whatsappNumber={settings.whatsapp_number} />
+      {/* AI Assistant Panel (opened from the navbar) */}
+      <AssistantChat
+        open={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        whatsappNumber={settings.whatsapp_number}
+      />
 
       {/* Interactive Budget Calculator Modal */}
       <BudgetCalculatorModal
