@@ -28,6 +28,9 @@ export async function POST(req: Request) {
   let messages: UIMessage[];
   try {
     const body = await req.json();
+    if (!Array.isArray(body.messages)) {
+      return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 });
+    }
     messages = body.messages;
   } catch {
     return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 });
