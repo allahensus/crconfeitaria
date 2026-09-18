@@ -28,6 +28,8 @@ Encomendas de bolos e doces para confeitarias artesanais normalmente acontecem i
 
 Projeto real, construído para a confeitaria da Cinthia Rodrigues e arquitetado como **multi-tenant** (cada confeitaria roda em seu próprio subdomínio, sobre a mesma base de código).
 
+📖 Para as decisões, desafios e o porquê de cada escolha ao longo do projeto, veja [`docs/HISTORIA_DO_PRODUTO.md`](docs/HISTORIA_DO_PRODUTO.md).
+
 ## Funcionalidades
 
 **Loja pública**
@@ -85,9 +87,15 @@ Projeto real, construído para a confeitaria da Cinthia Rodrigues e arquitetado 
 │   │   ├── coupons.ts             # Validação e aplicação de cupons de desconto
 │   │   └── pix.ts                  # Geração de cobrança Pix
 │   └── middleware.ts           # Rate limiting, defesa CSRF e roteamento por subdomínio
+├── tests/
+│   ├── lib/                    # Testes unitários, um arquivo por módulo de src/lib/
+│   └── integration/             # Testes de integração (ex: isolamento entre tenants)
 └── docs/
-    ├── PRD.md                 # Documento de requisitos do produto
-    └── superpowers/plans/      # Planos técnicos de features já entregues
+    ├── PRD.md                  # Documento de requisitos do produto
+    ├── HISTORIA_DO_PRODUTO.md  # A história do projeto: decisões, desafios e porquês
+    └── superpowers/
+        ├── specs/               # Design de cada feature antes de implementar
+        └── plans/                # Planos técnicos de features já entregues
 ```
 
 ## Rodando localmente

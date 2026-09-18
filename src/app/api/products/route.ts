@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         slug,
         categoryId,
         description,
-        mainImage: mainImage || '/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg',
+        mainImage: mainImage || '/images/og-social-share.jpg',
         imageFit: imageFit === 'cover' ? 'cover' : 'contain',
         imageZoom: imageZoom !== undefined ? parseFloat(imageZoom) : 1,
         imagePosX: imagePosX !== undefined ? parseFloat(imagePosX) : 50,

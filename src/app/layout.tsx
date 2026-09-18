@@ -51,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: shortTitle,
       description: socialDescription,
-      images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
+      images: ['/images/og-social-share.jpg'],
       url: siteUrl,
       locale: 'pt_BR',
       type: 'website',
@@ -60,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: shortTitle,
       description: socialDescription,
-      images: ['/cinthia/WhatsApp Image 2026-08-20 at 17.59.33.jpeg'],
+      images: ['/images/og-social-share.jpg'],
     },
   };
 }
