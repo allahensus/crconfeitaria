@@ -23,6 +23,7 @@ import {
   X,
   Images,
   UserCog,
+  Layers,
 } from 'lucide-react';
 
 export function AdminSidebar() {
@@ -53,6 +54,7 @@ export function AdminSidebar() {
     { label: 'Produtos', href: '/admin/produtos', icon: Cake, ownerOnly: false },
     { label: 'Insumos & Precificação', href: '/admin/insumos', icon: Sparkles, ownerOnly: false },
     { label: 'Categorias', href: '/admin/categorias', icon: FolderTree, ownerOnly: false },
+    { label: 'Recheios', href: '/admin/recheios', icon: Layers, ownerOnly: false },
     { label: 'Clientes (CRM)', href: '/admin/clientes', icon: Users, ownerOnly: false },
     { label: 'Financeiro', href: '/admin/financeiro', icon: DollarSign, ownerOnly: true },
     { label: 'Cupons', href: '/admin/cupons', icon: Tag, ownerOnly: true },

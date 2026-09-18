@@ -3,6 +3,10 @@ import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
 
+// Public storefront callers only ever need active fillings. The admin
+// management page needs inactive ones too (to review/reactivate them), so a
+// logged-in session widens this to every filling instead of adding a second
+// endpoint just for that.
 export async function GET() {
   try {
     const organization = await getCurrentOrganization();
@@ -10,9 +14,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Loja não encontrada.' }, { status: 404 });
     }
     const db = getScopedPrisma(organization.id);
+    const session = await getSession();
 
     const fillings = await db.fillingOption.findMany({
-      where: { active: true },
+      where: session ? undefined : { active: true },
       orderBy: { name: 'asc' }
     });
     return NextResponse.json(fillings);
