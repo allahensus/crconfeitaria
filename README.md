@@ -29,6 +29,7 @@ Encomendas de bolos e doces para confeitarias artesanais normalmente acontecem i
 Projeto real, construído para a confeitaria da Cinthia Rodrigues e arquitetado como **multi-tenant** (cada confeitaria roda em seu próprio subdomínio, sobre a mesma base de código).
 
 📖 Para as decisões, desafios e o porquê de cada escolha ao longo do projeto, veja [`docs/HISTORIA_DO_PRODUTO.md`](docs/HISTORIA_DO_PRODUTO.md).
+🏗️ Para a arquitetura com diagrama, veja [`docs/arquitetura.md`](docs/arquitetura.md); para as decisões de arquitetura registradas formalmente (ADRs), veja [`docs/adr/`](docs/adr/).
 
 ## Funcionalidades
 
@@ -102,9 +103,12 @@ Hoje a camada "ouro" é calculada sob demanda (a cada carregamento do Dashboard)
 ├── tests/
 │   ├── lib/                    # Testes unitários, um arquivo por módulo de src/lib/
 │   └── integration/             # Testes de integração (ex: isolamento entre tenants)
+├── CLAUDE.md                    # Contexto do projeto pra agentes de código
 └── docs/
     ├── PRD.md                  # Documento de requisitos do produto
     ├── HISTORIA_DO_PRODUTO.md  # A história do projeto: decisões, desafios e porquês
+    ├── arquitetura.md          # Diagrama e explicação da arquitetura, incluindo o assistente de IA
+    ├── adr/                     # Registro das decisões de arquitetura (ADRs)
     └── superpowers/
         ├── specs/               # Design de cada feature antes de implementar
         └── plans/                # Planos técnicos de features já entregues
