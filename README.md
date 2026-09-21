@@ -60,6 +60,18 @@ Projeto real, construído para a confeitaria da Cinthia Rodrigues e arquitetado 
 | Testes | Vitest |
 | Deploy | Vercel |
 
+## Arquitetura de dados (camadas bronze/prata/ouro)
+
+O sistema não usa um data warehouse separado -- é um banco transacional (Postgres via Prisma) servindo uma aplicação web, não um pipeline analítico com múltiplas fontes. Mas o raciocínio por trás da arquitetura em camadas (medalhão) já aparece de forma natural em como os dados fluem até virar decisão de negócio:
+
+| Camada | O que é aqui | Onde vive |
+|---|---|---|
+| **Bronze** (bruto) | Dado transacional exatamente como é gravado -- pedidos, orçamentos, pagamentos, recheios, insumos | Tabelas do `prisma/schema.prisma`, escopadas por `organizationId` |
+| **Prata** (limpo) | O mesmo dado, mas validado, tipado e com relacionamentos garantidos pelo ORM -- nunca um pedido sem cliente válido, nunca um recheio com preço negativo | Camada de acesso em `src/lib/` (`db.ts`, `stock.ts`, `coupons.ts`) e as rotas de API, que validam antes de gravar |
+| **Ouro** (agregado, pronto pra decisão) | Métricas de negócio prontas pra visualização: receita x despesa por mês, produtos mais vendidos, KPIs do painel | `src/app/admin/page.tsx` (`buildMonthlyRevenueExpense`, `buildTopProducts`) e os cards do Dashboard |
+
+Hoje a camada "ouro" é calculada sob demanda (a cada carregamento do Dashboard), não materializada em tabelas próprias -- suficiente para o volume atual. Se o negócio crescer a ponto de precisar de relatórios históricos pesados ou múltiplas lojas consolidadas, o próximo passo natural é materializar essas agregações em views ou tabelas de resumo, sem precisar de um data warehouse externo.
+
 ## Estrutura do projeto
 
 ```
