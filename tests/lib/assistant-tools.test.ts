@@ -145,12 +145,17 @@ describe('createAssistantTools', () => {
         variation: '20 a 25 fatias',
         quantity: 1,
         eventDate: '2027-03-10',
+        lgpdAccepted: true,
       },
       { toolCallId: 'test', messages: [] } as any
     );
 
     expect(result).toHaveProperty('numeroPedido');
     expect((result as any).numeroPedido).toMatch(/^ORC-\d{4}-0001$/);
+    // The wa.me link is what actually notifies the confeiteira -- the
+    // admin queue alone has no push notification, so this must be
+    // present for the customer to have any real way to flag the order.
+    expect((result as any).whatsappUrl).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
 
     const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
     expect(quote?.createdByAssistant).toBe(true);
@@ -170,6 +175,7 @@ describe('createAssistantTools', () => {
         productName: 'Bolo Que Não Existe',
         quantity: 1,
         eventDate: '2027-03-10',
+        lgpdAccepted: true,
       },
       { toolCallId: 'test', messages: [] } as any
     );
@@ -177,6 +183,33 @@ describe('createAssistantTools', () => {
     expect(result).toHaveProperty('erro');
     const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
     expect(quote).toBeNull();
+  });
+
+  it('fecharPedido refuses to create a pedido when lgpdAccepted is false', async () => {
+    const { org } = await makeOrgWithCatalog();
+    const db = getScopedPrisma(org.id);
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
+
+    const result = await tools.fecharPedido.execute!(
+      {
+        customerName: 'Maria Silva',
+        customerWhatsapp: '11999998888',
+        productName: 'Bolo de Chocolate',
+        variation: '20 a 25 fatias',
+        quantity: 1,
+        eventDate: '2027-03-10',
+        lgpdAccepted: false,
+      },
+      { toolCallId: 'test', messages: [] } as any
+    );
+
+    expect(result).toHaveProperty('erro');
+    // No Quote, and critically no Customer row either -- declining consent
+    // must not leave a "consented" record behind, or anywhere else.
+    const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
+    expect(quote).toBeNull();
+    const customer = await prisma.customer.findFirst({ where: { organizationId: org.id, whatsapp: '11999998888' } });
+    expect(customer).toBeNull();
   });
 
   it('fecharPedido returns a generic message instead of leaking an unexpected (non-validation) error', async () => {
@@ -203,6 +236,7 @@ describe('createAssistantTools', () => {
         variation: '20 a 25 fatias',
         quantity: 1,
         eventDate: '2027-03-10',
+        lgpdAccepted: true,
       },
       { toolCallId: 'test', messages: [] } as any
     );
