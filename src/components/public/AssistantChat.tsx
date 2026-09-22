@@ -30,9 +30,14 @@ const SUGGESTIONS = [
 export function AssistantChat({ open, onClose, whatsappNumber = '5512997594697' }: AssistantChatProps) {
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(true);
+  // One id per widget session, sent with every request so the server can
+  // group messages into a conversation for the admin's "Conversas da IA"
+  // log. Client-generated and untrusted for anything beyond that grouping
+  // (see ADR 0004) -- it never gates access to data.
+  const [conversationId] = useState(() => crypto.randomUUID());
 
   const { messages, sendMessage, status, error, stop } = useChat<AssistantUIMessage>({
-    transport: new DefaultChatTransport({ api: '/api/assistant' }),
+    transport: new DefaultChatTransport({ api: '/api/assistant', body: { conversationId } }),
   });
 
   // Gemini's free tier occasionally fails mid-stream (quota, transient 503)

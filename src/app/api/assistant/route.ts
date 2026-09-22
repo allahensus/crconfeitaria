@@ -16,6 +16,13 @@ import { createAssistantTools, buildAssistantInstructions } from '@/lib/assistan
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
+function extractText(message: UIMessage): string {
+  return message.parts
+    .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n');
+}
+
 // Rate limiting for this route is handled centrally by src/middleware.ts
 // (it reads RATE_LIMITED_ROUTES and rejects with 429 before this handler
 // ever runs) -- see the entry added to src/lib/rate-limit.ts in Step 1.
@@ -26,12 +33,14 @@ export async function POST(req: Request) {
   }
 
   let messages: UIMessage[];
+  let conversationId: string | undefined;
   try {
     const body = await req.json();
     if (!Array.isArray(body.messages)) {
       return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 });
     }
     messages = body.messages;
+    conversationId = typeof body.conversationId === 'string' ? body.conversationId : undefined;
   } catch {
     return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 });
   }
@@ -53,6 +62,40 @@ export async function POST(req: Request) {
 
     const tools = createAssistantTools(db, { whatsappNumber, minLeadDays });
 
+    // Best-effort conversation logging -- never let a logging failure break
+    // the actual chat response. conversationId is client-generated and
+    // trusted as-is (same accepted-risk posture as the message history
+    // itself, see ADR 0004): worst case is a mixed-up log row, never a
+    // cross-tenant read, since every query below stays scoped by
+    // organization.id via getScopedPrisma.
+    if (conversationId) {
+      try {
+        await db.assistantConversation.upsert({
+          where: { id: conversationId },
+          update: { lastMessageAt: new Date() },
+          create: { id: conversationId, organizationId: organization.id },
+        });
+
+        const lastMessage = recentMessages[recentMessages.length - 1];
+        if (lastMessage?.role === 'user') {
+          await db.assistantMessage.create({
+            data: {
+              conversationId,
+              role: 'user',
+              text: extractText(lastMessage),
+            },
+          });
+        }
+      } catch (logError) {
+        console.error('Failed to log assistant conversation (user turn):', logError);
+      }
+    }
+
+    // `const` (unlike the `let conversationId` above) so the closure below
+    // keeps the narrowed `string` type instead of widening back to
+    // `string | undefined`.
+    const conversationIdForLogging = conversationId;
+
     const result = streamText({
       // gemini-3.8-flash's free tier is capped at 5 requests/minute in
       // practice (confirmed via production AI_APICallError logs) -- far too
@@ -68,6 +111,31 @@ export async function POST(req: Request) {
       stopWhen: isStepCount(3),
       maxOutputTokens: 1000,
       tools,
+      onEnd: conversationIdForLogging
+        ? async (end) => {
+            try {
+              const tokens = end.totalUsage?.totalTokens ?? null;
+              await db.assistantMessage.create({
+                data: {
+                  conversationId: conversationIdForLogging,
+                  role: 'assistant',
+                  text: end.text || '',
+                  toolCalls: end.toolCalls?.length ? JSON.stringify(end.toolCalls) : null,
+                  tokens,
+                },
+              });
+              await db.assistantConversation.update({
+                where: { id: conversationIdForLogging },
+                data: {
+                  lastMessageAt: new Date(),
+                  totalTokens: { increment: tokens ?? 0 },
+                },
+              });
+            } catch (logError) {
+              console.error('Failed to log assistant conversation (assistant turn):', logError);
+            }
+          }
+        : undefined,
     });
 
     return createUIMessageStreamResponse({

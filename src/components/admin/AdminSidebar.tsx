@@ -24,6 +24,7 @@ import {
   Images,
   UserCog,
   Layers,
+  MessageCircleQuestion,
 } from 'lucide-react';
 
 export function AdminSidebar() {
@@ -61,6 +62,7 @@ export function AdminSidebar() {
     { label: 'Depoimentos', href: '/admin/depoimentos', icon: Quote, ownerOnly: false },
     { label: 'Galeria', href: '/admin/galeria', icon: Images, ownerOnly: false },
     { label: 'Equipe', href: '/admin/equipe', icon: UserCog, ownerOnly: true },
+    { label: 'Conversas da IA', href: '/admin/conversas-ia', icon: MessageCircleQuestion, ownerOnly: false },
     { label: 'Configurações', href: '/admin/configuracoes', icon: Settings, ownerOnly: false },
   ];
   const navItems = allNavItems.filter((item) => !item.ownerOnly || role === 'OWNER');
