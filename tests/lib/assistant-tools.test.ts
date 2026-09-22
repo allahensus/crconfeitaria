@@ -151,6 +151,10 @@ describe('createAssistantTools', () => {
 
     expect(result).toHaveProperty('numeroPedido');
     expect((result as any).numeroPedido).toMatch(/^ORC-\d{4}-0001$/);
+    // The wa.me link is what actually notifies the confeiteira -- the
+    // admin queue alone has no push notification, so this must be
+    // present for the customer to have any real way to flag the order.
+    expect((result as any).whatsappUrl).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
 
     const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
     expect(quote?.createdByAssistant).toBe(true);
