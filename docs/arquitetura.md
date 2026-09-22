@@ -25,7 +25,7 @@ flowchart TB
     end
 
     subgraph Externo["Serviços externos"]
-        Gemini["Google Gemini<br/>(free tier)"]
+        Groq["Groq<br/>(openai/gpt-oss-120b, free tier)"]
         WhatsApp["WhatsApp<br/>(wa.me)"]
     end
 
@@ -42,7 +42,7 @@ flowchart TB
     AssistantRoute -- "tool-calling: lê produtos, recheios,<br/>disponibilidade real" --> DB
     AssistantRoute -- "fecharPedido: cria Quote<br/>(status PENDING, createdByAssistant)" --> DB
     AssistantRoute -- "loga conversa + tokens" --> DB
-    AssistantRoute --> Gemini
+    AssistantRoute --> Groq
     AssistantRoute -- "resumo + link" --> WhatsApp
 ```
 
@@ -61,11 +61,11 @@ A Açucena (ver [ADR 0002](adr/0002-assistente-tool-calling-grounded.md), [ADR 0
 **O que o agente pode fazer:** responder perguntas usando dado real, recomendar produto por necessidade descrita (não só por nome), montar um resumo da conversa, e criar um pedido de verdade para revisão.
 **O que o agente não pode fazer:** confirmar um pedido sozinho, cobrar, prometer uma data como confirmada, ou usar qualquer preço que não venha do catálogo -- a palavra final sobre o que vira negócio de verdade é sempre humana.
 **Onde entra o humano:** todo `Quote` criado pela Açucena nasce `PENDING` e aparece em `/admin/aprovacoes-ia`; só vira `Order` de verdade quando a confeiteira aprova e converte (mesmas ações que já existiam pra orçamentos criados manualmente). Pagamento é sempre uma ação manual da confeiteira (inclusive o modo "Simulado", usado pra demonstração, sem dinheiro real); o recibo em `/recibo/[id]` é gerado só depois disso, com acesso controlado por número de WhatsApp (mesmo modelo do `/pedido` já existente).
-**O que acontece quando falha:** timeout ou erro do Gemini (cota, indisponibilidade) cai num estado de fallback no próprio widget -- mensagem de erro + botão direto de WhatsApp, nunca uma tela travada ou em branco. Se `fecharPedido` falhar (produto/variação não encontrado no catálogo, erro inesperado), a Açucena recebe um erro tratado -- nunca o texto bruto de uma falha interna -- e explica o problema ao cliente com suas próprias palavras, oferecendo o resumo por WhatsApp como alternativa.
+**O que acontece quando falha:** timeout ou erro do provedor de IA (cota, indisponibilidade) cai num estado de fallback no próprio widget -- mensagem de erro + botão direto de WhatsApp, nunca uma tela travada ou em branco. Se `fecharPedido` falhar (produto/variação não encontrado no catálogo, erro inesperado), a Açucena recebe um erro tratado -- nunca o texto bruto de uma falha interna -- e explica o problema ao cliente com suas próprias palavras, oferecendo o resumo por WhatsApp como alternativa.
 
 ## Custo e observabilidade
 
-Toda conversa com a Açucena é registrada (`AssistantConversation` + `AssistantMessage`), incluindo o total de tokens consumidos por conversa -- visível em `/admin/conversas-ia`. Isso cobre tanto a auditoria (o que um cliente perguntou, o que o agente respondeu e fez) quanto o controle de custo (o assistente roda no free tier do Gemini; o registro de tokens é o que permite perceber se o uso real está se aproximando de um limite).
+Toda conversa com a Açucena é registrada (`AssistantConversation` + `AssistantMessage`), incluindo o total de tokens consumidos por conversa -- visível em `/admin/conversas-ia`. Isso cobre tanto a auditoria (o que um cliente perguntou, o que o agente respondeu e fez) quanto o controle de custo (o assistente roda no free tier do Groq -- trocado do Gemini depois que o free tier dele causou instabilidade real em produção; o registro de tokens é o que permite perceber se o uso real está se aproximando de um limite).
 
 ## Limitações conhecidas (aceitas, não ignoradas)
 
