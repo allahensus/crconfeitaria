@@ -1,6 +1,6 @@
 // src/app/api/assistant/route.ts
 import { NextResponse } from 'next/server';
-import { google } from '@ai-sdk/google';
+import { groq } from '@ai-sdk/groq';
 import {
   streamText,
   convertToModelMessages,
@@ -97,15 +97,14 @@ export async function POST(req: Request) {
     const conversationIdForLogging = conversationId;
 
     const result = streamText({
-      // gemini-3.8-flash's free tier is capped at 5 requests/minute in
-      // practice (confirmed via production AI_APICallError logs) -- far too
-      // low for even light real traffic. gemini-2.5-flash-lite turned out to
-      // be discontinued for new API keys (404 "no longer available to new
-      // users", also confirmed via production logs) -- Google's own error
-      // message pointed at this replacement, the "lite" tier of the current
-      // generation, which should carry a materially higher free quota than
-      // the newest/most-contended "flash" model.
-      model: google('gemini-3.5-flash-lite'),
+      // Testing Groq as an alternative to Gemini: Gemini's free tier has
+      // repeatedly caused issues in production (rate limits, a model
+      // deprecation, and a 30s stream timeout with no error surfaced) --
+      // Groq's LPU hardware is much faster, which should avoid the timeout
+      // class of failure, and its free tier's daily quota is generous
+      // enough for this site's real traffic. gpt-oss-120b is Groq's
+      // current flagship for tool-calling quality.
+      model: groq('openai/gpt-oss-120b'),
       instructions: buildAssistantInstructions(bakeryName, depositPercentage, minLeadDays),
       messages: await convertToModelMessages(recentMessages),
       stopWhen: isStepCount(3),

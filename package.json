@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.74",
+    "@ai-sdk/groq": "^4.0.46",
     "@ai-sdk/react": "^4.0.108",
     "@prisma/client": "^6.4.0",
     "@vercel/blob": "^2.8.0",
