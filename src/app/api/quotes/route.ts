@@ -42,7 +42,12 @@ export async function POST(request: Request) {
     const db = getScopedPrisma(organization.id);
     const body = await request.json();
 
-    const { quote, whatsappUrl } = await createQuote(db, organization.id, body);
+    // This route is public: never trust a client-supplied createdByAssistant --
+    // only fecharPedido (calling createQuote directly, not through HTTP) may set it.
+    const { quote, whatsappUrl } = await createQuote(db, organization.id, {
+      ...body,
+      createdByAssistant: false,
+    });
 
     return NextResponse.json({ success: true, quote, whatsappUrl }, { status: 201 });
   } catch (error: any) {
