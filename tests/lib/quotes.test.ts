@@ -48,6 +48,7 @@ describe('createQuote', () => {
       eventDate: '2027-01-15',
       finalTotal: 200,
       subtotal: 200,
+      preferredPaymentMethod: 'Pix',
     });
 
     expect(result.quote.quoteNumber).toMatch(/^ORC-\d{4}-0001$/);
@@ -73,6 +74,7 @@ describe('createQuote', () => {
       eventDate: '2027-01-20',
       finalTotal: 100,
       subtotal: 100,
+      preferredPaymentMethod: 'Pix',
       createdByAssistant: true,
     });
 
@@ -137,6 +139,24 @@ describe('createQuote', () => {
     ).rejects.toThrow('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
   });
 
+  it('throws when preferredPaymentMethod is missing', async () => {
+    const { org, product } = await makeOrgWithProduct();
+    const db = getScopedPrisma(org.id);
+
+    await expect(
+      createQuote(db, org.id, {
+        customerName: 'Ana',
+        customerWhatsapp: '11999998888',
+        productId: product.id,
+        productName: product.name,
+        quantity: 1,
+        unitPrice: 100,
+        eventDate: '2027-01-15',
+        finalTotal: 100,
+      })
+    ).rejects.toThrow('Por favor, escolha a forma de pagamento preferida.');
+  });
+
   it('numbers quotes sequentially across two calls', async () => {
     const { org, product } = await makeOrgWithProduct();
     const db = getScopedPrisma(org.id);
@@ -149,6 +169,7 @@ describe('createQuote', () => {
       unitPrice: 100,
       eventDate: '2027-01-15',
       finalTotal: 100,
+      preferredPaymentMethod: 'Pix',
     };
 
     const first = await createQuote(db, org.id, input);

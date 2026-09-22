@@ -102,8 +102,16 @@ export async function createQuote(
     throw new QuoteValidationError('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
   }
 
+  if (!preferredPaymentMethod) {
+    throw new QuoteValidationError('Por favor, escolha a forma de pagamento preferida.');
+  }
+
   const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
 
+  // upsert (not find-then-create) so two near-simultaneous submissions from
+  // the same new customer can't both miss the "already exists" check and
+  // both insert -- the database resolves the race via the
+  // (organizationId, whatsapp) unique constraint, not application logic.
   const customer = await db.customer.upsert({
     where: { organizationId_whatsapp: { organizationId, whatsapp: cleanWhatsapp } },
     create: {
@@ -152,6 +160,8 @@ export async function createQuote(
     throw new QuoteValidationError('Valores de preço ou quantidade inválidos.');
   }
 
+  // Re-validate the coupon server-side before trusting the client-computed
+  // discount -- don't just take the client's word for it being applied.
   let appliedDiscount = 0;
   let appliedCouponCode: string | null = null;
   if (couponCode) {
@@ -168,6 +178,10 @@ export async function createQuote(
     }
     const eligibility = checkCouponEligibility(coupon, alreadyUsedByCustomer);
     if (eligibility.ok) {
+      // Atomic claim: the WHERE and the increment run as one statement in
+      // Postgres, so concurrent submissions racing the same near-exhausted
+      // coupon can't all read "still eligible" and all apply the discount --
+      // only as many as maxUses actually allows get count > 0 back.
       const claimed = await db.coupon.updateMany({
         where: {
           id: coupon!.id,
@@ -177,6 +191,10 @@ export async function createQuote(
       });
       if (claimed.count > 0) {
         appliedCouponCode = coupon!.code;
+        // Computed from the coupon's own stored value against the
+        // server-validated subtotal -- the client's `discount` field is
+        // never trusted, or a customer could claim any coupon and submit
+        // an arbitrary discount amount alongside it.
         appliedDiscount = coupon!.discountType === 'PERCENT'
           ? Math.round(sub * (coupon!.discountValue / 100) * 100) / 100
           : Math.min(coupon!.discountValue, sub);

@@ -163,6 +163,7 @@ export function createAssistantTools(db: ScopedPrismaClient, config: AssistantTo
             finalTotal,
             subtotal: finalTotal,
             themeNotes,
+            preferredPaymentMethod: 'A combinar',
             createdByAssistant: true,
           });
           return {
