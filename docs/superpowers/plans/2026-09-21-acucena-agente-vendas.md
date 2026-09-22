@@ -834,12 +834,22 @@ Add the `fecharPedido` tool as the last entry inside the object returned by `cre
             numeroPedido: quote.quoteNumber,
             resumo: `Pedido ${quote.quoteNumber} registrado para revisão da confeiteira.`,
           };
-        } catch (err: any) {
-          return { erro: err?.message || 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.' };
+        } catch (err) {
+          // Amended during Task 2's review: only a QuoteValidationError's
+          // message is safe to relay to the customer-facing chat (it's the
+          // same user-safe text route.ts already surfaces as a 400). Any
+          // other error (a raw Prisma failure, etc.) must not have its
+          // internal message handed to the model to repeat back verbatim.
+          if (err instanceof QuoteValidationError) {
+            return { erro: err.message };
+          }
+          return { erro: 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.' };
         }
       },
     }),
 ```
+
+`fecharPedido`'s `execute` needs `QuoteValidationError` imported alongside `createQuote` at the top of the file: `import { createQuote, QuoteValidationError } from './quotes';`.
 
 Update the return type export at the bottom of the file (unchanged in shape, just confirm it still reads):
 ```ts
