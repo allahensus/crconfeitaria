@@ -414,6 +414,7 @@ export default function AdminOrdersPage() {
                     <option value="Dinheiro">Dinheiro</option>
                     <option value="Cartao">Cartão de Crédito/Débito</option>
                     <option value="Transferencia">Transferência</option>
+                    <option value="Simulado">Simulado (sem dinheiro real)</option>
                   </select>
                 </div>
 
