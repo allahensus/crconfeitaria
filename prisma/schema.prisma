@@ -31,6 +31,7 @@ model Organization {
   blockedDates          BlockedDate[]
   coupons               Coupon[]
   galleryItems          GalleryItem[]
+  assistantConversations AssistantConversation[]
 }
 
 model User {
@@ -370,5 +371,36 @@ model BlockedDate {
   createdAt      DateTime @default(now())
 
   @@unique([organizationId, date])
+}
+
+// One row per browser session of the public AI assistant widget (see
+// src/components/public/AssistantChat.tsx / src/app/api/assistant/route.ts).
+// Client-generated id, trusted as-is -- same accepted-risk posture as the
+// conversation history itself (ADR 0004): worst case is a mixed-up log
+// entry, never a cross-tenant read since every query is still scoped by
+// organizationId.
+model AssistantConversation {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  startedAt      DateTime @default(now())
+  lastMessageAt  DateTime @default(now())
+  totalTokens    Int      @default(0)
+  messages       AssistantMessage[]
+
+  @@index([organizationId])
+}
+
+model AssistantMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  conversation   AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String   // 'user' | 'assistant'
+  text           String
+  toolCalls      String?  // JSON string: [{ tool, input, output }], assistant messages only
+  tokens         Int?     // total tokens for this turn (assistant messages only)
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
 }
 

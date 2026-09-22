@@ -15,6 +15,7 @@ const TENANT_SCOPED_MODELS = new Set([
   'BlockedDate',
   'Coupon',
   'GalleryItem',
+  'AssistantConversation',
 ]);
 
 const AUTO_WHERE_OPERATIONS = new Set([
