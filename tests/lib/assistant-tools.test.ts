@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { resetTestDatabase } from '../helpers/testDb';
 import { prisma } from '@/lib/prisma';
 import { getScopedPrisma } from '@/lib/db';
-import { createAssistantTools, buildAssistantInstructions } from '@/lib/assistant-tools';
+import { createAssistantTools, buildAssistantInstructions, nowInBrazil } from '@/lib/assistant-tools';
 
 describe('createAssistantTools', () => {
   beforeEach(async () => {
@@ -222,5 +222,16 @@ describe('buildAssistantInstructions', () => {
   it('names the agent Açucena', () => {
     const instructions = buildAssistantInstructions('Cinthia Rodrigues');
     expect(instructions).toContain('Açucena');
+  });
+
+  it("states today's date so the model doesn't guess a stale year for relative dates", () => {
+    // Regression test: production logs showed the model calling
+    // verificarDisponibilidade with { data: '2025-09-27' } when the real
+    // current year was 2026 -- the prompt never stated today's date, so the
+    // model had no anchor and guessed a stale year from its own training,
+    // making a genuinely available date look unavailable to a real customer.
+    const instructions = buildAssistantInstructions('Cinthia Rodrigues');
+    const todayStr = nowInBrazil().toISOString().slice(0, 10);
+    expect(instructions).toContain(todayStr);
   });
 });

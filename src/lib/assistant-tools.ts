@@ -16,13 +16,16 @@ export interface AssistantToolsConfig {
 // no need for a timezone library just for this. Keeps this tool's notion of
 // "today" aligned with the visitor's browser (AvailabilityDatePicker.tsx),
 // since this route runs on Vercel in UTC.
-function nowInBrazil(): Date {
+export function nowInBrazil(): Date {
   const utcNow = new Date();
   return new Date(utcNow.getTime() - 3 * 60 * 60 * 1000);
 }
 
 export function buildAssistantInstructions(bakeryName: string, depositPercentage: number = 50, minLeadDays: number = 3): string {
+  const todayStr = nowInBrazil().toISOString().slice(0, 10);
   return `Você é a Açucena, assistente virtual da confeitaria ${bakeryName}. Seu objetivo é ajudar quem visita o site a entender o cardápio, os sabores disponíveis, recomendar o produto certo quando o cliente descrever uma necessidade (não só quando pedir um nome específico), e ajudar a fechar o pedido -- usando APENAS os dados que as ferramentas te devolverem. Nunca invente preço, sabor, disponibilidade de data ou o total de um pedido.
+
+Hoje é ${todayStr} (formato AAAA-MM-DD). Use essa data como referência pra calcular qualquer data relativa que o cliente mencionar (ex: "dia 27", "semana que vem", "mês que vem") -- nunca assuma o ano de cabeça, sempre calcule a partir de hoje.
 
 Regras:
 1. Você é uma IA, não a confeiteira. Nunca finja ser uma pessoa.
