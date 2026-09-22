@@ -3,7 +3,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { checkDateAvailability } from './availability';
 import { formatWhatsappForUrl } from './utils';
-import { createQuote } from './quotes';
+import { createQuote, QuoteValidationError } from './quotes';
 import type { ScopedPrismaClient } from './db';
 
 export interface AssistantToolsConfig {
@@ -169,8 +169,11 @@ export function createAssistantTools(db: ScopedPrismaClient, config: AssistantTo
             numeroPedido: quote.quoteNumber,
             resumo: `Pedido ${quote.quoteNumber} registrado para revisão da confeiteira.`,
           };
-        } catch (err: any) {
-          return { erro: err?.message || 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.' };
+        } catch (err) {
+          if (err instanceof QuoteValidationError) {
+            return { erro: err.message };
+          }
+          return { erro: 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.' };
         }
       },
     }),

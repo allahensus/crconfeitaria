@@ -178,6 +178,39 @@ describe('createAssistantTools', () => {
     const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
     expect(quote).toBeNull();
   });
+
+  it('fecharPedido returns a generic message instead of leaking an unexpected (non-validation) error', async () => {
+    const { org } = await makeOrgWithCatalog();
+    const db = getScopedPrisma(org.id);
+    // db stays scoped to the real org (so the product lookup succeeds), but
+    // config.organizationId points at an org that doesn't exist. createQuote's
+    // customer.upsert is intentionally NOT auto-scoped by getScopedPrisma, so
+    // it inserts a Customer row with this nonexistent organizationId -- a
+    // real Postgres foreign-key violation, i.e. a genuine unexpected error,
+    // not a QuoteValidationError. No mocking: this exercises the real
+    // DB-backed failure path.
+    const tools = createAssistantTools(db, {
+      whatsappNumber: '5512997594697',
+      minLeadDays: 3,
+      organizationId: '00000000-0000-0000-0000-000000000000',
+    });
+
+    const result = await tools.fecharPedido.execute!(
+      {
+        customerName: 'Maria Silva',
+        customerWhatsapp: '11999997777',
+        productName: 'Bolo de Chocolate',
+        variation: '20 a 25 fatias',
+        quantity: 1,
+        eventDate: '2027-03-10',
+      },
+      { toolCallId: 'test', messages: [] } as any
+    );
+
+    expect(result).toEqual({
+      erro: 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.',
+    });
+  });
 });
 
 describe('buildAssistantInstructions', () => {
