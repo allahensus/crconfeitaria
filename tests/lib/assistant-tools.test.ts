@@ -49,7 +49,7 @@ describe('createAssistantTools', () => {
   it('listarBolosECategorias returns active products with category and variations', async () => {
     const { org } = await makeOrgWithCatalog();
     const db = getScopedPrisma(org.id);
-    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3 });
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
 
     const result = await tools.listarBolosECategorias.execute!({}, { toolCallId: 'test', messages: [] } as any);
 
@@ -68,7 +68,7 @@ describe('createAssistantTools', () => {
   it('listarRecheios returns active fillings', async () => {
     const { org } = await makeOrgWithCatalog();
     const db = getScopedPrisma(org.id);
-    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3 });
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
 
     const result = await tools.listarRecheios.execute!({}, { toolCallId: 'test', messages: [] } as any);
 
@@ -80,7 +80,7 @@ describe('createAssistantTools', () => {
   it('verificarDisponibilidade flags a blocked date', async () => {
     const { org } = await makeOrgWithCatalog();
     const db = getScopedPrisma(org.id);
-    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3 });
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
 
     const result = await tools.verificarDisponibilidade.execute!(
       { data: '2026-12-24' },
@@ -98,7 +98,7 @@ describe('createAssistantTools', () => {
   it('verificarDisponibilidade flags a date that is too soon', async () => {
     const { org } = await makeOrgWithCatalog();
     const db = getScopedPrisma(org.id);
-    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 30 });
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 30, organizationId: org.id });
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -120,7 +120,7 @@ describe('createAssistantTools', () => {
   it('gerarResumoWhatsApp builds a wa.me link with the encoded summary', async () => {
     const { org } = await makeOrgWithCatalog();
     const db = getScopedPrisma(org.id);
-    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3 });
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
 
     const result = await tools.gerarResumoWhatsApp.execute!(
       { resumo: 'Bolo de chocolate, 20 fatias, para 24/12' },
@@ -131,11 +131,63 @@ describe('createAssistantTools', () => {
       url: 'https://wa.me/5512997594697?text=Bolo%20de%20chocolate%2C%2020%20fatias%2C%20para%2024%2F12',
     });
   });
+
+  it('fecharPedido creates a Quote with createdByAssistant true and the catalog price, never a model-supplied one', async () => {
+    const { org } = await makeOrgWithCatalog();
+    const db = getScopedPrisma(org.id);
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
+
+    const result = await tools.fecharPedido.execute!(
+      {
+        customerName: 'Maria Silva',
+        customerWhatsapp: '11999998888',
+        productName: 'Bolo de Chocolate',
+        variation: '20 a 25 fatias',
+        quantity: 1,
+        eventDate: '2027-03-10',
+      },
+      { toolCallId: 'test', messages: [] } as any
+    );
+
+    expect(result).toHaveProperty('numeroPedido');
+    expect((result as any).numeroPedido).toMatch(/^ORC-\d{4}-0001$/);
+
+    const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
+    expect(quote?.createdByAssistant).toBe(true);
+    expect(quote?.status).toBe('PENDING');
+    expect(quote?.finalTotal).toBe(150); // the variation's real price, not something the model could have invented
+  });
+
+  it('fecharPedido refuses an unknown product instead of guessing a price', async () => {
+    const { org } = await makeOrgWithCatalog();
+    const db = getScopedPrisma(org.id);
+    const tools = createAssistantTools(db, { whatsappNumber: '5512997594697', minLeadDays: 3, organizationId: org.id });
+
+    const result = await tools.fecharPedido.execute!(
+      {
+        customerName: 'Maria Silva',
+        customerWhatsapp: '11999998888',
+        productName: 'Bolo Que Não Existe',
+        quantity: 1,
+        eventDate: '2027-03-10',
+      },
+      { toolCallId: 'test', messages: [] } as any
+    );
+
+    expect(result).toHaveProperty('erro');
+    const quote = await prisma.quote.findFirst({ where: { organizationId: org.id } });
+    expect(quote).toBeNull();
+  });
 });
 
 describe('buildAssistantInstructions', () => {
   it('includes the bakery name so the model knows who it represents', () => {
     const instructions = buildAssistantInstructions('Cinthia Rodrigues');
     expect(instructions).toContain('Cinthia Rodrigues');
+  });
+
+  it('names the agent Açucena', () => {
+    const instructions = buildAssistantInstructions('Cinthia Rodrigues');
+    expect(instructions).toContain('Açucena');
   });
 });

@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const minLeadDays = settingsMap.min_lead_days ? parseInt(settingsMap.min_lead_days) : 3;
     const depositPercentage = settingsMap.deposit_percentage ? parseInt(settingsMap.deposit_percentage) : 50;
 
-    const tools = createAssistantTools(db, { whatsappNumber, minLeadDays });
+    const tools = createAssistantTools(db, { whatsappNumber, minLeadDays, organizationId: organization.id });
 
     // Best-effort conversation logging -- never let a logging failure break
     // the actual chat response. conversationId is client-generated and
