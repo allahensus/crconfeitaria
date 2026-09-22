@@ -131,6 +131,20 @@ export function AssistantChat({ open, onClose, whatsappNumber = '5512997594697' 
                 );
               }
 
+              if (part.type === 'tool-fecharPedido' && part.state === 'output-available' && 'whatsappUrl' in part.output) {
+                return (
+                  <a
+                    key={index}
+                    href={part.output.whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs"
+                  >
+                    Avisar a confeiteira no WhatsApp
+                  </a>
+                );
+              }
+
               return null;
             })}
           </div>
