@@ -246,6 +246,7 @@ This is a faithful port of the current `POST /api/quotes` body (`src/app/api/quo
 
 ```ts
 // src/lib/quotes.ts
+import type { Prisma } from '@prisma/client';
 import type { ScopedPrismaClient } from './db';
 import { generateWhatsAppLink } from './utils';
 import { checkCouponEligibility } from './coupons';
@@ -277,10 +278,25 @@ export interface CreateQuoteInput {
   createdByAssistant?: boolean;
 }
 
+// ReturnType on a generic Prisma delegate method resolves against the
+// method's default type parameters, not the `include: { items: true }`
+// this function actually passes -- it would type `quote` without `items`
+// even though the real value always has it. Prisma.QuoteGetPayload names
+// the exact shape the `include` below produces.
+type QuoteWithItems = Prisma.QuoteGetPayload<{ include: { items: true } }>;
+
 export interface CreateQuoteResult {
-  quote: Awaited<ReturnType<ScopedPrismaClient['quote']['create']>>;
+  quote: QuoteWithItems;
   whatsappUrl: string;
 }
+
+// Amended during Task 1's review: the original route's outer catch always
+// returned 500 unconditionally (validation failures were separate
+// early-return 400s, never routed through it). A plain `Error` can't tell
+// a deliberate validation failure apart from an unexpected one (e.g. a raw
+// Prisma error) at the call site, so callers would have no way to map
+// correctly to 400 vs 500. This marker class lets them.
+export class QuoteValidationError extends Error {}
 
 export async function createQuote(
   db: ScopedPrismaClient,
@@ -316,20 +332,20 @@ export async function createQuote(
   const cleanWhatsapp = (customerWhatsapp || '').replace(/\D/g, '');
 
   if (!trimmedName) {
-    throw new Error('Por favor, informe seu Nome Completo.');
+    throw new QuoteValidationError('Por favor, informe seu Nome Completo.');
   }
 
   if (!cleanWhatsapp || cleanWhatsapp.length < 10) {
-    throw new Error('Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).');
+    throw new QuoteValidationError('Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).');
   }
 
   if (!productName) {
-    throw new Error('Por favor, selecione um produto para o orçamento.');
+    throw new QuoteValidationError('Por favor, selecione um produto para o orçamento.');
   }
 
   const parsedEventDateCheck = eventDate ? new Date(eventDate) : null;
   if (!parsedEventDateCheck || isNaN(parsedEventDateCheck.getTime())) {
-    throw new Error('Por favor, escolha a data desejada da entrega/festa.');
+    throw new QuoteValidationError('Por favor, escolha a data desejada da entrega/festa.');
   }
 
   const eventDateStr = eventDate.slice(0, 10);
@@ -337,7 +353,7 @@ export async function createQuote(
     where: { date: new Date(`${eventDateStr}T00:00:00.000Z`) },
   });
   if (isBlockedDate) {
-    throw new Error('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
+    throw new QuoteValidationError('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
   }
 
   const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
@@ -387,7 +403,7 @@ export async function createQuote(
   const sub = parseFloat(String(subtotal)) || price * qty;
 
   if (!Number.isFinite(qty) || qty < 1 || !Number.isFinite(price) || price < 0 || !Number.isFinite(tot) || tot < 0 || !Number.isFinite(sub) || sub < 0) {
-    throw new Error('Valores de preço ou quantidade inválidos.');
+    throw new QuoteValidationError('Valores de preço ou quantidade inválidos.');
   }
 
   let appliedDiscount = 0;
@@ -510,7 +526,7 @@ import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
-import { createQuote } from '@/lib/quotes';
+import { createQuote, QuoteValidationError } from '@/lib/quotes';
 
 export const dynamic = 'force-dynamic';
 
@@ -555,10 +571,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, quote, whatsappUrl }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating quote:', error);
-    return NextResponse.json(
-      { error: error?.message || 'Erro ao gerar orçamento.' },
-      { status: error?.message ? 400 : 500 }
-    );
+    if (error instanceof QuoteValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Erro ao gerar orçamento.' }, { status: 500 });
   }
 }
 ```
