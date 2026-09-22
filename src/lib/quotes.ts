@@ -4,6 +4,8 @@ import { generateWhatsAppLink } from './utils';
 import { checkCouponEligibility } from './coupons';
 import { withNumberRetry } from './sequence';
 
+export class QuoteValidationError extends Error {}
+
 export interface CreateQuoteInput {
   customerName: string;
   customerWhatsapp: string;
@@ -76,20 +78,20 @@ export async function createQuote(
   const cleanWhatsapp = (customerWhatsapp || '').replace(/\D/g, '');
 
   if (!trimmedName) {
-    throw new Error('Por favor, informe seu Nome Completo.');
+    throw new QuoteValidationError('Por favor, informe seu Nome Completo.');
   }
 
   if (!cleanWhatsapp || cleanWhatsapp.length < 10) {
-    throw new Error('Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).');
+    throw new QuoteValidationError('Por favor, informe um número de WhatsApp válido com DDD (ex: 11999998888).');
   }
 
   if (!productName) {
-    throw new Error('Por favor, selecione um produto para o orçamento.');
+    throw new QuoteValidationError('Por favor, selecione um produto para o orçamento.');
   }
 
   const parsedEventDateCheck = eventDate ? new Date(eventDate) : null;
   if (!parsedEventDateCheck || isNaN(parsedEventDateCheck.getTime())) {
-    throw new Error('Por favor, escolha a data desejada da entrega/festa.');
+    throw new QuoteValidationError('Por favor, escolha a data desejada da entrega/festa.');
   }
 
   const eventDateStr = eventDate.slice(0, 10);
@@ -97,7 +99,7 @@ export async function createQuote(
     where: { date: new Date(`${eventDateStr}T00:00:00.000Z`) },
   });
   if (isBlockedDate) {
-    throw new Error('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
+    throw new QuoteValidationError('Essa data já está com a agenda cheia. Por favor, escolha outra data.');
   }
 
   const parsedBirthDate = customerBirthDate ? new Date(customerBirthDate) : null;
@@ -147,7 +149,7 @@ export async function createQuote(
   const sub = parseFloat(String(subtotal)) || price * qty;
 
   if (!Number.isFinite(qty) || qty < 1 || !Number.isFinite(price) || price < 0 || !Number.isFinite(tot) || tot < 0 || !Number.isFinite(sub) || sub < 0) {
-    throw new Error('Valores de preço ou quantidade inválidos.');
+    throw new QuoteValidationError('Valores de preço ou quantidade inválidos.');
   }
 
   let appliedDiscount = 0;

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { resetTestDatabase } from '../helpers/testDb';
 import { prisma } from '@/lib/prisma';
 import { getScopedPrisma } from '@/lib/db';
-import { createQuote } from '@/lib/quotes';
+import { createQuote, QuoteValidationError } from '@/lib/quotes';
 
 describe('createQuote', () => {
   beforeEach(async () => {
@@ -96,6 +96,24 @@ describe('createQuote', () => {
         finalTotal: 100,
       })
     ).rejects.toThrow('Por favor, informe seu Nome Completo.');
+  });
+
+  it('throws a QuoteValidationError (not a generic Error) for validation failures', async () => {
+    const { org, product } = await makeOrgWithProduct();
+    const db = getScopedPrisma(org.id);
+
+    await expect(
+      createQuote(db, org.id, {
+        customerName: '',
+        customerWhatsapp: '11999998888',
+        productId: product.id,
+        productName: product.name,
+        quantity: 1,
+        unitPrice: 100,
+        eventDate: '2027-01-15',
+        finalTotal: 100,
+      })
+    ).rejects.toBeInstanceOf(QuoteValidationError);
   });
 
   it('throws when the event date is blocked', async () => {

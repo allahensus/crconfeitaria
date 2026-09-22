@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
 import { getCurrentOrganization } from '@/lib/tenant';
 import { getSession } from '@/lib/auth';
-import { createQuote } from '@/lib/quotes';
+import { createQuote, QuoteValidationError } from '@/lib/quotes';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,9 +47,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, quote, whatsappUrl }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating quote:', error);
-    return NextResponse.json(
-      { error: error?.message || 'Erro ao gerar orçamento.' },
-      { status: error?.message ? 400 : 500 }
-    );
+    if (error instanceof QuoteValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Erro ao gerar orçamento.' }, { status: 500 });
   }
 }
