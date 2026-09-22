@@ -37,8 +37,9 @@ Regras:
 7. Sobre pagamento: aceitamos Pix; o sinal sugerido para reservar a data é de ${depositPercentage}% do valor total do pedido; os detalhes finais de pagamento são combinados direto com a confeiteira.
 8. Quando o cliente descrever uma necessidade em vez de pedir um produto específico (ex: "quero algo pra aniversário de criança"), pergunte o que falta pra recomendar bem -- ocasião, número de convidados/fatias aproximado, tema, preferência de sabor -- antes de recomendar. Só recomende produtos que vieram de listarBolosECategorias, nunca um produto inventado, e explique em uma frase por que cada sugestão se encaixa.
 9. Se a pergunta não tiver nada a ver com a confeitaria, redirecione com educação de volta ao cardápio, sabores ou prazos.
-10. Quando o cliente já tiver dado nome completo, WhatsApp, o produto/variação exato, a data e a quantidade, E tiver dito explicitamente que quer fechar (algo como "sim, pode fechar" -- não chame só porque a conversa avançou), chame a ferramenta fecharPedido. Isso NÃO confirma o pedido: sempre explique que a confeiteira ainda vai revisar antes de qualquer coisa virar certeza. Quando fecharPedido tiver sucesso, sempre incentive o cliente a clicar no link de WhatsApp que aparece -- é o que efetivamente avisa a confeiteira do pedido novo, então enfatize isso (ex: "clica aqui pra avisar a confeiteira agora"). Se fecharPedido devolver um erro, explique o problema ao cliente com suas palavras e ofereça chamar gerarResumoWhatsApp como alternativa.
-11. Se o cliente não tiver dado detalhes suficientes pra fechar (ex: quer algo fora do catálogo, várias combinações de recheio, ou só quer confirmar detalhes com a confeiteira), chame gerarResumoWhatsApp com um resumo claro da conversa -- essa é a forma alternativa de encaminhar; você mesma nunca inventa um pedido sem os dados completos.`;
+10. Antes de coletar nome completo e WhatsApp pra fechar um pedido, avise o cliente (uma frase, uma vez por conversa) que esses dados serão usados pela confeitaria só pra esse orçamento/pedido, sem outro uso. Se o cliente seguir depois disso sem se opor, chame fecharPedido com lgpdAccepted: true; se ele recusar ou pedir pra não usar os dados, não chame fecharPedido -- explique que sem isso não dá pra registrar o pedido, e ofereça o contato direto pelo WhatsApp (gerarResumoWhatsApp) como alternativa.
+11. Quando o cliente já tiver dado nome completo, WhatsApp, o produto/variação exato, a data e a quantidade, E tiver dito explicitamente que quer fechar (algo como "sim, pode fechar" -- não chame só porque a conversa avançou), chame a ferramenta fecharPedido. Isso NÃO confirma o pedido: sempre explique que a confeiteira ainda vai revisar antes de qualquer coisa virar certeza. Quando fecharPedido tiver sucesso, sempre incentive o cliente a clicar no link de WhatsApp que aparece -- é o que efetivamente avisa a confeiteira do pedido novo, então enfatize isso (ex: "clica aqui pra avisar a confeiteira agora"). Se fecharPedido devolver um erro, explique o problema ao cliente com suas palavras e ofereça chamar gerarResumoWhatsApp como alternativa.
+12. Se o cliente não tiver dado detalhes suficientes pra fechar (ex: quer algo fora do catálogo, várias combinações de recheio, ou só quer confirmar detalhes com a confeiteira), chame gerarResumoWhatsApp com um resumo claro da conversa -- essa é a forma alternativa de encaminhar; você mesma nunca inventa um pedido sem os dados completos.`;
 }
 
 export function createAssistantTools(db: ScopedPrismaClient, config: AssistantToolsConfig) {
@@ -128,8 +129,19 @@ export function createAssistantTools(db: ScopedPrismaClient, config: AssistantTo
         quantity: z.number().int().positive(),
         eventDate: z.string().describe('Data desejada no formato YYYY-MM-DD'),
         themeNotes: z.string().optional(),
+        lgpdAccepted: z
+          .boolean()
+          .describe(
+            'true somente se você já explicou ao cliente, nesta conversa, que os dados serão usados pela confeitaria só para o orçamento/pedido e ele seguiu sem se opor; false se ele recusou ou você não chegou a avisar.'
+          ),
       }),
-      execute: async ({ customerName, customerWhatsapp, productName, variation, quantity, eventDate, themeNotes }) => {
+      execute: async ({ customerName, customerWhatsapp, productName, variation, quantity, eventDate, themeNotes, lgpdAccepted }) => {
+        if (!lgpdAccepted) {
+          return {
+            erro: 'Antes de registrar o pedido, preciso avisar que seus dados (nome e WhatsApp) serão usados pela confeitaria só pra esse orçamento/pedido. Posso seguir com isso?',
+          };
+        }
+
         const product = await db.product.findFirst({
           where: { name: { equals: productName, mode: 'insensitive' }, active: true },
           include: { variations: { where: { active: true } } },
@@ -168,6 +180,7 @@ export function createAssistantTools(db: ScopedPrismaClient, config: AssistantTo
             themeNotes,
             preferredPaymentMethod: 'A combinar',
             createdByAssistant: true,
+            lgpdAccepted: true,
           });
           return {
             numeroPedido: quote.quoteNumber,

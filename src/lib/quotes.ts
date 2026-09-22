@@ -120,7 +120,10 @@ export async function createQuote(
       whatsapp: cleanWhatsapp,
       email: customerEmail || null,
       birthDate: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : null,
-      lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : true,
+      // Never assume consent when omitted -- LGPD requires it to be
+      // explicit and informed, not defaulted. Every caller of createQuote
+      // must pass the real value.
+      lgpdAccepted: lgpdAccepted !== undefined ? Boolean(lgpdAccepted) : false,
     },
     update: {
       name: customerName,
