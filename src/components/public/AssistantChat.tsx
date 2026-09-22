@@ -88,7 +88,7 @@ export function AssistantChat({ open, onClose, whatsappNumber = '5512997594697' 
     <div className="fixed z-40 bottom-0 right-0 left-0 sm:left-auto sm:bottom-6 sm:right-6 w-full sm:w-96 h-[80vh] sm:h-[min(520px,calc(100vh-8rem))] bg-white sm:rounded-3xl shadow-2xl border border-[var(--color-border)] flex flex-col overflow-hidden">
       <div className="px-4 py-3 bg-[var(--color-accent-strong)] text-white flex items-center justify-between">
         <span className="font-serif font-bold text-sm flex items-center gap-2">
-          <MessageCircleQuestion className="w-4 h-4" /> Assistente Virtual
+          <MessageCircleQuestion className="w-4 h-4" /> Açucena
         </span>
         <button type="button" onClick={onClose} aria-label="Fechar chat">
           <X className="w-5 h-5" />
@@ -98,7 +98,7 @@ export function AssistantChat({ open, onClose, whatsappNumber = '5512997594697' 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[var(--color-bg)]">
         {messages.length === 0 && (
           <p className="text-xs text-[var(--color-text-soft)]">
-            Oi! Eu sou a assistente virtual da confeitaria. Posso te contar sobre sabores, preços e prazos.
+            Oi! Eu sou a Açucena, assistente virtual da confeitaria. Posso te contar sobre sabores, preços e prazos.
             Não sou a confeiteira, mas te ajudo a chegar até ela com tudo pronto 🍰
           </p>
         )}

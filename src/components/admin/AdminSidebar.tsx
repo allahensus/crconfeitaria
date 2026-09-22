@@ -63,6 +63,7 @@ export function AdminSidebar() {
     { label: 'Galeria', href: '/admin/galeria', icon: Images, ownerOnly: false },
     { label: 'Equipe', href: '/admin/equipe', icon: UserCog, ownerOnly: true },
     { label: 'Conversas da IA', href: '/admin/conversas-ia', icon: MessageCircleQuestion, ownerOnly: false },
+    { label: 'Pedidos da Açucena', href: '/admin/aprovacoes-ia', icon: Sparkles, ownerOnly: false },
     { label: 'Configurações', href: '/admin/configuracoes', icon: Settings, ownerOnly: false },
   ];
   const navItems = allNavItems.filter((item) => !item.ownerOnly || role === 'OWNER');

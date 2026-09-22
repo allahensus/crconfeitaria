@@ -158,6 +158,7 @@ model Quote {
   finalTotal       Float
   depositAmount    Float? // sinal sugerido (finalTotal x % configurado em Configurações no momento do envio)
   status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
+  createdByAssistant Boolean   @default(false)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items            QuoteItem[]

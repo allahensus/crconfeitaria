@@ -9,3 +9,4 @@ Registro das decisões de arquitetura deste projeto: o que foi decidido, quais a
 | [0003](0003-gemini-free-tier-sem-ai-gateway.md) | Gemini free tier direto, sem Vercel AI Gateway |
 | [0004](0004-assistente-so-tira-duvida-e-encaminha.md) | Assistente só tira dúvida e encaminha pro WhatsApp (não fecha pedido) |
 | [0005](0005-rate-limiting-centralizado-no-middleware.md) | Rate limiting centralizado no middleware, não por rota |
+| [0006](0006-assistente-cria-pedido-sob-aprovacao-humana.md) | Assistente cria pedido, mas sempre sob aprovação humana (supersede 0004) |

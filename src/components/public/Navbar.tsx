@@ -77,11 +77,11 @@ export function Navbar({
             {onOpenAssistant && (
               <button
                 onClick={onOpenAssistant}
-                aria-label="Tirar dúvidas com a assistente virtual"
+                aria-label="Tirar dúvidas com a Açucena"
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border)] text-[var(--color-accent-strong)] font-medium hover:bg-[var(--color-accent-soft)] transition-colors duration-200 text-sm"
               >
                 <MessageCircleQuestion className="w-4 h-4" />
-                Tirar Dúvidas
+                Falar com a Açucena
               </button>
             )}
             <button
@@ -98,7 +98,7 @@ export function Navbar({
             {onOpenAssistant && (
               <button
                 onClick={onOpenAssistant}
-                aria-label="Tirar dúvidas com a assistente virtual"
+                aria-label="Tirar dúvidas com a Açucena"
                 className="p-2 rounded-full border border-[var(--color-border)] text-[var(--color-accent-strong)]"
               >
                 <MessageCircleQuestion className="w-5 h-5" />
@@ -134,7 +134,7 @@ export function Navbar({
                 }}
                 className="px-3 py-2 rounded-lg hover:bg-[var(--color-surface-alt)] text-base flex items-center gap-2.5 text-left"
               >
-                <MessageCircleQuestion className="w-4 h-4 text-[var(--color-accent)]" /> Tirar Dúvidas com a Assistente
+                <MessageCircleQuestion className="w-4 h-4 text-[var(--color-accent)]" /> Tirar Dúvidas com a Açucena
               </button>
             )}
             <a

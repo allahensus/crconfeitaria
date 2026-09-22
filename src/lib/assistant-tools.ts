@@ -3,26 +3,13 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { checkDateAvailability } from './availability';
 import { formatWhatsappForUrl } from './utils';
-
-// Narrow structural type -- only the Prisma calls this module actually
-// makes, so tests can pass either a real getScopedPrisma(...) client (as
-// they do) or, in principle, a hand-built fake, without depending on
-// Prisma's full generated types. Same convention as src/lib/stock.ts.
-interface AssistantDb {
-  product: {
-    findMany: (args: any) => Promise<any[]>;
-  };
-  fillingOption: {
-    findMany: (args: any) => Promise<any[]>;
-  };
-  blockedDate: {
-    findMany: (args?: any) => Promise<{ date: Date }[]>;
-  };
-}
+import { createQuote, QuoteValidationError } from './quotes';
+import type { ScopedPrismaClient } from './db';
 
 export interface AssistantToolsConfig {
   whatsappNumber: string;
   minLeadDays: number;
+  organizationId: string;
 }
 
 // Brazil abolished DST nationally in 2019, so UTC-3 is a safe fixed offset --
@@ -35,7 +22,7 @@ function nowInBrazil(): Date {
 }
 
 export function buildAssistantInstructions(bakeryName: string, depositPercentage: number = 50, minLeadDays: number = 3): string {
-  return `Você é o assistente virtual da confeitaria ${bakeryName}. Seu único objetivo é ajudar quem visita o site a entender o cardápio, os sabores disponíveis e os prazos de encomenda, usando APENAS os dados que as ferramentas te devolverem -- nunca invente preço, sabor ou disponibilidade de data.
+  return `Você é a Açucena, assistente virtual da confeitaria ${bakeryName}. Seu objetivo é ajudar quem visita o site a entender o cardápio, os sabores disponíveis, recomendar o produto certo quando o cliente descrever uma necessidade (não só quando pedir um nome específico), e ajudar a fechar o pedido -- usando APENAS os dados que as ferramentas te devolverem. Nunca invente preço, sabor, disponibilidade de data ou o total de um pedido.
 
 Regras:
 1. Você é uma IA, não a confeiteira. Nunca finja ser uma pessoa.
@@ -45,11 +32,13 @@ Regras:
 5. Sobre prazo mínimo em geral (sem data específica em mente): o prazo mínimo de antecedência para encomendar é de ${minLeadDays} dia(s). Se o cliente já tiver uma data específica em mente, chame verificarDisponibilidade com ela em vez de só citar esse número.
 6. Sobre entrega: sim, a confeitaria faz entrega, mas depende da demanda do dia -- não é garantida, a confirmação final é sempre com a confeiteira.
 7. Sobre pagamento: aceitamos Pix; o sinal sugerido para reservar a data é de ${depositPercentage}% do valor total do pedido; os detalhes finais de pagamento são combinados direto com a confeiteira.
-8. Se a pergunta não tiver nada a ver com a confeitaria, redirecione com educação de volta ao cardápio, sabores ou prazos.
-9. Quando o cliente já tiver dado detalhes suficientes (o que quer, para quando, tema ou dúvida) e parecer pronto para seguir, chame a ferramenta gerarResumoWhatsApp com um resumo claro da conversa -- essa é a única forma de "fechar" a conversa; você mesmo nunca cria um pedido ou orçamento.`;
+8. Quando o cliente descrever uma necessidade em vez de pedir um produto específico (ex: "quero algo pra aniversário de criança"), pergunte o que falta pra recomendar bem -- ocasião, número de convidados/fatias aproximado, tema, preferência de sabor -- antes de recomendar. Só recomende produtos que vieram de listarBolosECategorias, nunca um produto inventado, e explique em uma frase por que cada sugestão se encaixa.
+9. Se a pergunta não tiver nada a ver com a confeitaria, redirecione com educação de volta ao cardápio, sabores ou prazos.
+10. Quando o cliente já tiver dado nome completo, WhatsApp, o produto/variação exato, a data e a quantidade, E tiver dito explicitamente que quer fechar (algo como "sim, pode fechar" -- não chame só porque a conversa avançou), chame a ferramenta fecharPedido. Isso NÃO confirma o pedido: sempre explique que a confeiteira ainda vai revisar antes de qualquer coisa virar certeza. Se fecharPedido devolver um erro, explique o problema ao cliente com suas palavras e ofereça chamar gerarResumoWhatsApp como alternativa.
+11. Se o cliente não tiver dado detalhes suficientes pra fechar (ex: quer algo fora do catálogo, várias combinações de recheio, ou só quer confirmar detalhes com a confeiteira), chame gerarResumoWhatsApp com um resumo claro da conversa -- essa é a forma alternativa de encaminhar; você mesma nunca inventa um pedido sem os dados completos.`;
 }
 
-export function createAssistantTools(db: AssistantDb, config: AssistantToolsConfig) {
+export function createAssistantTools(db: ScopedPrismaClient, config: AssistantToolsConfig) {
   return {
     listarBolosECategorias: tool({
       description:
@@ -122,6 +111,71 @@ export function createAssistantTools(db: AssistantDb, config: AssistantToolsConf
       execute: async ({ resumo }: { resumo: string }) => {
         const cleanPhone = formatWhatsappForUrl(config.whatsappNumber);
         return { url: `https://wa.me/${cleanPhone}?text=${encodeURIComponent(resumo)}` };
+      },
+    }),
+
+    fecharPedido: tool({
+      description:
+        'Cria um pedido de verdade pra confeiteira revisar e aprovar. Só chame isso depois de já ter nome completo, WhatsApp, o produto/variação exato, a data do evento e a quantidade confirmados pelo cliente, E o cliente já ter dito explicitamente que quer fechar. Isso NÃO confirma o pedido -- a confeiteira ainda revisa antes de qualquer coisa virar certeza.',
+      inputSchema: z.object({
+        customerName: z.string().min(1),
+        customerWhatsapp: z.string().min(8),
+        productName: z.string().describe('Nome exato do produto, como retornado por listarBolosECategorias'),
+        variation: z.string().optional().describe('Nome exato da variação, se houver, como retornado por listarBolosECategorias'),
+        quantity: z.number().int().positive(),
+        eventDate: z.string().describe('Data desejada no formato YYYY-MM-DD'),
+        themeNotes: z.string().optional(),
+      }),
+      execute: async ({ customerName, customerWhatsapp, productName, variation, quantity, eventDate, themeNotes }) => {
+        const product = await db.product.findFirst({
+          where: { name: { equals: productName, mode: 'insensitive' }, active: true },
+          include: { variations: { where: { active: true } } },
+        });
+        if (!product) {
+          return { erro: `Não encontrei "${productName}" no catálogo ativo. Confirme o nome exato com listarBolosECategorias antes de tentar de novo.` };
+        }
+
+        let unitPrice = product.basePrice;
+        let variationName: string | undefined;
+        if (variation) {
+          const matched = product.variations.find(
+            (v) => v.name.toLowerCase() === variation.toLowerCase()
+          );
+          if (!matched) {
+            return { erro: `"${variation}" não é uma variação válida de "${product.name}". Confirme com listarBolosECategorias.` };
+          }
+          unitPrice = matched.price;
+          variationName = matched.name;
+        }
+
+        const finalTotal = Math.round(unitPrice * quantity * 100) / 100;
+
+        try {
+          const { quote } = await createQuote(db, config.organizationId, {
+            customerName,
+            customerWhatsapp,
+            productId: product.id,
+            productName: product.name,
+            variation: variationName,
+            quantity,
+            unitPrice,
+            eventDate,
+            finalTotal,
+            subtotal: finalTotal,
+            themeNotes,
+            preferredPaymentMethod: 'A combinar',
+            createdByAssistant: true,
+          });
+          return {
+            numeroPedido: quote.quoteNumber,
+            resumo: `Pedido ${quote.quoteNumber} registrado para revisão da confeiteira.`,
+          };
+        } catch (err) {
+          if (err instanceof QuoteValidationError) {
+            return { erro: err.message };
+          }
+          return { erro: 'Não consegui registrar o pedido agora. Tente novamente ou fale direto no WhatsApp.' };
+        }
       },
     }),
   };
