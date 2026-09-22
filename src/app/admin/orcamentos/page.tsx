@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { PixChargeModal } from '@/components/admin/PixChargeModal';
 import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
-import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle2, MessageCircle, Clock, Search, Eye, ShoppingBag, Tag, QrCode } from 'lucide-react';
 
 export default function AdminQuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -11,6 +12,7 @@ export default function AdminQuotesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
 
   const loadQuotes = async () => {
     try {
@@ -61,6 +63,13 @@ export default function AdminQuotesPage() {
     }
   };
 
+  const handleRejectQuote = (quoteId: string) => {
+    if (confirm('Deseja recusar este orçamento? O cliente não será notificado automaticamente.')) {
+      handleUpdateStatus(quoteId, 'REJECTED');
+      if (selectedQuote?.id === quoteId) setSelectedQuote(null);
+    }
+  };
+
   const filteredQuotes = quotes.filter((q) => {
     const matchesSearch =
       q.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,7 +79,7 @@ export default function AdminQuotesPage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -154,6 +163,11 @@ export default function AdminQuotesPage() {
                       <td className="p-4 font-medium">{formatDate(q.eventDate)}</td>
                       <td className="p-4 font-extrabold text-[#C27360] font-serif">
                         {formatCurrency(q.finalTotal)}
+                        {q.couponCode && (
+                          <span className="block text-[9px] font-bold text-emerald-700 uppercase mt-0.5">
+                            🏷️ {q.couponCode}
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         <span
@@ -180,13 +194,21 @@ export default function AdminQuotesPage() {
                         >
                           Ver Detalhes
                         </button>
-                        {q.status !== 'CONVERTED' && (
-                          <button
-                            onClick={() => handleConvertToOrder(q.id)}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm"
-                          >
-                            Converter em Pedido
-                          </button>
+                        {q.status !== 'CONVERTED' && q.status !== 'REJECTED' && (
+                          <>
+                            <button
+                              onClick={() => handleConvertToOrder(q.id)}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-sm"
+                            >
+                              Converter em Pedido
+                            </button>
+                            <button
+                              onClick={() => handleRejectQuote(q.id)}
+                              className="px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-600 font-bold hover:bg-red-50"
+                            >
+                              Recusar
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
@@ -216,6 +238,7 @@ export default function AdminQuotesPage() {
                   <p><strong>Cliente:</strong> {selectedQuote.customerName}</p>
                   <p><strong>WhatsApp:</strong> {selectedQuote.customerWhatsapp}</p>
                   <p><strong>Data Desejada:</strong> {formatDate(selectedQuote.eventDate)}</p>
+                  <p><strong>Forma de Pagamento:</strong> {selectedQuote.preferredPaymentMethod || 'Não informado'}</p>
                   {selectedQuote.themeNotes && <p><strong>Tema/Obs:</strong> {selectedQuote.themeNotes}</p>}
                 </div>
 
@@ -227,7 +250,9 @@ export default function AdminQuotesPage() {
                       {item.variation && <p>Tamanho: {item.variation}</p>}
                       {item.cakeBase && <p>Massa: {item.cakeBase}</p>}
                       {item.filling1 && <p>Recheio 1: {item.filling1}</p>}
-                      {item.frosting && <p>Cobertura: {item.frosting}</p>}
+                      {item.frosting && !(item.variation || '').includes(item.frosting) && (
+                        <p>Cobertura: {item.frosting}</p>
+                      )}
                       {item.extras && <p>Adicionais: {item.extras}</p>}
                       <div className="flex justify-between items-center pt-2 border-t border-gray-100 font-bold text-[#C27360]">
                         <span>Qtd: {item.quantity}x</span>
@@ -238,21 +263,66 @@ export default function AdminQuotesPage() {
                 </div>
               </div>
 
+              {selectedQuote.couponCode && (
+                <div className="flex justify-between items-center text-xs bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                  <span className="font-bold text-emerald-800 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5" /> Cupom {selectedQuote.couponCode}
+                  </span>
+                  <span className="font-bold text-emerald-800">
+                    -{formatCurrency(selectedQuote.discount || 0)}
+                  </span>
+                </div>
+              )}
+
+              {selectedQuote.depositAmount ? (
+                <div className="flex justify-between items-center text-xs bg-amber-50 border border-amber-200 rounded-xl p-2.5">
+                  <span className="font-bold text-amber-800 flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5" /> Sinal sugerido
+                  </span>
+                  <span className="font-bold text-amber-800">
+                    {formatCurrency(selectedQuote.depositAmount)}
+                  </span>
+                </div>
+              ) : null}
+
               <div className="pt-4 border-t border-[#F2D7D0] flex justify-between items-center">
                 <span className="font-extrabold text-lg text-[#C27360] font-serif">
                   {formatCurrency(selectedQuote.finalTotal)}
                 </span>
-                {selectedQuote.status !== 'CONVERTED' && (
-                  <button
-                    onClick={() => handleConvertToOrder(selectedQuote.id)}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md"
-                  >
-                    Converter em Pedido Agora
-                  </button>
+                {selectedQuote.status !== 'CONVERTED' && selectedQuote.status !== 'REJECTED' && (
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <button
+                      onClick={() => setIsPixModalOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-bold text-xs hover:bg-emerald-50 flex items-center gap-1.5"
+                    >
+                      <QrCode className="w-3.5 h-3.5" /> Cobrar Sinal via Pix
+                    </button>
+                    <button
+                      onClick={() => handleRejectQuote(selectedQuote.id)}
+                      className="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50"
+                    >
+                      Recusar
+                    </button>
+                    <button
+                      onClick={() => handleConvertToOrder(selectedQuote.id)}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md"
+                    >
+                      Converter em Pedido Agora
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
+        )}
+
+        {isPixModalOpen && selectedQuote && (
+          <PixChargeModal
+            onClose={() => setIsPixModalOpen(false)}
+            defaultAmount={selectedQuote.depositAmount || selectedQuote.finalTotal}
+            txid={selectedQuote.quoteNumber}
+            customerName={selectedQuote.customerName}
+          />
         )}
 
       </main>

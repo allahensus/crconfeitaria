@@ -15,7 +15,7 @@ export async function PUT(
 
     const { id } = await context.params;
     const body = await request.json();
-    const { name, unit, packageQuantity, costPrice, category } = body;
+    const { name, unit, packageQuantity, costPrice, category, stockQuantity, lowStockThreshold } = body;
 
     const ingredient = await db.ingredient.update({
       where: { id },
@@ -25,6 +25,8 @@ export async function PUT(
         ...(packageQuantity !== undefined && { packageQuantity: parseFloat(packageQuantity) }),
         ...(costPrice !== undefined && { costPrice: parseFloat(costPrice) }),
         ...(category && { category }),
+        ...(stockQuantity !== undefined && { stockQuantity: parseFloat(stockQuantity) }),
+        ...(lowStockThreshold !== undefined && { lowStockThreshold: parseFloat(lowStockThreshold) }),
       },
     });
 

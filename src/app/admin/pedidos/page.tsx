@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { PixChargeModal } from '@/components/admin/PixChargeModal';
+import { formatCurrency, formatDate, generateReviewRequestLink } from '@/lib/utils';
 import {
   ShoppingBag,
   Kanban,
@@ -16,6 +17,7 @@ import {
   X,
   CreditCard,
   MessageCircle,
+  Star,
 } from 'lucide-react';
 
 const STATUS_COLUMNS = [
@@ -32,11 +34,13 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [settings, setSettings] = useState<Record<string, string>>({});
 
   // Payment Modal state
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Pix');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
 
   const loadOrders = async () => {
     try {
@@ -52,7 +56,20 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     loadOrders();
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === 'object') setSettings(data);
+      })
+      .catch((err) => console.error(err));
   }, []);
+
+  const handleRequestReview = (order: any) => {
+    const bakeryName = settings.bakery_name || 'nossa confeitaria';
+    const reviewUrl = `${window.location.origin}/avaliar`;
+    const link = generateReviewRequestLink(order.customerWhatsapp, order.customerName, bakeryName, reviewUrl);
+    window.open(link, '_blank');
+  };
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
@@ -61,7 +78,14 @@ export default function AdminOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (res.ok) loadOrders();
+      if (res.ok) {
+        const data = await res.json();
+        loadOrders();
+        // Surfaces a real gap, not a false alarm: an item with no product
+        // linked or no Ficha Técnica registered has its stock silently
+        // skipped otherwise -- see src/lib/stock.ts.
+        if (data?.stockWarning) alert(data.stockWarning);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -95,7 +119,7 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -280,6 +304,12 @@ export default function AdminOrdersPage() {
                   <p><strong>Cliente:</strong> {selectedOrder.customerName}</p>
                   <p><strong>WhatsApp:</strong> {selectedOrder.customerWhatsapp}</p>
                   <p><strong>Data Entrega:</strong> {formatDate(selectedOrder.deliveryDate)}</p>
+                  {selectedOrder.preferredPaymentMethod && (
+                    <p><strong>Forma de Pagamento Preferida:</strong> {selectedOrder.preferredPaymentMethod}</p>
+                  )}
+                  {selectedOrder.depositAmount ? (
+                    <p><strong>Sinal Sugerido:</strong> {formatCurrency(selectedOrder.depositAmount)}</p>
+                  ) : null}
                   {selectedOrder.notes && <p><strong>Notas:</strong> {selectedOrder.notes}</p>}
                 </div>
 
@@ -305,6 +335,15 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
+                {selectedOrder.status === 'ENTREGUE' && (
+                  <button
+                    onClick={() => handleRequestReview(selectedOrder)}
+                    className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Star className="w-4 h-4" /> Pedir Avaliação no WhatsApp
+                  </button>
+                )}
+
                 {/* Financial Payment Summary */}
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
                   <div className="flex justify-between items-center font-bold text-[#4A231A]">
@@ -320,12 +359,20 @@ export default function AdminOrdersPage() {
                     <span>{formatCurrency(Math.max(0, selectedOrder.totalAmount - selectedOrder.paidAmount))}</span>
                   </div>
 
-                  <button
-                    onClick={() => setIsPaymentModalOpen(true)}
-                    className="w-full mt-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
-                  >
-                    + Registrar Novo Pagamento (Pix/Cartão/Dinheiro)
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button
+                      onClick={() => setIsPixModalOpen(true)}
+                      className="py-2 rounded-xl bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold text-xs shadow-sm"
+                    >
+                      Gerar Cobrança Pix
+                    </button>
+                    <button
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
+                    >
+                      + Registrar Pagamento
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -388,6 +435,15 @@ export default function AdminOrdersPage() {
               </form>
             </div>
           </div>
+        )}
+
+        {isPixModalOpen && selectedOrder && (
+          <PixChargeModal
+            onClose={() => setIsPixModalOpen(false)}
+            defaultAmount={Math.max(0, selectedOrder.totalAmount - selectedOrder.paidAmount)}
+            txid={selectedOrder.orderNumber}
+            customerName={selectedOrder.customerName}
+          />
         )}
 
       </main>

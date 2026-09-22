@@ -16,6 +16,8 @@ import {
   Award,
   Users,
   PlusCircle,
+  Percent,
+  Trophy,
 } from 'lucide-react';
 import {
   BarChart,
@@ -30,31 +32,92 @@ import {
   Cell,
 } from 'recharts';
 
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function buildMonthlyRevenueExpense(transactions: any[]) {
+  const now = new Date();
+  const months: { key: string; name: string; receita: number; despesa: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, name: MONTH_LABELS[d.getMonth()], receita: 0, despesa: 0 });
+  }
+  const byKey = new Map(months.map((m) => [m.key, m]));
+  for (const t of transactions) {
+    const d = new Date(t.date);
+    const bucket = byKey.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (!bucket) continue;
+    if (t.type === 'RECEITA') bucket.receita += t.amount;
+    else if (t.type === 'DESPESA') bucket.despesa += t.amount;
+  }
+  return months;
+}
+
+function buildTopProducts(orders: any[]) {
+  const totals = new Map<string, { name: string; quantity: number; revenue: number }>();
+  for (const o of orders) {
+    for (const item of o.items || []) {
+      const existing = totals.get(item.productName) || { name: item.productName, quantity: 0, revenue: 0 };
+      existing.quantity += item.quantity;
+      existing.revenue += item.totalPrice;
+      totals.set(item.productName, existing);
+    }
+  }
+  return Array.from(totals.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+}
+
+function buildPaymentMethodsBreakdown(orders: any[]) {
+  const totals: Record<string, number> = {};
+  for (const o of orders) {
+    for (const p of o.payments || []) {
+      totals[p.paymentMethod] = (totals[p.paymentMethod] || 0) + p.amount;
+    }
+  }
+  const totalPaid = Object.values(totals).reduce((a, b) => a + b, 0);
+  if (totalPaid === 0) return [];
+  return Object.entries(totals)
+    .map(([name, amount]) => ({ name, amount, value: Math.round((amount / totalPaid) * 100) }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => setRole(data?.user?.role || null))
+      .catch(() => setRole(null));
+  }, []);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [finRes, ordRes, qutoRes, custRes] = await Promise.all([
+        const [finRes, finAllRes, ordRes, qutoRes, custRes] = await Promise.all([
           fetch('/api/finance?range=month'),
+          fetch('/api/finance?range=all'),
           fetch('/api/orders'),
           fetch('/api/quotes'),
           fetch('/api/customers'),
         ]);
 
-        const [finData, ordData, qutoData, custData] = await Promise.all([
+        const [finData, finAllData, ordData, qutoData, custData] = await Promise.all([
           finRes.json(),
+          finAllRes.json(),
           ordRes.json(),
           qutoRes.json(),
           custRes.json(),
         ]);
 
-        if (finData && finData.metrics) setMetrics(finData.metrics);
+        if (finRes.ok && finData && finData.metrics) setMetrics(finData.metrics);
+        if (finAllRes.ok && finAllData && Array.isArray(finAllData.transactions)) setAllTransactions(finAllData.transactions);
         if (Array.isArray(ordData)) setOrders(ordData);
         if (Array.isArray(qutoData)) setQuotes(qutoData);
         if (Array.isArray(custData)) setCustomers(custData);
@@ -80,25 +143,26 @@ export default function AdminDashboardPage() {
   const pendingQuotesCount = quotes.filter((q) => q.status === 'PENDING').length;
   const approvedQuotesCount = quotes.filter((q) => q.status === 'APPROVED' || q.status === 'CONVERTED').length;
 
-  // Chart sample data
-  const revenueVsExpenseData = [
-    { name: 'Jan', receita: 1200, despesa: 450 },
-    { name: 'Fev', receita: 1850, despesa: 600 },
-    { name: 'Mar', receita: 2400, despesa: 800 },
-    { name: 'Abr', receita: 3100, despesa: 950 },
-    { name: 'Mai', receita: (metrics?.totalRevenue || 0) + 1500, despesa: (metrics?.totalExpenses || 0) + 400 },
-  ];
+  // Dados reais: últimos 6 meses de receita/despesa e distribuição real de formas de pagamento
+  const revenueVsExpenseData = buildMonthlyRevenueExpense(allTransactions);
+  const paymentMethodsData = buildPaymentMethodsBreakdown(orders);
+  const topProducts = buildTopProducts(orders);
 
-  const paymentMethodsData = [
-    { name: 'Pix', value: 70 },
-    { name: 'Cartão', value: 20 },
-    { name: 'Dinheiro', value: 10 },
-  ];
+  // Taxa de conversão: de todos os orçamentos recebidos, quantos viraram pedido
+  const convertedQuotesCount = quotes.filter((q) => q.status === 'CONVERTED').length;
+  const conversionRate = quotes.length > 0 ? (convertedQuotesCount / quotes.length) * 100 : 0;
 
-  const COLORS = ['#C27360', '#D59483', '#E6B9AE'];
+  // Taxa de clientes recorrentes: de quem já comprou ao menos 1x, quantos voltaram
+  const customersWithOrders = customers.filter((c) => (c._count?.orders || 0) >= 1);
+  const recurringCustomersCount = customersWithOrders.filter((c) => (c._count?.orders || 0) >= 2).length;
+  const recurringRate = customersWithOrders.length > 0
+    ? (recurringCustomersCount / customersWithOrders.length) * 100
+    : 0;
+
+  const COLORS = ['#C27360', '#D59483', '#E6B9AE', '#A75644', '#4A231A'];
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -127,7 +191,7 @@ export default function AdminDashboardPage() {
         {/* 10 Key Indicator Metric Cards */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
               <div key={i} className="h-28 rounded-2xl bg-gray-200" />
             ))}
           </div>
@@ -141,7 +205,7 @@ export default function AdminDashboardPage() {
                   Faturamento Mês
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.totalRevenue || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.totalRevenue || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5 mt-1">
                   <TrendingUp className="w-3 h-3" /> Receitas consolidadas
@@ -159,7 +223,7 @@ export default function AdminDashboardPage() {
                   Lucro Estimado Mês
                 </span>
                 <h3 className="text-xl font-bold text-emerald-700 font-serif mt-1">
-                  {formatCurrency(metrics?.netProfit || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.netProfit || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Receita despesada
@@ -231,7 +295,7 @@ export default function AdminDashboardPage() {
                   Contas a Receber
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.accountsReceivable || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.accountsReceivable || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-rose-600 font-semibold mt-1 block">
                   Sinais a quitar na entrega
@@ -249,7 +313,7 @@ export default function AdminDashboardPage() {
                   Despesas Mês
                 </span>
                 <h3 className="text-xl font-bold text-red-600 font-serif mt-1">
-                  {formatCurrency(metrics?.totalExpenses || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.totalExpenses || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Ingredientes & Embalagens
@@ -267,7 +331,7 @@ export default function AdminDashboardPage() {
                   Ticket Médio Pedido
                 </span>
                 <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
-                  {formatCurrency(metrics?.averageTicket || 0)}
+                  {role === 'OWNER' ? formatCurrency(metrics?.averageTicket || 0) : '—'}
                 </h3>
                 <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
                   Média por venda
@@ -275,6 +339,42 @@ export default function AdminDashboardPage() {
               </div>
               <div className="w-12 h-12 rounded-xl bg-[#FAF6F4] text-[#C27360] flex items-center justify-center font-bold">
                 <Award className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Card 9: Taxa de Conversão (Orçamento -> Pedido) */}
+            <div className="bg-white p-5 rounded-2xl border border-[#F2D7D0] shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#645451]">
+                  Conversão Orçamento → Pedido
+                </span>
+                <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
+                  {quotes.length > 0 ? `${conversionRate.toFixed(0)}%` : '—'}
+                </h3>
+                <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
+                  {convertedQuotesCount} de {quotes.length} orçamento(s)
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-[#F9ECE9] text-[#A75644] flex items-center justify-center font-bold">
+                <Percent className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Card 10: Clientes Recorrentes */}
+            <div className="bg-white p-5 rounded-2xl border border-[#F2D7D0] shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#645451]">
+                  Clientes Recorrentes
+                </span>
+                <h3 className="text-xl font-bold text-[#4A231A] font-serif mt-1">
+                  {customersWithOrders.length > 0 ? `${recurringRate.toFixed(0)}%` : '—'}
+                </h3>
+                <span className="text-[10px] text-[#645451] font-semibold mt-1 block">
+                  {recurringCustomersCount} de {customersWithOrders.length} cliente(s) voltaram
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-[#FDF7F6] text-[#C27360] flex items-center justify-center font-bold">
+                <Users className="w-6 h-6" />
               </div>
             </div>
 
@@ -345,18 +445,24 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="h-72 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueVsExpenseData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F2D7D0" />
-                  <XAxis dataKey="name" stroke="#645451" fontSize={12} />
-                  <YAxis stroke="#645451" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#FAF6F4', borderRadius: '12px', border: '1px solid #F2D7D0' }}
-                  />
-                  <Bar dataKey="receita" fill="#C27360" name="Receita (R$)" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="despesa" fill="#D59483" name="Despesa (R$)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {role === 'OWNER' ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueVsExpenseData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F2D7D0" />
+                    <XAxis dataKey="name" stroke="#645451" fontSize={12} />
+                    <YAxis stroke="#645451" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#FAF6F4', borderRadius: '12px', border: '1px solid #F2D7D0' }}
+                    />
+                    <Bar dataKey="receita" fill="#C27360" name="Receita (R$)" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="despesa" fill="#D59483" name="Despesa (R$)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-sm text-[#645451]">
+                  Visível apenas para a dona da loja
+                </div>
+              )}
             </div>
           </div>
 
@@ -369,40 +475,97 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-[#645451]">Distribuição das vendas por método</p>
             </div>
 
-            <div className="h-60 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={paymentMethodsData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {paymentMethodsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-[#F2D7D0]">
-              {paymentMethodsData.map((p, i) => (
-                <div key={p.name} className="flex justify-between items-center text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-[#4A231A] font-medium">{p.name}</span>
-                  </div>
-                  <span className="font-bold text-[#C27360]">{p.value}%</span>
+            {paymentMethodsData.length === 0 ? (
+              <div className="h-60 w-full flex flex-col items-center justify-center text-center gap-2 text-[#645451]">
+                <PieChartIcon className="w-8 h-8 text-[#F2D7D0]" />
+                <p className="text-xs">
+                  Nenhum pagamento registrado ainda.<br />Assim que houver pagamentos em Pedidos, a distribuição aparece aqui.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="h-60 w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={paymentMethodsData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {paymentMethodsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-2 pt-2 border-t border-[#F2D7D0]">
+                  {paymentMethodsData.map((p, i) => (
+                    <div key={p.name} className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="text-[#4A231A] font-medium">{p.name}</span>
+                      </div>
+                      <span className="font-bold text-[#C27360]">{p.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
+        </div>
+
+        {/* Top Products Panel */}
+        <div className="bg-white p-6 rounded-3xl border border-[#F2D7D0] shadow-card space-y-4">
+          <div>
+            <h3 className="font-serif text-lg font-bold text-[#4A231A] flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-[#C27360]" /> Produtos Mais Vendidos
+            </h3>
+            <p className="text-xs text-[#645451]">Ranking por faturamento, com base nos pedidos já feitos</p>
+          </div>
+
+          {topProducts.length === 0 ? (
+            <p className="text-xs text-[#645451] py-4">
+              Nenhum item vendido ainda. Assim que os pedidos tiverem produtos, o ranking aparece aqui.
+            </p>
+          ) : (
+            <div className="space-y-3 pt-2">
+              {topProducts.map((p, i) => {
+                const maxRevenue = topProducts[0].revenue || 1;
+                return (
+                  <div key={p.name} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-[#F9ECE9] text-[#A75644] text-xs font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-xs font-semibold text-[#4A231A] truncate">{p.name}</span>
+                        <span className="text-xs font-bold text-[#C27360] font-serif shrink-0">
+                          {formatCurrency(p.revenue)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#FAF6F4] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#C27360] to-[#A75644]"
+                          style={{ width: `${Math.max(4, (p.revenue / maxRevenue) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-[#645451] font-semibold shrink-0 w-16 text-right">
+                      {p.quantity} un.
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </main>

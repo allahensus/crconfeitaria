@@ -54,6 +54,7 @@ export async function PUT(
         cpf: body.cpf,
         address: body.address,
         notes: body.notes,
+        birthDate: body.birthDate !== undefined ? (body.birthDate ? new Date(body.birthDate) : null) : undefined,
       },
     });
 

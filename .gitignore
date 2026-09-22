@@ -36,3 +36,4 @@ prisma/data-export.json
 
 # local MCP server config
 .mcp.json
+.env*

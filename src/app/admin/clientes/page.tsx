@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { formatCurrency, formatDate, formatWhatsappForUrl } from '@/lib/utils';
-import { Users, Search, MessageCircle, Cake, Mail, ShieldCheck, Gift, Tag, X, Send, Sparkles } from 'lucide-react';
+import { daysUntilNextBirthday, isBirthdayWithinDays } from '@/lib/birthdays';
+import { Users, Search, MessageCircle, Cake, Mail, ShieldCheck, Gift, Tag, X, Send, Sparkles, Edit2, Trash2, Check } from 'lucide-react';
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -11,6 +12,17 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'birthdays'>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  // Edit customer state
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editCpf, setEditCpf] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editErrorMsg, setEditErrorMsg] = useState('');
 
   // Promo modal state
   const [promoCustomer, setPromoCustomer] = useState<any>(null);
@@ -37,31 +49,110 @@ export default function AdminCustomersPage() {
     try {
       const res = await fetch(`/api/customers/${id}`);
       const data = await res.json();
-      if (data) setSelectedCustomer(data);
+      if (data) {
+        setSelectedCustomer(data);
+        setIsEditingCustomer(false);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const currentMonth = new Date().getMonth();
-
-  const isBirthdayThisMonth = (birthDateStr?: string) => {
-    if (!birthDateStr) return false;
-    const d = new Date(birthDateStr);
-    return !isNaN(d.getTime()) && d.getMonth() === currentMonth;
+  const handleStartEdit = () => {
+    if (!selectedCustomer) return;
+    setEditName(selectedCustomer.name || '');
+    setEditWhatsapp(selectedCustomer.whatsapp || '');
+    setEditEmail(selectedCustomer.email || '');
+    setEditCpf(selectedCustomer.cpf || '');
+    setEditAddress(selectedCustomer.address || '');
+    setEditBirthDate(selectedCustomer.birthDate ? selectedCustomer.birthDate.slice(0, 10) : '');
+    setEditNotes(selectedCustomer.notes || '');
+    setEditErrorMsg('');
+    setIsEditingCustomer(true);
   };
 
-  const filtered = customers.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.whatsapp.includes(searchTerm) ||
-      (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    if (filterType === 'birthdays') {
-      return matchesSearch && isBirthdayThisMonth(c.birthDate);
+  const handleSaveCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomer) return;
+    setEditErrorMsg('');
+    try {
+      const res = await fetch(`/api/customers/${selectedCustomer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          whatsapp: editWhatsapp,
+          email: editEmail || null,
+          cpf: editCpf || null,
+          address: editAddress || null,
+          birthDate: editBirthDate || null,
+          notes: editNotes || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsEditingCustomer(false);
+        setSelectedCustomer({ ...selectedCustomer, ...data });
+        loadCustomers();
+      } else {
+        setEditErrorMsg(data.error || 'Erro ao salvar cliente.');
+      }
+    } catch (err) {
+      console.error(err);
+      setEditErrorMsg('Erro ao conectar ao servidor.');
     }
-    return matchesSearch;
-  });
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!selectedCustomer) return;
+    if (
+      !confirm(
+        `Excluir "${selectedCustomer.name}" definitivamente? Os dados pessoais (nome, WhatsApp, e-mail, CPF, endereço) serão apagados. Os pedidos e valores já registrados são mantidos no histórico financeiro, apenas desvinculados deste cliente. Essa ação não pode ser desfeita.`
+      )
+    )
+      return;
+    try {
+      const res = await fetch(`/api/customers/${selectedCustomer.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setSelectedCustomer(null);
+        loadCustomers();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Erro ao excluir cliente.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao conectar ao servidor.');
+    }
+  };
+
+  const BIRTHDAY_WINDOW_DAYS = 30;
+
+  // "Coming up in the next 30 days", not "same calendar month" -- a same-month
+  // check misses a birthday landing right after the month rolls over, and
+  // keeps flagging one from days ago as if it still needed action.
+  const isBirthdayUpcoming = (birthDateStr?: string) => {
+    if (!birthDateStr) return false;
+    const d = new Date(birthDateStr);
+    return !isNaN(d.getTime()) && isBirthdayWithinDays(d, BIRTHDAY_WINDOW_DAYS);
+  };
+
+  const filtered = customers
+    .filter((c) => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.whatsapp.includes(searchTerm) ||
+        (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      if (filterType === 'birthdays') {
+        return matchesSearch && isBirthdayUpcoming(c.birthDate);
+      }
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (filterType !== 'birthdays') return 0;
+      return daysUntilNextBirthday(new Date(a.birthDate)) - daysUntilNextBirthday(new Date(b.birthDate));
+    });
 
   const generatePromoTemplate = (type: 'birthday' | 'catalog' | 'discount' | 'custom', customerName: string) => {
     const firstName = customerName ? customerName.split(' ')[0] : 'Cliente';
@@ -102,7 +193,7 @@ export default function AdminCustomersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -149,8 +240,8 @@ export default function AdminCustomersPage() {
                   : 'bg-white text-rose-700 border border-rose-200'
               }`}
             >
-              <Cake className="w-4 h-4" /> Aniversariantes do Mês (
-              {customers.filter((c) => isBirthdayThisMonth(c.birthDate)).length})
+              <Cake className="w-4 h-4" /> Aniversariantes (30 dias) (
+              {customers.filter((c) => isBirthdayUpcoming(c.birthDate)).length})
             </button>
           </div>
         </div>
@@ -160,6 +251,7 @@ export default function AdminCustomersPage() {
           <div className="py-8 text-center text-[#645451]">Carregando base de clientes...</div>
         ) : (
           <div className="bg-white rounded-3xl border border-[#F2D7D0] overflow-hidden shadow-card">
+            <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#FDF7F6] border-b border-[#F2D7D0] text-[11px] uppercase tracking-wider font-bold text-[#A75644]">
@@ -197,12 +289,24 @@ export default function AdminCustomersPage() {
                       {c.birthDate ? (
                         <span
                           className={`font-semibold px-2.5 py-1 rounded-full text-[11px] inline-flex items-center gap-1 ${
-                            isBirthdayThisMonth(c.birthDate)
+                            isBirthdayUpcoming(c.birthDate)
                               ? 'bg-rose-100 text-rose-800 font-bold border border-rose-300'
                               : 'bg-gray-100 text-gray-700'
                           }`}
+                          title={
+                            isBirthdayUpcoming(c.birthDate)
+                              ? `Faltam ${daysUntilNextBirthday(new Date(c.birthDate))} dia(s)`
+                              : undefined
+                          }
                         >
                           <Cake className="w-3 h-3" /> {formatDate(c.birthDate).slice(0, 5)}
+                          {isBirthdayUpcoming(c.birthDate) && (
+                            <span className="ml-0.5">
+                              · {daysUntilNextBirthday(new Date(c.birthDate)) === 0
+                                ? 'Hoje!'
+                                : `${daysUntilNextBirthday(new Date(c.birthDate))}d`}
+                            </span>
+                          )}
                         </span>
                       ) : (
                         <span className="text-gray-400 italic">Não informado</span>
@@ -220,7 +324,7 @@ export default function AdminCustomersPage() {
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-1.5">
-                      {isBirthdayThisMonth(c.birthDate) && (
+                      {isBirthdayUpcoming(c.birthDate) && (
                         <button
                           onClick={() => handleOpenPromoModal(c, 'birthday')}
                           className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-sm inline-flex items-center gap-1"
@@ -245,6 +349,7 @@ export default function AdminCustomersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
@@ -346,32 +451,146 @@ export default function AdminCustomersPage() {
                     WhatsApp: {selectedCustomer.whatsapp} {selectedCustomer.email && `| E-mail: ${selectedCustomer.email}`}
                   </p>
                 </div>
-                <button onClick={() => setSelectedCustomer(null)}>
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {!isEditingCustomer && (
+                    <>
+                      <button
+                        onClick={handleStartEdit}
+                        className="p-2 rounded-lg bg-white border border-[#F2D7D0] text-[#4A231A] hover:bg-[#FAF6F4]"
+                        title="Editar cliente"
+                      >
+                        <Edit2 className="w-4 h-4 text-[#C27360]" />
+                      </button>
+                      <button
+                        onClick={handleDeleteCustomer}
+                        className="p-2 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50"
+                        title="Excluir cliente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  <button onClick={() => setSelectedCustomer(null)}>
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                </div>
               </div>
 
-              {/* Info Badges */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
-                  <span className="text-[10px] uppercase font-bold text-[#A75644]">Data de Nascimento</span>
-                  <p className="text-sm font-bold font-serif text-[#4A231A] mt-0.5">
-                    {selectedCustomer.birthDate ? formatDate(selectedCustomer.birthDate) : 'Não informada'}
-                  </p>
-                </div>
-                <div className="p-3 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
-                  <span className="text-[10px] uppercase font-bold text-[#A75644]">Total Gasto</span>
-                  <p className="text-sm font-bold font-serif text-[#C27360] mt-0.5">
-                    {formatCurrency(selectedCustomer.totalSpent || 0)}
-                  </p>
-                </div>
-                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
-                  <span className="text-[10px] uppercase font-bold text-emerald-800">Conformidade LGPD</span>
-                  <p className="text-xs font-bold text-emerald-700 mt-0.5 flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Aceite Registrado
-                  </p>
-                </div>
-              </div>
+              {isEditingCustomer ? (
+                <form onSubmit={handleSaveCustomer} className="space-y-3">
+                  {editErrorMsg && (
+                    <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl p-2.5">
+                      {editErrorMsg}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">Nome *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">WhatsApp *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editWhatsapp}
+                        onChange={(e) => setEditWhatsapp(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">E-mail</label>
+                      <input
+                        type="email"
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">CPF</label>
+                      <input
+                        type="text"
+                        value={editCpf}
+                        onChange={(e) => setEditCpf(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">Data de Nascimento</label>
+                      <input
+                        type="date"
+                        value={editBirthDate}
+                        onChange={(e) => setEditBirthDate(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">Endereço</label>
+                      <input
+                        type="text"
+                        value={editAddress}
+                        onChange={(e) => setEditAddress(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-[#A75644] mb-1">Observações</label>
+                    <textarea
+                      rows={2}
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#F2D7D0] text-sm outline-none focus:ring-2 focus:ring-[#C27360] resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingCustomer(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-[#F2D7D0] text-[#4A231A] font-bold text-xs hover:bg-[#FAF6F4]"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C27360] to-[#A75644] text-white font-bold text-xs shadow-blush hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-4 h-4" /> Salvar
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  {/* Info Badges */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
+                      <span className="text-[10px] uppercase font-bold text-[#A75644]">Data de Nascimento</span>
+                      <p className="text-sm font-bold font-serif text-[#4A231A] mt-0.5">
+                        {selectedCustomer.birthDate ? formatDate(selectedCustomer.birthDate) : 'Não informada'}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-[#FDF7F6] border border-[#F2D7D0]">
+                      <span className="text-[10px] uppercase font-bold text-[#A75644]">Total Gasto</span>
+                      <p className="text-sm font-bold font-serif text-[#C27360] mt-0.5">
+                        {formatCurrency(selectedCustomer.totalSpent || 0)}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                      <span className="text-[10px] uppercase font-bold text-emerald-800">Conformidade LGPD</span>
+                      <p className="text-xs font-bold text-emerald-700 mt-0.5 flex items-center gap-1">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" /> Aceite Registrado
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Order History */}
               <div className="space-y-2">

@@ -11,16 +11,17 @@ interface ContactFooterProps {
 export function ContactFooter({ settings }: ContactFooterProps) {
   const whatsappNumber = settings?.whatsapp_number || '5512997594697';
   const instagram = settings?.instagram || '@crconfeitaria__';
+  const bakeryName = settings?.bakery_name || 'Cinthia Rodrigues';
 
   return (
-    <footer id="contato" className="bg-[#3D312F] text-white pt-16 pb-12 border-t border-[#645451]">
+    <footer id="contato" className="bg-[#3D312F] text-white pt-16 pb-12 border-t border-[var(--color-text-soft)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           
           {/* Brand Info */}
           <div className="space-y-4">
-            <h3 className="font-serif text-2xl font-bold text-[#F2D7D0]">
-              Cinthia Rodrigues
+            <h3 className="font-serif text-2xl font-bold text-[var(--color-border)]">
+              {bakeryName}
             </h3>
             <p className="text-xs text-[#E3E0DE] leading-relaxed">
               Confeitaria artesanal de alta qualidade. Bolos e biscoitos preparados com afeto e sofisticação para celebrar seus momentos especiais.
@@ -30,7 +31,8 @@ export function ContactFooter({ settings }: ContactFooterProps) {
                 href={`https://instagram.com/${instagram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-full bg-[#645451] hover:bg-[#C27360] flex items-center justify-center transition-colors text-white"
+                aria-label={`Instagram da Confeitaria ${bakeryName}`}
+                className="w-9 h-9 rounded-full bg-[var(--color-text-soft)] hover:bg-[var(--color-accent)] flex items-center justify-center transition-colors text-white"
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -38,7 +40,8 @@ export function ContactFooter({ settings }: ContactFooterProps) {
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-full bg-[#645451] hover:bg-emerald-600 flex items-center justify-center transition-colors text-white"
+                aria-label="Falar no WhatsApp"
+                className="w-9 h-9 rounded-full bg-[var(--color-text-soft)] hover:bg-emerald-600 flex items-center justify-center transition-colors text-white"
               >
                 <Phone className="w-5 h-5" />
               </a>
@@ -47,33 +50,34 @@ export function ContactFooter({ settings }: ContactFooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-sm text-[#F2D7D0] uppercase tracking-wider mb-4">
+            <h4 className="font-bold text-sm text-[var(--color-border)] uppercase tracking-wider mb-4">
               Navegação
             </h4>
             <ul className="space-y-2.5 text-xs text-[#E3E0DE]">
-              <li><a href="#catalogo" className="hover:text-[#F2D7D0] transition-colors">Catálogo de Bolos</a></li>
-              <li><a href="#sabores" className="hover:text-[#F2D7D0] transition-colors">Cardápio de Recheios</a></li>
-              <li><a href="#depoimentos" className="hover:text-[#F2D7D0] transition-colors">Avaliações de Clientes</a></li>
-              <li><a href="#contato" className="hover:text-[#F2D7D0] transition-colors">Contato & Localização</a></li>
+              <li><a href="#catalogo" className="hover:text-[var(--color-border)] transition-colors">Catálogo de Bolos</a></li>
+              <li><a href="#historia" className="hover:text-[var(--color-border)] transition-colors">Nossa História</a></li>
+              <li><a href="#depoimentos" className="hover:text-[var(--color-border)] transition-colors">Avaliações de Clientes</a></li>
+              <li><Link href="/avaliar" className="hover:text-[var(--color-border)] transition-colors">Deixar uma Avaliação</Link></li>
+              <li><a href="#contato" className="hover:text-[var(--color-border)] transition-colors">Contato & Localização</a></li>
             </ul>
           </div>
 
           {/* Business Info */}
           <div>
-            <h4 className="font-bold text-sm text-[#F2D7D0] uppercase tracking-wider mb-4">
+            <h4 className="font-bold text-sm text-[var(--color-border)] uppercase tracking-wider mb-4">
               Atendimento
             </h4>
             <ul className="space-y-3 text-xs text-[#E3E0DE]">
               <li className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#C27360]" />
+                <Clock className="w-4 h-4 text-[var(--color-accent)]" />
                 <span>Terça a Sábado: 09h às 18h</span>
               </li>
               <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#C27360]" />
-                <span>São Paulo - SP (Sob Encomenda)</span>
+                <MapPin className="w-4 h-4 text-[var(--color-accent)]" />
+                <span>{settings?.address || 'São Paulo - SP'} (Sob Encomenda)</span>
               </li>
               <li className="flex items-center gap-2">
-                <Instagram className="w-4 h-4 text-[#C27360]" />
+                <Instagram className="w-4 h-4 text-[var(--color-accent)]" />
                 <span>Siga-nos: {instagram}</span>
               </li>
             </ul>
@@ -81,7 +85,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
 
           {/* Payment Methods Section */}
           <div>
-            <h4 className="font-bold text-sm text-[#F2D7D0] uppercase tracking-wider mb-4">
+            <h4 className="font-bold text-sm text-[var(--color-border)] uppercase tracking-wider mb-4">
               Formas de Pagamento
             </h4>
             <p className="text-xs text-[#E3E0DE] mb-3">
@@ -90,7 +94,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
             
             <div className="space-y-2.5">
               {/* Credit Card Badge */}
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[#645451] hover:border-[#C27360] transition-all">
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[var(--color-text-soft)] hover:border-[var(--color-accent)] transition-all">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-sm shrink-0 text-white">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth="2"/>
@@ -105,7 +109,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
               </div>
 
               {/* Money / Cash Badge */}
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[#645451] hover:border-emerald-500 transition-all">
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[var(--color-text-soft)] hover:border-emerald-500 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-sm shrink-0 text-white">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <rect x="2" y="6" width="20" height="12" rx="2" strokeWidth="2"/>
@@ -120,7 +124,7 @@ export function ContactFooter({ settings }: ContactFooterProps) {
               </div>
 
               {/* Pix Badge */}
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[#645451] hover:border-teal-400 transition-all">
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#4A3B38] border border-[var(--color-text-soft)] hover:border-teal-400 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-[#32BCAD] flex items-center justify-center shadow-sm shrink-0 text-white font-bold text-xs">
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M12 4.4L17.6 10L12 15.6L6.4 10L12 4.4ZM12 2L4 10L12 18L20 10L12 2Z" />
@@ -136,8 +140,8 @@ export function ContactFooter({ settings }: ContactFooterProps) {
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-[#645451] text-center text-xs text-[#E3E0DE] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Confeitaria Cinthia Rodrigues. Todos os direitos reservados.</p>
+        <div className="mt-12 pt-8 border-t border-[var(--color-text-soft)] text-center text-xs text-[#E3E0DE] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} Confeitaria {bakeryName}. Todos os direitos reservados.</p>
           <p className="flex items-center gap-1 text-gray-400">
             Desenvolvido com <Heart className="w-3.5 h-3.5 text-rose-400 fill-current" /> para impulsionar vendas
           </p>

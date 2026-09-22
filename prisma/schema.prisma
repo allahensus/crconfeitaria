@@ -28,11 +28,14 @@ model Organization {
   settings              Setting[]
   testimonials          Testimonial[]
   ingredients           Ingredient[]
+  blockedDates          BlockedDate[]
+  coupons               Coupon[]
+  galleryItems          GalleryItem[]
 }
 
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique
+  email     String
   name      String
   password  String
   role      String   @default("OWNER")
@@ -41,7 +44,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([organizationId])
+  @@unique([organizationId, email])
 }
 
 model Category {
@@ -67,6 +70,10 @@ model Product {
   category    Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   description String
   mainImage   String
+  imageFit    String             @default("contain") // "contain" (full photo, no crop) or "cover" (manual zoom/position)
+  imageZoom   Float              @default(1) // used when imageFit = "cover"
+  imagePosX   Float              @default(50) // 0-100, used when imageFit = "cover"
+  imagePosY   Float              @default(50) // 0-100, used when imageFit = "cover"
   gallery     String?            // JSON string array
   basePrice   Float
   unit        String             @default("unidade") // unidade, kg, etc.
@@ -130,7 +137,7 @@ model Customer {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  @@index([organizationId])
+  @@unique([organizationId, whatsapp])
 }
 
 model Quote {
@@ -141,11 +148,14 @@ model Quote {
   customerName     String
   customerWhatsapp String
   eventDate        DateTime?
+  preferredPaymentMethod String? // Pix, Cartão de Crédito, Dinheiro -- how the customer said they'd pay
   themeNotes       String?
   subtotal         Float
   discount         Float       @default(0.0)
+  couponCode       String?
   extraTotal       Float       @default(0.0)
   finalTotal       Float
+  depositAmount    Float? // sinal sugerido (finalTotal x % configurado em Configurações no momento do envio)
   status           String      @default("PENDING") // PENDING, APPROVED, CONVERTED, REJECTED
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -183,11 +193,14 @@ model Order {
   customer         Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName     String
   customerWhatsapp String
+  preferredPaymentMethod String? // carried over from the quote, if any
+  depositAmount    Float? // carried over from the quote, if any
   deliveryDate     DateTime
   status           String                 @default("NOVO") // NOVO, AGUARDANDO_CONFIRMACAO, CONFIRMADO, PAGAMENTO_PENDENTE, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO
   totalAmount      Float
   paidAmount       Float                  @default(0.0)
   paymentStatus    String                 @default("PENDENTE") // PENDENTE, PARCIAL, PAGO
+  stockDeducted    Boolean                @default(false) // true while this order's recipe ingredients are deducted from stock
   notes            String?
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -204,6 +217,7 @@ model OrderItem {
   id            String  @id @default(uuid())
   orderId       String
   order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String? // links to the catalog Product, when known -- see src/lib/stock.ts
   productName   String
   variationName String?
   cakeBase      String?
@@ -283,18 +297,38 @@ model Testimonial {
   @@index([organizationId])
 }
 
-model Ingredient {
-  id              String       @id @default(uuid())
-  name            String
-  unit            String       @default("g") // g, ml, un, kg
-  packageQuantity Float        // ex: 395 (g) no pacote
-  costPrice       Float        // ex: 7.50 (preço pago no mercado)
-  category        String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+model GalleryItem {
+  id          String   @id @default(uuid())
+  imageUrl    String
+  caption     String?
+  eventType   String
+  imageZoom   Float    @default(1) // 1-2.5, scale applied on top of the cover crop
+  imagePosX   Float    @default(50) // 0-100, object-position X for the cover crop
+  imagePosY   Float    @default(50) // 0-100, object-position Y for the cover crop
+  order       Int      @default(0)
+  active      Boolean  @default(true)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  recipeItems     RecipeItem[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+model Ingredient {
+  id                String       @id @default(uuid())
+  name              String
+  unit              String       @default("g") // g, ml, un, kg
+  packageQuantity   Float        // ex: 395 (g) no pacote
+  costPrice         Float        // ex: 7.50 (preço pago no mercado)
+  category          String       @default("Ingredientes") // Laticínios, Chocolates, Embalagens, etc.
+  stockQuantity     Float        @default(0) // quanto tem em estoque hoje, na unidade acima
+  lowStockThreshold Float        @default(0) // abaixo disso, mostra alerta de estoque baixo
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipeItems       RecipeItem[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   @@index([organizationId])
 }
@@ -308,5 +342,33 @@ model RecipeItem {
   quantityUsed Float      // ex: 150 (g usados por unidade de produto)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model Coupon {
+  id              String    @id @default(uuid())
+  code            String // ex: "NIVER10" -- stored uppercase, matched case-insensitively
+  discountType    String    @default("PERCENT") // PERCENT or FIXED
+  discountValue   Float // 10 = 10% (PERCENT) or R$10,00 (FIXED)
+  active          Boolean   @default(true)
+  expiresAt       DateTime?
+  maxUses         Int? // null = sem limite total de usos
+  oncePerCustomer Boolean   @default(true) // mesmo WhatsApp não pode reusar o código
+  usageCount      Int       @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+
+  @@unique([organizationId, code])
+}
+
+model BlockedDate {
+  id             String   @id @default(uuid())
+  date           DateTime // stored at midnight UTC, one row per unavailable calendar day
+  reason         String?  // ex: "Agenda lotada", "Folga"
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, date])
 }
 

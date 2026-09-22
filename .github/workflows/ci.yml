@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# All test runs share one physical Postgres schema (schema=test on the
+# project's Supabase instance -- see TEST_DATABASE_URL below), and
+# resetTestDatabase() drops and recreates that schema at the start of every
+# test file. Two runs executing at once race each other's DROP/CREATE and
+# corrupt each other's data (seen directly: 4 pushes within a minute produced
+# 4 concurrent runs, all failing on unique-constraint collisions and
+# "db push" errors that had nothing to do with the actual code changes).
+# Queuing runs one at a time for the same branch eliminates that.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      # Dummy values are enough for `prisma generate` and `next build` -- neither
+      # needs a reachable database, they just need these env vars to be set.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/postgres"
+      DIRECT_URL: "postgresql://user:password@localhost:5432/postgres"
+      JWT_SECRET: "ci-placeholder-secret"
+      ROOT_DOMAIN: "localhost"
+      DEFAULT_TENANT_SUBDOMAIN: "cinthia"
+      # Real, isolated Postgres schema (schema=test) on the project's Supabase
+      # instance -- separate from both production (public) and local dev (dev).
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test

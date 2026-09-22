@@ -10,10 +10,17 @@
     "test": "vitest run",
     "db:push": "prisma db push",
     "db:seed": "node --import tsx/esm prisma/seed.ts || ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts",
+    "db:push:prod": "node scripts/with-env.js .env.production.local \"npm run db:push\"",
+    "db:seed:prod": "node scripts/with-env.js .env.production.local \"npm run db:seed\"",
+    "db:studio:prod": "node scripts/with-env.js .env.production.local \"npx prisma studio\"",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.74",
+    "@ai-sdk/react": "^4.0.108",
     "@prisma/client": "^6.4.0",
+    "@vercel/blob": "^2.8.0",
+    "ai": "^7.0.105",
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -21,15 +28,18 @@
     "jose": "^6.0.8",
     "lucide-react": "^0.475.0",
     "next": "^15.1.7",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.13.4",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.20",

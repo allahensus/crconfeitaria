@@ -3,6 +3,15 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// Never hardcode the real admin password here -- this file is committed to
+// git. Set SEED_ADMIN_PASSWORD in the env file passed to the seed command
+// (see scripts/with-env.js) to seed a real password; otherwise this falls
+// back to an insecure placeholder meant only for local dev databases.
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+if (!SEED_ADMIN_PASSWORD) {
+  console.warn('SEED_ADMIN_PASSWORD not set -- seeding the admin user with an insecure placeholder password. Set SEED_ADMIN_PASSWORD before seeding a real/production database.');
+}
+
 async function main() {
   console.log('Seeding Confeitaria Cinthia Database...');
 
@@ -19,9 +28,9 @@ async function main() {
   console.log('Organization ready:', organization.subdomain);
 
   // 1. Create Admin User
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash(SEED_ADMIN_PASSWORD || 'TrocarEssaSenha123!', 10);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@cinthia.com' },
+    where: { organizationId_email: { organizationId: organization.id, email: 'admin@cinthia.com' } },
     update: {
       password: hashedPassword,
       organizationId: organization.id,
@@ -217,16 +226,16 @@ async function main() {
     },
   });
 
-  await prisma.product.upsert({
+  const kitFestaCelebrar = await prisma.product.upsert({
     where: { organizationId_slug: { organizationId: organization.id, slug: 'kit-festa-celebrar' } },
-    update: { mainImage: '/images/bento_cake.jpg' },
+    update: { mainImage: '/images/bento_cake.jpg', basePrice: 98.0 },
     create: {
       name: 'Kit Festa Celebrar (Bentô Cake + Biscoitos)',
       slug: 'kit-festa-celebrar',
       categoryId: catKits.id,
       description: 'Combo perfeito para comemorações! Acompanha 1 Bentô Cake artesanal com cobertura em Buttercream + Biscoitos Amanteigados desenhados no tema da festa.',
       mainImage: '/images/bento_cake.jpg',
-      basePrice: 160.0,
+      basePrice: 98.0,
       unit: 'kit',
       yieldInfo: 'Bentô Cake + Biscoitos Decorados',
       active: true,
@@ -234,11 +243,21 @@ async function main() {
       organizationId: organization.id,
       variations: {
         create: [
-          { name: '10 biscoitos de 6cm (Bentô Cake + 10 Biscoitos 6cm)', price: 160.0, weight: '450g + 10 biscoitos', slices: '2 fatias + biscoitos' },
-          { name: '5 biscoitos de 9cm (sendo 1 no palito) (Bentô Cake + 5 Biscoitos 9cm)', price: 160.0, weight: '450g + 5 biscoitos', slices: '2 fatias + biscoitos' },
+          { name: 'Bentô Cake + 6 Biscoitos 6cm', price: 176.0, weight: '450g + 6 biscoitos', slices: '2 fatias + biscoitos' },
+          { name: 'Bentô Cake + 5 Biscoitos 9cm (1 no palito)', price: 209.50, weight: '450g + 5 biscoitos', slices: '2 fatias + biscoitos' },
         ]
       }
     },
+  });
+
+  // Keep name/price in sync for orgs seeded before this correction.
+  await prisma.productVariation.updateMany({
+    where: { productId: kitFestaCelebrar.id, name: { contains: '6cm' } },
+    data: { name: 'Bentô Cake + 6 Biscoitos 6cm', price: 176.0 },
+  });
+  await prisma.productVariation.updateMany({
+    where: { productId: kitFestaCelebrar.id, name: { contains: '9cm' } },
+    data: { name: 'Bentô Cake + 5 Biscoitos 9cm (1 no palito)', price: 209.50 },
   });
 
   // 5. Official Fillings Options (Full 20-flavor Menu)
@@ -301,36 +320,8 @@ async function main() {
     }
   }
 
-  // 7. Testimonials
-  const testimonials = [
-    {
-      name: 'Mariana Silva',
-      eventType: 'Aniversário Infantil',
-      comment: 'O bolo de Ninho com Morangos estava divino e super delicado! Todos os convidados elogiaram muito.',
-      rating: 5,
-    },
-    {
-      name: 'Camila Rocha',
-      eventType: 'Mesversário',
-      comment: 'Os biscoitos personalizados do Bentô Cake superaram minhas expectativas. Dá até pena de comer de tão lindo!',
-      rating: 5,
-    },
-    {
-      name: 'Fernanda Lima',
-      eventType: 'Casamento',
-      comment: 'Atendimento impecável via WhatsApp e a entrega foi super pontual. O bolo retangular rendeu maravilhosamente.',
-      rating: 5,
-    }
-  ];
-
-  for (const t of testimonials) {
-    const existing = await prisma.testimonial.findFirst({
-      where: { name: t.name, organizationId: organization.id },
-    });
-    if (!existing) {
-      await prisma.testimonial.create({ data: { ...t, organizationId: organization.id } });
-    }
-  }
+  // 7. Testimonials are managed by the confeiteira herself in /admin/depoimentos
+  // with real customer reviews -- intentionally not seeded with placeholder data.
 
   // 8. Seed Initial Customer and Sample Order for Dashboard metrics
   const sampleCustomer = await prisma.customer.create({

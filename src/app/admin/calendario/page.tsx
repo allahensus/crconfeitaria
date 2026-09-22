@@ -3,11 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Cake, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Cake, Clock, Lock, Unlock } from 'lucide-react';
 
 export default function AdminCalendarPage() {
   const [orders, setOrders] = useState<any[]>([]);
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  const loadBlockedDates = async () => {
+    try {
+      const res = await fetch('/api/blocked-dates');
+      const data = await res.json();
+      if (Array.isArray(data)) setBlockedDates(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     async function loadOrders() {
@@ -20,6 +31,7 @@ export default function AdminCalendarPage() {
       }
     }
     loadOrders();
+    loadBlockedDates();
   }, []);
 
   const year = currentDate.getFullYear();
@@ -51,8 +63,34 @@ export default function AdminCalendarPage() {
     });
   };
 
+  const getBlockedEntryForDay = (day: number) => {
+    return blockedDates.find((b) => {
+      const d = new Date(b.date);
+      return d.getUTCDate() === day && d.getUTCMonth() === month && d.getUTCFullYear() === year;
+    });
+  };
+
+  const handleToggleBlock = async (day: number) => {
+    const existing = getBlockedEntryForDay(day);
+    try {
+      if (existing) {
+        await fetch(`/api/blocked-dates/${existing.id}`, { method: 'DELETE' });
+      } else {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        await fetch('/api/blocked-dates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: dateStr, reason: 'Agenda lotada' }),
+        });
+      }
+      loadBlockedDates();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#FAF6F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FAF6F4]">
       <AdminSidebar />
 
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
@@ -62,7 +100,8 @@ export default function AdminCalendarPage() {
               Calendário de Produção
             </h1>
             <p className="text-xs md:text-sm text-[#645451]">
-              Visualize as encomendas agendadas por data para evitar sobrecarga na agenda
+              Visualize as encomendas agendadas por data e clique no cadeado de um dia para bloqueá-lo — dias
+              bloqueados somem do calendário de orçamento no site, o cliente não consegue nem escolher
             </p>
           </div>
 
@@ -109,6 +148,8 @@ export default function AdminCalendarPage() {
             {[...Array(daysInMonth)].map((_, i) => {
               const dayNum = i + 1;
               const dayOrders = getOrdersForDay(dayNum);
+              const blockedEntry = getBlockedEntryForDay(dayNum);
+              const isBlocked = !!blockedEntry;
               const isToday =
                 dayNum === new Date().getDate() &&
                 month === new Date().getMonth() &&
@@ -118,23 +159,42 @@ export default function AdminCalendarPage() {
                 <div
                   key={dayNum}
                   className={`p-2 min-h-[100px] flex flex-col justify-between transition-colors ${
-                    isToday ? 'bg-[#FDF7F6]' : 'bg-white'
+                    isBlocked ? 'bg-red-50/70' : isToday ? 'bg-[#FDF7F6]' : 'bg-white'
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span
                       className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
-                        isToday ? 'bg-[#C27360] text-white' : 'text-[#4A231A]'
+                        isToday ? 'bg-[#C27360] text-white' : isBlocked ? 'text-red-700' : 'text-[#4A231A]'
                       }`}
                     >
                       {dayNum}
                     </span>
-                    {dayOrders.length > 0 && (
-                      <span className="text-[10px] font-bold text-[#C27360] bg-[#F9ECE9] px-1.5 py-0.5 rounded">
-                        {dayOrders.length} encomenda{dayOrders.length > 1 ? 's' : ''}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {dayOrders.length > 0 && (
+                        <span className="text-[10px] font-bold text-[#C27360] bg-[#F9ECE9] px-1.5 py-0.5 rounded">
+                          {dayOrders.length} encomenda{dayOrders.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleToggleBlock(dayNum)}
+                        title={isBlocked ? 'Clique para liberar este dia' : 'Clique para bloquear este dia'}
+                        className={`p-1 rounded-md transition-colors ${
+                          isBlocked
+                            ? 'bg-red-600 text-white hover:bg-red-700'
+                            : 'bg-transparent text-gray-300 hover:text-[#C27360] hover:bg-[#FAF6F4]'
+                        }`}
+                      >
+                        {isBlocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      </button>
+                    </div>
                   </div>
+
+                  {isBlocked && (
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-red-700 bg-red-100 px-1.5 py-0.5 rounded self-start mb-1">
+                      Indisponível
+                    </span>
+                  )}
 
                   <div className="space-y-1 overflow-y-auto max-h-24">
                     {dayOrders.map((o) => (

@@ -46,6 +46,26 @@ export function formatWhatsappForUrl(phone: string): string {
   return digits;
 }
 
+// Semi-automatic, not automatic: the confeiteira clicks this after marking
+// an order ENTREGUE, WhatsApp opens with the message already written, she
+// reviews and sends. Building real automatic sending needs the WhatsApp
+// Business API (cost + Meta approval), deliberately out of scope for now.
+export function generateReviewRequestLink(
+  phone: string,
+  customerName: string,
+  bakeryName: string,
+  reviewUrl: string
+): string {
+  const cleanPhone = formatWhatsappForUrl(phone);
+  const firstName = (customerName || '').trim().split(' ')[0] || 'você';
+
+  let text = `😍 Oi, ${firstName}! Esperamos que tenha amado seu pedido da *${bakeryName}*!\n\n`;
+  text += `Você poderia deixar uma avaliação rapidinha pra gente? Ajuda muito outras pessoas a conhecerem nosso trabalho! 🙏\n\n`;
+  text += `${reviewUrl}`;
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+}
+
 export function generateWhatsAppLink(
   phone: string,
   quote: {
@@ -53,6 +73,7 @@ export function generateWhatsAppLink(
     customerName: string;
     productName: string;
     variation?: string;
+    isBiscoito?: boolean;
     cakeBase?: string;
     filling1?: string;
     frosting?: string;
@@ -61,28 +82,46 @@ export function generateWhatsAppLink(
     eventDate?: string;
     themeNotes?: string;
     finalTotal: number;
+    depositAmount?: number;
   }
 ): string {
   const cleanPhone = formatWhatsappForUrl(phone);
+  const divider = '━━━━━━━━━━━━━━━━━━━━━';
 
-  let text = `*SOLICITAÇÃO DE ORÇAMENTO*\n`;
+  let text = `🎂 *SOLICITAÇÃO DE ORÇAMENTO*\n`;
   text += `*Confeitaria Cinthia Rodrigues*\n`;
-  text += `---------------------------------------\n\n`;
+  text += `${divider}\n\n`;
 
-  if (quote.quoteNumber) text += `• *Código:* ${quote.quoteNumber}\n`;
-  text += `• *Cliente:* ${quote.customerName}\n`;
-  text += `• *Produto:* ${quote.productName}\n`;
-  if (quote.variation) text += `• *Tamanho/Fatias:* ${quote.variation}\n`;
-  if (quote.cakeBase) text += `• *Massa:* ${quote.cakeBase}\n`;
-  if (quote.filling1) text += `• *Recheio Principal:* ${quote.filling1}\n`;
-  if (quote.frosting) text += `• *Cobertura:* ${quote.frosting}\n`;
-  if (quote.extras) text += `• *Adicionais:* ${quote.extras}\n`;
-  text += `• *Quantidade:* ${quote.quantity}\n`;
-  if (quote.eventDate) text += `• *Data Desejada:* ${quote.eventDate}\n`;
-  if (quote.themeNotes) text += `• *Tema / Observações:* ${quote.themeNotes}\n`;
+  if (quote.quoteNumber) text += `Código: *${quote.quoteNumber}*\n\n`;
 
-  text += `\n*VALOR TOTAL ESTIMADO: ${formatCurrency(quote.finalTotal)}*\n`;
-  text += `---------------------------------------\n\n`;
+  text += `📦 *Pedido*\n`;
+  text += `• Produto: ${quote.productName}\n`;
+  if (quote.variation) text += `• ${quote.isBiscoito ? 'Tamanho' : 'Tamanho/Fatias'}: ${quote.variation}\n`;
+  if (quote.cakeBase) text += `• Massa: ${quote.cakeBase}\n`;
+  if (quote.filling1) text += `• Recheio Principal: ${quote.filling1}\n`;
+  // Skip this line when the variation name already says it (e.g. "Cobertura em
+  // Buttercream" as a Mini Bolo size option) -- otherwise it repeats itself.
+  if (quote.frosting && !(quote.variation && quote.variation.includes(quote.frosting))) {
+    text += `• Cobertura: ${quote.frosting}\n`;
+  }
+  text += `• Quantidade: ${quote.quantity}\n`;
+  if (quote.extras) {
+    for (const part of quote.extras.split('|').map((p) => p.trim()).filter(Boolean)) {
+      text += `• ${part}\n`;
+    }
+  }
+
+  text += `\n👤 *Cliente*\n`;
+  text += `• Nome: ${quote.customerName}\n`;
+  if (quote.eventDate) text += `• Data Desejada: ${quote.eventDate}\n`;
+  if (quote.themeNotes) text += `• Observações: ${quote.themeNotes}\n`;
+
+  text += `\n${divider}\n`;
+  text += `💰 *VALOR TOTAL ESTIMADO: ${formatCurrency(quote.finalTotal)}*\n`;
+  if (quote.depositAmount) {
+    text += `✅ *Sinal para reservar a data: ${formatCurrency(quote.depositAmount)}*\n`;
+  }
+  text += `${divider}\n\n`;
   text += `_Aguardo sua confirmação para combinarmos os detalhes e a data!_`;
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;

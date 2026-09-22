@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getScopedPrisma } from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, isOwnerFresh } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || 'month';
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     const db = getScopedPrisma(session.organizationId);
+    if (!(await isOwnerFresh(session, db))) return NextResponse.json({ error: 'Acesso restrito à dona da loja' }, { status: 403 });
 
     const body = await request.json();
     const { type, description, category, amount, paymentMethod, date, notes } = body;
@@ -113,6 +115,9 @@ export async function POST(request: Request) {
     }
 
     const parsedAmount = parseFloat(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json({ error: 'O valor deve ser maior que zero.' }, { status: 400 });
+    }
     const parsedDate = date ? new Date(date) : new Date();
 
     if (type === 'DESPESA') {

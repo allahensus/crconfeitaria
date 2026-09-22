@@ -1,12 +1,19 @@
 'use client';
 
 import React from 'react';
+import { Sparkles, Cake, Cookie, Gift, LayoutGrid } from 'lucide-react';
 
 interface CategoryFilterProps {
   categories: any[];
   selectedCategory: string;
   onSelectCategory: (slug: string) => void;
 }
+
+const CATEGORY_ICONS: Record<string, typeof Cake> = {
+  bolos: Cake,
+  biscoitos: Cookie,
+  kits: Gift,
+};
 
 export function CategoryFilter({
   categories,
@@ -17,31 +24,33 @@ export function CategoryFilter({
     <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap my-8">
       <button
         onClick={() => onSelectCategory('all')}
-        className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+        className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
           selectedCategory === 'all'
-            ? 'bg-[#C27360] text-white shadow-blush font-semibold'
-            : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
+            ? 'bg-[var(--color-accent-strong)] text-white shadow-blush font-semibold'
+            : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
         }`}
       >
-        ✨ Todos os Produtos
+        <LayoutGrid className="w-3.5 h-3.5" />
+        Todos os Produtos
       </button>
 
-      {categories.map((cat) => (
-        <button
-          key={cat.id}
-          onClick={() => onSelectCategory(cat.slug)}
-          className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-            selectedCategory === cat.slug
-              ? 'bg-[#C27360] text-white shadow-blush font-semibold'
-              : 'bg-white text-[#4A3531] border border-[#F2D7D0] hover:bg-[#FDF7F6]'
-          }`}
-        >
-          {cat.slug === 'bolos' && '🎂 '}
-          {cat.slug === 'biscoitos' && '🍪 '}
-          {cat.slug === 'kits' && '🎁 '}
-          {cat.name}
-        </button>
-      ))}
+      {categories.map((cat) => {
+        const Icon = CATEGORY_ICONS[cat.slug] || Sparkles;
+        return (
+          <button
+            key={cat.id}
+            onClick={() => onSelectCategory(cat.slug)}
+            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+              selectedCategory === cat.slug
+                ? 'bg-[var(--color-accent-strong)] text-white shadow-blush font-semibold'
+                : 'bg-white text-[#4A3531] border border-[var(--color-border)] hover:bg-[var(--color-surface-alt)]'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {cat.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -8,19 +8,21 @@ interface TestimonialsProps {
 }
 
 export function Testimonials({ testimonials }: TestimonialsProps) {
+  if (!testimonials || testimonials.length === 0) return null;
+
   return (
-    <section id="depoimentos" className="py-16 bg-[#FAF6F4]">
+    <section id="depoimentos" className="py-16 bg-[var(--color-bg)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#C27360] font-bold">
+          <span className="text-xs uppercase tracking-widest text-[var(--color-accent-strong)] font-bold">
             Amor em Cada Detalhe
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#4A231A] mt-2">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-heading)] mt-2">
             O que nossas clientes dizem
           </h2>
-          <p className="text-sm text-[#645451] mt-2">
+          <p className="text-sm text-[var(--color-text-soft)] mt-2">
             A maior recompensa é fazer parte dos seus momentos inesquecíveis.
           </p>
         </div>
@@ -30,7 +32,7 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
           {testimonials.map((t) => (
             <div
               key={t.id}
-              className="bg-white p-8 rounded-3xl border border-[#F2D7D0] shadow-card hover:shadow-xl transition-all duration-300 relative flex flex-col justify-between"
+              className="bg-white p-8 rounded-3xl border border-[var(--color-border)] shadow-card hover:shadow-xl transition-all duration-300 relative flex flex-col justify-between"
             >
               <div>
                 {/* Stars */}
@@ -46,12 +48,12 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-[#F2D7D0]/50">
-                <div className="w-10 h-10 rounded-full bg-[#F9ECE9] text-[#C27360] font-bold flex items-center justify-center text-sm font-serif">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-bold flex items-center justify-center text-sm font-serif">
                   {t.name.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-[#4A231A]">{t.name}</h4>
-                  <span className="text-xs text-[#C27360] font-medium">{t.eventType}</span>
+                  <h3 className="font-bold text-sm text-[var(--color-heading)]">{t.name}</h3>
+                  <span className="text-xs text-[var(--color-accent-strong)] font-medium">{t.eventType}</span>
                 </div>
               </div>
             </div>

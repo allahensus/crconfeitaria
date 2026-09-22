@@ -4,6 +4,19 @@
 
 @layer base {
   :root {
+    /* Storefront brand theme tokens — same names/roles as the brand guide.
+       Swapping a tenant's palette means changing only these 10 values. */
+    --color-bg: #FAF6F4;
+    --color-surface-alt: #FDF7F6;
+    --color-border: #F2D7D0;
+    --color-accent-soft: #F9ECE9;
+    --color-accent: #C27360;
+    --color-accent-strong: #A75644;
+    --color-accent-deep: #874132;
+    --color-heading: #4A231A;
+    --color-text: #332220;
+    --color-text-soft: #645451;
+
     --background: 30 33% 98%;
     --foreground: 12 30% 15%;
 
@@ -37,9 +50,9 @@
 }
 
 body {
-  color: #332220;
-  background-color: #FAF6F4;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   overflow-x: hidden;
 }
 
@@ -59,17 +72,17 @@ body {
 }
 
 .text-gradient-rose {
-  background: linear-gradient(135deg, #A75644 0%, #C27360 50%, #D59483 100%);
+  background: linear-gradient(135deg, var(--color-accent-strong) 0%, var(--color-accent) 50%, #D59483 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .bg-gradient-soft-rose {
-  background: linear-gradient(135deg, #FDF7F6 0%, #F9ECE9 50%, #F2D7D0 100%);
+  background: linear-gradient(135deg, var(--color-surface-alt) 0%, var(--color-accent-soft) 50%, var(--color-border) 100%);
 }
 
 .bg-gradient-hero {
-  background: radial-gradient(circle at 50% 0%, #F8EBE7 0%, #FAF6F4 70%);
+  background: radial-gradient(circle at 50% 0%, #F8EBE7 0%, var(--color-bg) 70%);
 }
 
 .shadow-blush {
@@ -86,12 +99,12 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF6F4;
+  background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
   background: #E6B9AE;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C27360;
+  background: var(--color-accent);
 }
