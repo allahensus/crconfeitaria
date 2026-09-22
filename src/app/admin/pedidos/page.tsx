@@ -18,6 +18,7 @@ import {
   CreditCard,
   MessageCircle,
   Star,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 const STATUS_COLUMNS = [
@@ -71,6 +72,16 @@ export default function AdminOrdersPage() {
     window.open(link, '_blank');
   };
 
+  const handleCopyReceiptLink = async (order: any) => {
+    const url = `${window.location.origin}/recibo/${order.id}?whatsapp=${encodeURIComponent(order.customerWhatsapp)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert('Link copiado!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
@@ -103,6 +114,7 @@ export default function AdminOrdersPage() {
           addPayment: {
             amount: parseFloat(paymentAmount),
             paymentMethod,
+            ...(paymentMethod === 'Simulado' ? { notes: 'Pagamento simulado -- sem dinheiro real' } : {}),
           },
         }),
       });
@@ -373,6 +385,13 @@ export default function AdminOrdersPage() {
                       + Registrar Pagamento
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => handleCopyReceiptLink(selectedOrder)}
+                    className="w-full py-2 rounded-xl bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold text-xs shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" /> Copiar Link do Recibo
+                  </button>
                 </div>
               </div>
             </div>
