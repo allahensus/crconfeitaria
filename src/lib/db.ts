@@ -81,3 +81,5 @@ export function getScopedPrisma(organizationId: string) {
     },
   });
 }
+
+export type ScopedPrismaClient = ReturnType<typeof getScopedPrisma>;
